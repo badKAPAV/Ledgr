@@ -83,15 +83,14 @@ Built to be simple, fast, and expandable:
 
 ## 📥 Download
 
-**To get a link to download the last build, drop an email with your email address and you'll get a link to download the latest build via Play Store**
+**To get access to closed beta, drop an email with your email address and you'll get a link to download the latest build via Play Store**
 
 > **Note**
-> This build is currently distributed through Internal Testing in Play Store.
+> - This build is currently distributed through Closed Testing in Play Store.
 > - Transaction detection requires notification access to bank alerts.
 > - Detection accuracy may vary between banks.
 
-If your bank’s messages are not detected correctly, email a **sample transaction alert** to  
-📧 **kapav.dev@gmail.com**, and support will be added.
+If your bank’s messages are not detected correctly, go to Feedback > SMS parsing request and fill up the form as instructed.
 
 ---
 
@@ -100,4 +99,4 @@ If your bank’s messages are not detected correctly, email a **sample transacti
 Ledgr is a solo-developed project built with care and attention to privacy.  
 Feedback, bug reports, and feature suggestions are always welcome.
 
-📧 **Contact:** [kapav.dev@gmail.com](mailto:kapav.dev@gmail.com)
+📧 **Contact:** [info.ledgr@gmail.com](mailto:info.ledgr@gmail.com)
