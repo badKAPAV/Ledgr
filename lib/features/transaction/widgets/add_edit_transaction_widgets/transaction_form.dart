@@ -264,9 +264,18 @@ class TransactionFormState extends State<TransactionForm> {
 
   Future<void> _checkAutoAddFolders() async {
     if (_isEditing && _selectedFolders.isNotEmpty) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       final metaProvider = Provider.of<MetaProvider>(context, listen: false);
+
+      // Polling for loading state (up to 2 seconds)
+      int retries = 0;
+      while (metaProvider.isLoading && retries < 20) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        retries++;
+        if (!mounted) return;
+      }
+
       final autoTags = metaProvider.getAutoAddTagsForDate(_selectedDate);
       if (autoTags.isNotEmpty) {
         setState(() {

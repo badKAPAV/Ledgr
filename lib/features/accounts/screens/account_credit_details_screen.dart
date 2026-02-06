@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:wallzy/core/themes/theme.dart';
 import 'package:wallzy/features/accounts/models/account.dart';
 import 'package:wallzy/features/accounts/widgets/account_info_modal_sheet.dart';
+import 'package:wallzy/features/accounts/provider/account_provider.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
@@ -159,7 +160,7 @@ class _AccountIncomeDetailsScreenState
     });
   }
 
-  Widget _buildCreditLimitBlock() {
+  Widget _buildCreditLimitBlock(Account currentAccount) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final settingsProvider = Provider.of<SettingsProvider>(context);
@@ -168,7 +169,7 @@ class _AccountIncomeDetailsScreenState
       symbol: currencySymbol,
       decimalDigits: 0,
     );
-    final limit = widget.account.creditLimit ?? 0.0;
+    final limit = currentAccount.creditLimit ?? 0.0;
 
     // Safety check
     if (limit <= 0) return const SizedBox.shrink();
@@ -369,15 +370,13 @@ class _AccountIncomeDetailsScreenState
     );
   }
 
-  void _showAccountInfo() {
+  void _showAccountInfo(Account account) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => AccountInfoModalSheet(
-        account: widget.account,
-        passedContext: context,
-      ),
+      builder: (context) =>
+          AccountInfoModalSheet(account: account, passedContext: context),
     );
   }
 
@@ -385,6 +384,11 @@ class _AccountIncomeDetailsScreenState
   Widget build(BuildContext context) {
     // Keep your currencyFormat definition
     final settingsProvider = Provider.of<SettingsProvider>(context);
+    final accountProvider = Provider.of<AccountProvider>(context);
+    final currentAccount = accountProvider.accounts.firstWhere(
+      (acc) => acc.id == widget.account.id,
+      orElse: () => widget.account,
+    );
     final currencySymbol = settingsProvider.currencySymbol;
     final currencyFormat = NumberFormat.currency(
       symbol: currencySymbol,
@@ -397,10 +401,10 @@ class _AccountIncomeDetailsScreenState
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(widget.account.bankName),
+            Text(currentAccount.bankName),
             const SizedBox(height: 4),
             Text(
-              widget.account.accountNumber,
+              currentAccount.accountNumber,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -416,7 +420,7 @@ class _AccountIncomeDetailsScreenState
               ).colorScheme.surfaceContainerHighest,
             ),
             icon: const Icon(Icons.info_outline_rounded),
-            onPressed: _showAccountInfo,
+            onPressed: () => _showAccountInfo(currentAccount),
           ),
           const SizedBox(width: 8),
         ],
@@ -428,7 +432,7 @@ class _AccountIncomeDetailsScreenState
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.only(top: 16.0, bottom: 16),
-                child: _buildCreditLimitBlock(),
+                child: _buildCreditLimitBlock(currentAccount),
               ),
             ),
 

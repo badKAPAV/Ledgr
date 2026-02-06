@@ -13,7 +13,10 @@ class MetaProvider with ChangeNotifier {
   StreamSubscription? _tagsSubscription;
 
   List<Tag> _tags = [];
+  bool _isLoading = false;
+
   List<Tag> get tags => _tags;
+  bool get isLoading => _isLoading;
 
   MetaProvider({required this.authProvider}) {
     if (authProvider.isLoggedIn) {
@@ -49,6 +52,8 @@ class MetaProvider with ChangeNotifier {
   }
 
   void _listenToTags(String uid) async {
+    _isLoading = true;
+    notifyListeners();
     _tagsSubscription?.cancel();
 
     // 1. CACHE FIRST
@@ -63,6 +68,7 @@ class MetaProvider with ChangeNotifier {
         _tags = cacheSnapshot.docs
             .map((doc) => Tag.fromMap(doc.id, doc.data()))
             .toList();
+        _isLoading = false;
         notifyListeners();
       }
     } catch (e) {
@@ -79,6 +85,7 @@ class MetaProvider with ChangeNotifier {
           _tags = snapshot.docs
               .map((doc) => Tag.fromMap(doc.id, doc.data()))
               .toList();
+          _isLoading = false;
           notifyListeners();
         });
   }

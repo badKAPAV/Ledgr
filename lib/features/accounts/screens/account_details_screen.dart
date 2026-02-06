@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:wallzy/core/themes/theme.dart';
 import 'package:wallzy/features/accounts/models/account.dart';
+import 'package:wallzy/features/accounts/provider/account_provider.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
@@ -138,21 +139,24 @@ class _AccountDetailsScreenState extends State<AccountDetailsScreen> {
     });
   }
 
-  void _showAccountInfo() {
+  void _showAccountInfo(Account account) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => AccountInfoModalSheet(
-        account: widget.account,
-        passedContext: context,
-      ),
+      builder: (context) =>
+          AccountInfoModalSheet(account: account, passedContext: context),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final settingsProvider = Provider.of<SettingsProvider>(context);
+    final accountProvider = Provider.of<AccountProvider>(context);
+    final currentAccount = accountProvider.accounts.firstWhere(
+      (acc) => acc.id == widget.account.id,
+      orElse: () => widget.account,
+    );
     final currencySymbol = settingsProvider.currencySymbol;
     final currencyFormat = NumberFormat.currency(
       symbol: currencySymbol,
@@ -165,10 +169,10 @@ class _AccountDetailsScreenState extends State<AccountDetailsScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(widget.account.bankName),
+            Text(currentAccount.bankName),
             const SizedBox(height: 4),
             Text(
-              widget.account.accountNumber,
+              currentAccount.accountNumber,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -183,7 +187,7 @@ class _AccountDetailsScreenState extends State<AccountDetailsScreen> {
                 context,
               ).colorScheme.surfaceContainerHighest,
             ),
-            onPressed: _showAccountInfo,
+            onPressed: () => _showAccountInfo(currentAccount),
             icon: const Icon(Icons.info_outline_rounded),
           ),
           const SizedBox(width: 8),
