@@ -7,6 +7,8 @@ import 'package:wallzy/features/dashboard/models/home_widget_model.dart';
 import 'package:wallzy/features/dashboard/provider/home_widgets_provider.dart';
 import 'package:wallzy/features/dashboard/home_widgets/folder_watchlist/folder_watchlist_widget.dart';
 import 'package:wallzy/features/dashboard/home_widgets/folder_watchlist/folder_selection_sheet.dart';
+import 'package:wallzy/features/dashboard/home_widgets/goals_watchlist/goals_watchlist_widget.dart';
+import 'package:wallzy/features/dashboard/home_widgets/goals_watchlist/goals_selection_sheet.dart';
 
 class HomeWidgetsSection extends StatelessWidget {
   const HomeWidgetsSection({super.key});
@@ -36,19 +38,38 @@ class HomeWidgetsSection extends StatelessWidget {
             double getWidgetWidth(int tiles) =>
                 (tiles * tileWidth) + ((tiles - 1) * spacing);
 
-            // pack widgets into rows of 4 columns.
-            List<Widget> rows = [];
+            // 2. Row Packing & Display Logic
+            final bool canAddFolder = !widgets.any(
+              (w) => w.type == HomeWidgetType.folderWatchlist,
+            );
+            final bool canAddGoals = !widgets.any(
+              (w) => w.type == HomeWidgetType.goalsWatchlist,
+            );
+            final bool canAddMore = canAddFolder || canAddGoals;
+
+            List<Widget> widgetRows = [];
             List<Widget> currentRowChildren = [];
             int currentRowUsedWidth = 0;
 
-            for (var widgetModel in widgets) {
-              // Check if widget fits in current row
-              if (currentRowUsedWidth + widgetModel.width > 4) {
-                // Fill remaining space in PREVIOUS row with "Add" button if space exists
-                final bool canAddMore = !widgets.any(
-                  (w) => w.type == HomeWidgetType.folderWatchlist,
+            // Helper to push current children as a row
+            void pushCurrentRow() {
+              if (currentRowChildren.isNotEmpty) {
+                widgetRows.add(
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: currentRowChildren,
+                  ),
                 );
-                if (currentRowUsedWidth < 4 && canAddMore) {
+                currentRowChildren = [];
+                currentRowUsedWidth = 0;
+              }
+            }
+
+            for (var widgetModel in widgets) {
+              // Row Break: Current widget doesn't fit
+              if (currentRowUsedWidth + widgetModel.width > 4) {
+                // Fill partial row if space exists
+                if (canAddMore && currentRowUsedWidth < 4) {
                   final addWidthTiles = 4 - currentRowUsedWidth;
                   currentRowChildren.add(
                     SizedBox(
@@ -61,22 +82,10 @@ class HomeWidgetsSection extends StatelessWidget {
                     ),
                   );
                 }
-
-                // Push the completed row
-                rows.add(
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: currentRowChildren,
-                  ),
-                );
-                rows.add(const SizedBox(height: spacing));
-
-                // Reset for new row
-                currentRowChildren = [];
-                currentRowUsedWidth = 0;
+                pushCurrentRow();
               }
 
-              // Add the widget to current row
+              // Add current widget
               currentRowChildren.add(
                 SizedBox(
                   width: getWidgetWidth(widgetModel.width),
@@ -84,33 +93,22 @@ class HomeWidgetsSection extends StatelessWidget {
                 ),
               );
 
-              // Add spacing if it's NOT the end of a row
+              // Horizontal spacing
               if (currentRowUsedWidth + widgetModel.width < 4) {
                 currentRowChildren.add(const SizedBox(width: spacing));
               }
 
               currentRowUsedWidth += widgetModel.width;
 
-              // If row is now perfectly full, push it immediately
+              // Row Break: Row is full
               if (currentRowUsedWidth == 4) {
-                rows.add(
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: currentRowChildren,
-                  ),
-                );
-                currentRowChildren = [];
-                currentRowUsedWidth = 0;
+                pushCurrentRow();
               }
             }
 
-            // Handle Remaining Row or End-of-List "Add" button
-            final bool canAddMore = !widgets.any(
-              (w) => w.type == HomeWidgetType.folderWatchlist,
-            );
-
+            // Handle leftovers or bottom "Add" button
             if (currentRowChildren.isNotEmpty) {
-              // If we have a partial row, fill it with an "Add" button and push
+              // Fill partial row
               if (canAddMore) {
                 final addWidthTiles = 4 - currentRowUsedWidth;
                 currentRowChildren.add(
@@ -124,31 +122,30 @@ class HomeWidgetsSection extends StatelessWidget {
                   ),
                 );
               }
-              rows.add(
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: currentRowChildren,
+              pushCurrentRow();
+            } else if (canAddMore) {
+              // Add a slim full-width "Add" button if grid is "perfect"
+              widgetRows.add(
+                _AddWidgetButton(
+                  widthTiles: 4,
+                  heightTiles: 1,
+                  isFullWidth: true,
+                  compact: true,
+                  onTap: () => _showWidgetTypeSheet(context),
                 ),
               );
-            } else {
-              // If perfect grid, add a slim "Add" row at bottom for continuity
-              if (canAddMore) {
-                if (rows.isNotEmpty) {
-                  rows.add(const SizedBox(height: spacing));
-                }
-                rows.add(
-                  _AddWidgetButton(
-                    widthTiles: 4,
-                    heightTiles: 1,
-                    isFullWidth: true,
-                    compact: true,
-                    onTap: () => _showWidgetTypeSheet(context),
-                  ),
-                );
+            }
+
+            // Assembly: Build column with vertical spacing
+            List<Widget> finalDisplayList = [];
+            for (int i = 0; i < widgetRows.length; i++) {
+              finalDisplayList.add(widgetRows[i]);
+              if (i < widgetRows.length - 1) {
+                finalDisplayList.add(const SizedBox(height: spacing));
               }
             }
 
-            return Column(children: rows);
+            return Column(children: finalDisplayList);
           },
         );
       },
@@ -180,7 +177,9 @@ class _WidgetContainer extends StatelessWidget {
         _showOptionsSheet(context, model);
       },
       onTap: model.needsSetup
-          ? () => _showFolderSelectionSheet(context, model)
+          ? () => model.type == HomeWidgetType.goalsWatchlist
+                ? _showGoalsSelectionSheet(context, model)
+                : _showFolderSelectionSheet(context, model)
           : null, // Tapping an active widget could open the folder details
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
@@ -204,6 +203,8 @@ class _WidgetContainer extends StatelessWidget {
     switch (model.type) {
       case HomeWidgetType.folderWatchlist:
         return FolderWatchlistWidget(model: model);
+      case HomeWidgetType.goalsWatchlist:
+        return GoalsWatchlistWidget(model: model);
       default:
         return const Center(child: Text("Coming Soon"));
     }
@@ -214,7 +215,9 @@ class _WidgetContainer extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         HugeIcon(
-          icon: HugeIcons.strokeRoundedFolder02,
+          icon: model.type == HomeWidgetType.goalsWatchlist
+              ? HugeIcons.strokeRoundedTarget02
+              : HugeIcons.strokeRoundedFolder02,
           color: theme.colorScheme.primary,
         ),
         const SizedBox(height: 8),
@@ -258,7 +261,11 @@ class _WidgetContainer extends StatelessWidget {
                 ),
                 onTap: () {
                   Navigator.pop(ctx);
-                  _showFolderSelectionSheet(context, model);
+                  if (model.type == HomeWidgetType.goalsWatchlist) {
+                    _showGoalsSelectionSheet(context, model);
+                  } else {
+                    _showFolderSelectionSheet(context, model);
+                  }
                 },
               ),
               ListTile(
@@ -281,6 +288,18 @@ class _WidgetContainer extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showGoalsSelectionSheet(BuildContext context, HomeWidgetModel model) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => GoalsSelectionSheet(
+        widgetId: model.id,
+        initialSelection: model.configIds,
       ),
     );
   }
@@ -377,7 +396,12 @@ class WidgetSelectionSheet extends StatelessWidget {
     final bool canAddFolderWatchlist = !activeTypes.contains(
       HomeWidgetType.folderWatchlist,
     );
-    final bool hasAvailableWidgets = canAddFolderWatchlist;
+    final bool canAddGoalsWatchlist = !activeTypes.contains(
+      HomeWidgetType.goalsWatchlist,
+    );
+
+    final bool hasAvailableWidgets =
+        canAddFolderWatchlist || canAddGoalsWatchlist;
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -386,65 +410,81 @@ class WidgetSelectionSheet extends StatelessWidget {
         color: Theme.of(context).colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.outlineVariant,
-              borderRadius: BorderRadius.circular(2),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.outlineVariant,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            "Add Widgets",
-            style: Theme.of(
-              context,
-            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 24),
+            const SizedBox(height: 12),
+            Text(
+              "Add Widgets",
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 24),
 
-          if (!hasAvailableWidgets)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 32.0),
-              child: Column(
-                children: [
-                  HugeIcon(
-                    icon: HugeIcons.strokeRoundedTick02,
-                    size: 48,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    "You've added all available widgets!",
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.outline,
+            if (!hasAvailableWidgets)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 32.0),
+                child: Column(
+                  children: [
+                    HugeIcon(
+                      icon: HugeIcons.strokeRoundedTick02,
+                      size: 48,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
-                  ),
+                    const SizedBox(height: 16),
+                    Text(
+                      "You've added all available widgets!",
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              Column(
+                children: [
+                  // FOLDER WATCHLIST PREVIEW TILE
+                  if (canAddFolderWatchlist)
+                    _WidgetPreviewTile(
+                      title: "Folders Watchlist",
+                      description: "Monitor your folder budgets at a glance",
+                      previewWidget: const _DummyFolderWatchlistWidget(),
+                      onTap: () {
+                        provider.addWidget(HomeWidgetType.folderWatchlist);
+                        Navigator.pop(context);
+                      },
+                    ),
+
+                  // GOALS WATCHLIST PREVIEW TILE
+                  if (canAddGoalsWatchlist) ...[
+                    if (canAddFolderWatchlist) const SizedBox(height: 16),
+                    _WidgetPreviewTile(
+                      title: "Goals Watchlist",
+                      description: "Keep your savings targets in focus",
+                      previewWidget: const _DummyGoalsWatchlistWidget(),
+                      onTap: () {
+                        provider.addWidget(HomeWidgetType.goalsWatchlist);
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ],
                 ],
               ),
-            )
-          else
-            Column(
-              children: [
-                // FOLDER WATCHLIST PREVIEW TILE
-                if (canAddFolderWatchlist)
-                  _WidgetPreviewTile(
-                    title: "Folders Watchlist",
-                    description: "Monitor your folder budgets at a glance",
-                    previewWidget: const _DummyFolderWatchlistWidget(),
-                    onTap: () {
-                      provider.addWidget(HomeWidgetType.folderWatchlist);
-                      Navigator.pop(context);
-                    },
-                  ),
-              ],
-            ),
-          const SizedBox(height: 24),
-        ],
+            const SizedBox(height: 24),
+          ],
+        ),
       ),
     );
   }
@@ -721,4 +761,181 @@ class _DummyFolderData {
     required this.limit,
     this.label,
   });
+}
+
+class _DummyGoalsWatchlistWidget extends StatelessWidget {
+  const _DummyGoalsWatchlistWidget();
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    // Hardcoded Data for Preview
+    final goals = [
+      _DummyFolderData(
+        name: 'New Car',
+        color: Colors.indigo,
+        spent: 15000,
+        limit: 45000,
+      ),
+      _DummyFolderData(
+        name: 'Japan Trip',
+        color: Colors.redAccent,
+        spent: 2400,
+        limit: 8000,
+      ),
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Expanded(
+            child: ListView.separated(
+              padding: const EdgeInsets.only(top: 8),
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: goals.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              itemBuilder: (context, index) {
+                final goal = goals[index];
+                final percent = (goal.spent / goal.limit).clamp(0.0, 1.0);
+                final spentStr = goal.spent.toStringAsFixed(0);
+                final limitStr = goal.limit.toStringAsFixed(0);
+
+                return Column(
+                  children: [
+                    Row(
+                      children: [
+                        // Icon Circle
+                        Container(
+                          width: 26,
+                          height: 26,
+                          decoration: BoxDecoration(
+                            color: goal.color.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(13),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(6.0),
+                            child: HugeIcon(
+                              icon: HugeIcons.strokeRoundedTarget02,
+                              size: 16,
+                              color: goal.color,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+
+                        // Stats
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Top Row
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    goal.name,
+                                    style: textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      height: 1,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        spentStr,
+                                        style: textTheme.bodyMedium?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          fontFamily: 'momo',
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      Text(
+                                        " / $limitStr",
+                                        style: textTheme.bodySmall?.copyWith(
+                                          color: Theme.of(context).hintColor,
+                                          fontFamily: 'momo',
+                                          fontSize: 9,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+
+                              // Bottom Row: Progress (Custom Goal Style)
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Stack(
+                                      children: [
+                                        Container(
+                                          height: 4,
+                                          decoration: BoxDecoration(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .surfaceContainerHighest,
+                                            borderRadius: BorderRadius.circular(
+                                              2,
+                                            ),
+                                          ),
+                                        ),
+                                        FractionallySizedBox(
+                                          widthFactor: percent,
+                                          child: Container(
+                                            height: 4,
+                                            decoration: BoxDecoration(
+                                              color: goal.color,
+                                              borderRadius:
+                                                  BorderRadius.circular(2),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    "${(percent * 100).toInt()}%",
+                                    style: textTheme.labelSmall?.copyWith(
+                                      color: Theme.of(context).hintColor,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

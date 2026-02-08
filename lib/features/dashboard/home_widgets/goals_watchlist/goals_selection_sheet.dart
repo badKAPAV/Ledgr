@@ -1,32 +1,29 @@
-// lib/features/home/screens/folder_selection_sheet.dart
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wallzy/features/dashboard/provider/home_widgets_provider.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:wallzy/features/tag/screens/tags_screen.dart';
-import 'package:wallzy/features/transaction/provider/meta_provider.dart';
+import 'package:wallzy/features/goals/provider/goals_provider.dart';
+import 'package:wallzy/features/goals/screens/goals_screen.dart';
 import 'package:wallzy/common/icon_picker/icons.dart';
 import 'package:wallzy/common/progress_bar/segmented_progress_bar.dart';
-import 'package:wallzy/features/settings/provider/settings_provider.dart';
+import 'package:wallzy/features/accounts/provider/account_provider.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
-import 'package:wallzy/features/tag/services/budget_helper.dart';
 
-class FolderSelectionSheet extends StatefulWidget {
+class GoalsSelectionSheet extends StatefulWidget {
   final String widgetId;
   final List<String> initialSelection;
 
-  const FolderSelectionSheet({
+  const GoalsSelectionSheet({
     super.key,
     required this.widgetId,
     this.initialSelection = const [],
   });
 
   @override
-  State<FolderSelectionSheet> createState() => _FolderSelectionSheetState();
+  State<GoalsSelectionSheet> createState() => _GoalsSelectionSheetState();
 }
 
-class _FolderSelectionSheetState extends State<FolderSelectionSheet> {
+class _GoalsSelectionSheetState extends State<GoalsSelectionSheet> {
   late List<String> _selectedIds;
 
   bool _isInitialized = false;
@@ -35,14 +32,11 @@ class _FolderSelectionSheetState extends State<FolderSelectionSheet> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_isInitialized) {
-      final metaProvider = Provider.of<MetaProvider>(context, listen: false);
-      final validTagIds = metaProvider.tags
-          .where((t) => t.tagBudget != null && (t.tagBudget ?? 0) > 0)
-          .map((t) => t.id)
-          .toSet();
+      final goalsProvider = Provider.of<GoalsProvider>(context, listen: false);
+      final validGoalIds = goalsProvider.goals.map((g) => g.id).toSet();
 
       _selectedIds = widget.initialSelection
-          .where((id) => validTagIds.contains(id))
+          .where((id) => validGoalIds.contains(id))
           .toList();
       _isInitialized = true;
     }
@@ -58,7 +52,7 @@ class _FolderSelectionSheetState extends State<FolderSelectionSheet> {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text("You can only choose up to 3 folders"),
+              content: Text("You can only choose up to 3 goals"),
               duration: Duration(seconds: 1),
             ),
           );
@@ -93,13 +87,13 @@ class _FolderSelectionSheetState extends State<FolderSelectionSheet> {
           ),
           const SizedBox(height: 24),
           Text(
-            "Select Folders",
+            "Select Goals",
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
             ),
           ),
           Text(
-            "Choose up to 3 folders to monitor\nYou can only monitor folders with a set budget",
+            "Choose up to 3 goals to monitor",
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.outline,
             ),
@@ -107,24 +101,24 @@ class _FolderSelectionSheetState extends State<FolderSelectionSheet> {
 
           const SizedBox(height: 16),
 
-          // List of Folders
+          // List of Goals
           Expanded(
-            child: Consumer<MetaProvider>(
-              builder: (context, metaProvider, _) {
-                final tags = metaProvider.tags
-                    .where((t) => t.tagBudget != null && (t.tagBudget ?? 0) > 0)
-                    .toList();
-
-                final settingsProvider = Provider.of<SettingsProvider>(
+            child: Consumer<GoalsProvider>(
+              builder: (context, goalsProvider, _) {
+                final accountProvider = Provider.of<AccountProvider>(
                   context,
                   listen: false,
-                );
+                ); // Use listen: false if mostly static or rebuilds triggered elsewhere? Actually inside Consumer we might not want to rebuild whole list on account change? But we do need live balance.
+                // However, optimization: if we use Provider.of inside builder it might be better?
+                // Actually, let's just grab them.
                 final transactionProvider = Provider.of<TransactionProvider>(
                   context,
                   listen: false,
                 );
 
-                if (tags.isEmpty) {
+                final goals = goalsProvider.goals;
+
+                if (goals.isEmpty) {
                   return Center(
                     child: GestureDetector(
                       onTap: () {
@@ -132,7 +126,7 @@ class _FolderSelectionSheetState extends State<FolderSelectionSheet> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const TagsScreen(),
+                            builder: (context) => const GoalsScreen(),
                           ),
                         );
                       },
@@ -145,7 +139,7 @@ class _FolderSelectionSheetState extends State<FolderSelectionSheet> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            "No folders found.\nCreate some first",
+                            "No goals found.\nCreate a goal first",
                             textAlign: TextAlign.center,
                             style: TextStyle(color: theme.colorScheme.outline),
                           ),
@@ -156,22 +150,26 @@ class _FolderSelectionSheetState extends State<FolderSelectionSheet> {
                 }
 
                 return ListView.builder(
-                  itemCount: tags.length,
+                  itemCount: goals.length,
                   itemBuilder: (context, index) {
-                    final tag = tags[index];
-                    final id = tag.id;
+                    final goal = goals[index];
+                    final id = goal.id;
                     final isSelected = _selectedIds.contains(id);
 
                     // Calculate progress
-                    final netSpent = BudgetHelper.calculateSpent(
-                      tag,
-                      transactionProvider.transactions,
-                      settingsProvider,
-                    );
-                    final limit = tag.tagBudget ?? 0.0;
-                    final percent = limit > 0
-                        ? (netSpent / limit).clamp(0.0, 1.0)
-                        : 0.0;
+                    double currentAmount = 0.0;
+                    for (final accountId in goal.accountsList) {
+                      try {
+                        // optimize: direct access? accounts list is likely small.
+                        final account = accountProvider.accounts.firstWhere(
+                          (a) => a.id == accountId,
+                        );
+                        currentAmount += accountProvider.getBalanceForAccount(
+                          account,
+                          transactionProvider.transactions,
+                        );
+                      } catch (_) {}
+                    }
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
@@ -199,14 +197,10 @@ class _FolderSelectionSheetState extends State<FolderSelectionSheet> {
                           child: Row(
                             children: [
                               HugeIcon(
-                                icon: GoalIconRegistry.getFolderIcon(
-                                  tag.iconKey,
-                                ),
-                                color: tag.color != null
-                                    ? Color(tag.color!)
-                                    : (isSelected
-                                          ? theme.colorScheme.primary
-                                          : theme.colorScheme.onSurface),
+                                icon: GoalIconRegistry.getIcon(goal.iconKey),
+                                color: (isSelected
+                                    ? theme.colorScheme.primary
+                                    : theme.colorScheme.onSurface),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -214,7 +208,7 @@ class _FolderSelectionSheetState extends State<FolderSelectionSheet> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      tag.name,
+                                      goal.title,
                                       style: const TextStyle(
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -225,23 +219,19 @@ class _FolderSelectionSheetState extends State<FolderSelectionSheet> {
                                       borderRadius: BorderRadius.circular(2),
                                       segments: [
                                         Segment(
-                                          value: netSpent,
-                                          color: limit > 0 && percent > 0.95
-                                              ? Colors.red
-                                              : (tag.color != null
-                                                    ? Color(tag.color!)
-                                                    : theme
-                                                          .colorScheme
-                                                          .primary),
+                                          value: currentAmount,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.primary,
                                         ),
                                         Segment(
-                                          value: (limit - netSpent).clamp(
-                                            0,
-                                            double.infinity,
-                                          ),
-                                          color: theme
-                                              .colorScheme
-                                              .surfaceContainerHighest,
+                                          value:
+                                              (goal.targetAmount -
+                                                      currentAmount)
+                                                  .clamp(0, double.infinity),
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.surfaceContainerHighest,
                                         ),
                                       ],
                                     ),
