@@ -23,7 +23,7 @@ object SmsTransactionParser {
 
     // --- CATEGORY KEYWORDS ---
     private val groceryKeywords = listOf("bigbasket", "blinkit", "zepto", "instamart", "grofers", "dmart", "reliance fresh", "nature's basket", "kirana", "supermarket", "vegetable", "fruit", "grocery")
-    private val foodKeywords = listOf("zomato", "swiggy", "ubereats", "domino", "pizza", "burger", "kfc", "mcdonald", "cafe", "coffee", "starbucks", "tea", "dining", "kitchen", "restaurant", "baking", "bakery", "cake", "eats", "bar", "pub")
+    private val foodKeywords = listOf("zomato", "swiggy", "ubereats", "domino", "pizza", "burger", "kfc", "mcdonald", "cafe", "coffee", "starbucks", "tea", "dining", "kitchen", "restaurant", "baking", "bakery", "cake", "eats", "bar", "pub", "brew", "brewery", "brewpub")
     private val transportKeywords = listOf("uber", "ola", "rapido", "indrive", "metro", "rail", "irctc", "fastag", "toll", "ticket", "cab", "auto")
     private val fuelKeywords = listOf("petrol", "diesel", "shell", "hpcl", "bpcl", "ioc", "pump", "fuel", "gas station")
     private val shoppingKeywords = listOf("amazon", "flipkart", "myntra", "ajio", "meesho", "nykaa", "tata", "reliance trends", "zudio", "pantaloons", "mall", "retail", "store", "mart", "cloth", "fashion", "decathlon", "nike", "adidas")

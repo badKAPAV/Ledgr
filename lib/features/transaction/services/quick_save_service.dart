@@ -327,8 +327,7 @@ class QuickSaveService {
         jsonEncode(pendingList),
       );
 
-      // debugPrint("🔵 --- DEBUG END: SUCCESS ---\n");
-      await _showSuccessNotification(notificationId, amount);
+      await _showSuccessNotification(notificationId, amount, type, payee);
     } catch (e) {
       // debugPrint("🔴 CRITICAL FAILURE: $e\n$s");
       await _showFailureNotification(notificationId);
@@ -381,6 +380,8 @@ class QuickSaveService {
   Future<void> _showSuccessNotification(
     int? notificationId,
     double amount,
+    String type,
+    String payee,
   ) async {
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
@@ -396,10 +397,14 @@ class QuickSaveService {
       android: androidPlatformChannelSpecifics,
     );
 
+    final String action = type.toLowerCase() == 'income' ? 'Received' : 'Sent';
+    final String preposition = type.toLowerCase() == 'income' ? 'from' : 'to';
+    final String person = payee.isEmpty ? 'Unknown' : payee;
+
     await _notificationsPlugin.show(
       notificationId ?? 999,
-      'Transaction Saved',
-      'Amount: ${amount.toStringAsFixed(2)}',
+      'Saved ✅ $action ${amount.toStringAsFixed(2)} $preposition $person',
+      'Tap to view.',
       platformChannelSpecifics,
     );
   }
@@ -421,7 +426,7 @@ class QuickSaveService {
 
     await _notificationsPlugin.show(
       notificationId ?? 999,
-      'Save Failed',
+      'Failed to save transaction ❌',
       'Please try again.',
       platformChannelSpecifics,
     );

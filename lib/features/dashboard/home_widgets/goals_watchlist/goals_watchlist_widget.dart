@@ -41,18 +41,30 @@ class GoalsWatchlistWidget extends StatelessWidget {
         .toList();
 
     final goals = selectedGoals.map((goal) {
-      // Calculate spent (current amount) by summing up balances of accounts in goal.accountsList
+      // Calculate spent (current amount)
       double currentAmount = 0.0;
-      for (final accountId in goal.accountsList) {
-        try {
-          final account = accountProvider.accounts.firstWhere(
-            (a) => a.id == accountId,
-          );
+
+      if (goal.accountsList.isEmpty) {
+        // If no specific accounts selected, sum up ALL accounts (Net Worth)
+        for (final account in accountProvider.accounts) {
           currentAmount += accountProvider.getBalanceForAccount(
             account,
             transactionProvider.transactions,
           );
-        } catch (_) {}
+        }
+      } else {
+        // Sum up balances of ONLY selected accounts
+        for (final accountId in goal.accountsList) {
+          try {
+            final account = accountProvider.accounts.firstWhere(
+              (a) => a.id == accountId,
+            );
+            currentAmount += accountProvider.getBalanceForAccount(
+              account,
+              transactionProvider.transactions,
+            );
+          } catch (_) {}
+        }
       }
 
       return _GoalData(

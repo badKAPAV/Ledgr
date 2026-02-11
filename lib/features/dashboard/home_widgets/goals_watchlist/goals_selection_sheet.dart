@@ -158,17 +158,25 @@ class _GoalsSelectionSheetState extends State<GoalsSelectionSheet> {
 
                     // Calculate progress
                     double currentAmount = 0.0;
-                    for (final accountId in goal.accountsList) {
-                      try {
-                        // optimize: direct access? accounts list is likely small.
-                        final account = accountProvider.accounts.firstWhere(
-                          (a) => a.id == accountId,
-                        );
+                    if (goal.accountsList.isEmpty) {
+                      for (final account in accountProvider.accounts) {
                         currentAmount += accountProvider.getBalanceForAccount(
                           account,
                           transactionProvider.transactions,
                         );
-                      } catch (_) {}
+                      }
+                    } else {
+                      for (final accountId in goal.accountsList) {
+                        try {
+                          final account = accountProvider.accounts.firstWhere(
+                            (a) => a.id == accountId,
+                          );
+                          currentAmount += accountProvider.getBalanceForAccount(
+                            account,
+                            transactionProvider.transactions,
+                          );
+                        } catch (_) {}
+                      }
                     }
 
                     return Padding(
