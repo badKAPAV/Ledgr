@@ -25,6 +25,17 @@ class Account {
     this.billingCycleDay,
   });
 
+  /// Factory for an empty account (Sentinel value)
+  factory Account.empty() {
+    return Account(
+      id: '',
+      bankName: '',
+      accountNumber: '',
+      accountHolderName: '',
+      userId: '',
+    );
+  }
+
   Account copyWith({
     String? id,
     String? bankName,
@@ -71,6 +82,22 @@ class Account {
     );
   }
 
+  /// Factory for creating an account from a Map (e.g. from JSON/SharedPrefs)
+  factory Account.fromMap(Map<String, dynamic> map) {
+    return Account(
+      id: map['id'] ?? '',
+      bankName: map['bankName'] ?? '',
+      accountNumber: map['accountNumber'] ?? '',
+      cardNumber: map['cardNumber'],
+      accountHolderName: map['accountHolderName'] ?? '',
+      isPrimary: map['isPrimary'] ?? false,
+      userId: map['userId'] ?? '',
+      accountType: map['accountType'] ?? 'debit',
+      creditLimit: map['creditLimit']?.toDouble() ?? 0.0,
+      billingCycleDay: map['billingCycleDay']?.toInt() ?? 1,
+    );
+  }
+
   // The userId is no longer stored in the document itself.
   Map<String, dynamic> toMap() {
     return {
@@ -82,6 +109,9 @@ class Account {
       'accountType': accountType,
       'creditLimit': creditLimit,
       'billingCycleDay': billingCycleDay,
+      // Include ID and UserID for local storage serialization
+      'id': id,
+      'userId': userId,
     };
   }
 

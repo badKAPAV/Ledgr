@@ -265,13 +265,7 @@ class _HomeScreenState extends State<HomeScreen>
     );
 
     if (confirmed == true) {
-      for (var tx in _pendingSmsTransactions) {
-        if (tx['id'] != null) {
-          _platform.invokeMethod('removePendingSmsTransaction', {
-            'id': tx['id'],
-          });
-        }
-      }
+      await _platform.invokeMethod('removeAllPendingTransactions');
 
       setState(() {
         _pendingSmsTransactions.clear();
@@ -288,11 +282,6 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   Widget build(BuildContext context) {
     final transactionProvider = Provider.of<TransactionProvider>(context);
-
-    // Turn off AppDrawer if we are processing SMS so user can't nav away?
-    // Not critical, but keeping pattern.
-
-    // Loading logic is now handled by AuthGate
 
     final recentTransactions = transactionProvider.transactions
         .take(8)
@@ -325,10 +314,9 @@ class _HomeScreenState extends State<HomeScreen>
                     dueSubscriptions: _dueSubscriptions,
                     onPendingSmsTap: _navigateToTransactionFromData,
                     onPendingSmsDismiss: (tx) async {
-                      await _platform.invokeMethod(
-                        'removePendingSmsTransaction',
-                        {'id': tx['id']},
-                      );
+                      await _platform.invokeMethod('removePendingTransaction', {
+                        'id': tx['id'],
+                      });
                       setState(() {
                         _pendingSmsTransactions.removeWhere(
                           (e) => e['id'] == tx['id'],
@@ -363,7 +351,7 @@ class _HomeScreenState extends State<HomeScreen>
                                   await _navigateToTransactionFromData(tx);
                               if (result == true) {
                                 _platform.invokeMethod(
-                                  'removePendingSmsTransaction',
+                                  'removePendingTransaction',
                                   {'id': tx['id']},
                                 );
                                 setState(() {
@@ -376,7 +364,7 @@ class _HomeScreenState extends State<HomeScreen>
                             },
                             onDismiss: (tx) {
                               _platform.invokeMethod(
-                                'removePendingSmsTransaction',
+                                'removePendingTransaction',
                                 {'id': tx['id']},
                               );
                               setState(() {
@@ -791,7 +779,7 @@ class _HomeScreenState extends State<HomeScreen>
 
         await txProvider.addTransaction(newTx);
 
-        await _platform.invokeMethod('removePendingSmsTransaction', {
+        await _platform.invokeMethod('removePendingTransaction', {
           'id': txData['id'],
         });
 
@@ -946,6 +934,14 @@ class _HomeScreenState extends State<HomeScreen>
     );
 
     if (result == true) {
+      final id = map['id']?.toString();
+      if (id != null) {
+        _platform.invokeMethod('removePendingTransaction', {'id': id});
+        setState(() {
+          _pendingSmsTransactions.removeWhere((t) => t['id'] == id);
+        });
+      }
+      // Fetch anyway to be sure
       await _fetchPendingSmsTransactions();
     }
     return result;

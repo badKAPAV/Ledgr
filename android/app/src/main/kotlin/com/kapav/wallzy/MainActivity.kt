@@ -84,7 +84,7 @@ class MainActivity: FlutterActivity() {
                 val jsonString = prefs.getString(SmsTransactionParser.KEY_PENDING_TRANSACTIONS, "[]")
                 result.success(jsonString)
             }
-            "removePendingSmsTransaction" -> {
+            "removePendingTransaction" -> {
                 val id = call.argument<String>("id")
                 if (id != null) {
                     removePendingTransaction(id)

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:wallzy/features/people/models/person.dart';
 import 'package:wallzy/features/tag/models/tag.dart';
@@ -47,9 +48,12 @@ class TransactionModel {
       transactionId: data['transactionId'] ?? '',
       type: data['type'] ?? 'expense',
       amount: (data['amount'] ?? 0).toDouble(),
-      timestamp: DateTime.parse(
-        data['timestamp'] ?? DateTime.now().toIso8601String(),
-      ),
+      timestamp: data['timestamp'] == null
+          ? DateTime.now()
+          : (data['timestamp'] is Timestamp
+                ? (data['timestamp'] as Timestamp).toDate()
+                : DateTime.tryParse(data['timestamp'].toString()) ??
+                      DateTime.now()),
       description: data['description'] ?? '',
       paymentMethod: data['paymentMethod'] ?? 'cash',
       people: (data['people'] as List<dynamic>? ?? [])

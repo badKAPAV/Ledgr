@@ -526,7 +526,7 @@ class TransactionFormState extends State<TransactionForm> {
     if (widget.smsTransactionId != null) {
       try {
         _platform
-            .invokeMethod('removePendingSmsTransaction', {
+            .invokeMethod('removePendingTransaction', {
               'id': widget.smsTransactionId,
             })
             .timeout(const Duration(seconds: 1));

@@ -1,10 +1,14 @@
 import 'dart:async';
+import 'dart:convert'; // Added for JSON encoding
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
 import 'package:wallzy/features/accounts/models/account.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Added for local caching
 
 class AccountProvider with ChangeNotifier {
+  static const String _prefAccountsCache =
+      'quick_save_accounts_cache'; // Key for caching
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   List<Account> _accounts = [];
   StreamSubscription? _accountSubscription;
@@ -128,6 +132,8 @@ class AccountProvider with ChangeNotifier {
             .toList();
         _isLoading = false; // Mark as loaded immediately if cache hit
         notifyListeners();
+        // Save to local prefs for background service
+        _cacheAccountsLocally();
       }
     } catch (e) {
       debugPrint("Error loading accounts from cache or timeout: $e");
@@ -159,6 +165,8 @@ class AccountProvider with ChangeNotifier {
             // 3. If empty AND from cache, we keep loading (waiting for sync)
 
             notifyListeners();
+            // Save to local prefs for background service
+            _cacheAccountsLocally();
           },
           onError: (error) {
             _isLoading = false;
@@ -196,6 +204,25 @@ class AccountProvider with ChangeNotifier {
       userId: _userId,
       isPrimary: shouldBePrimary,
     );
+  }
+
+  /// 🔹 Imports an account with a specific ID.
+  /// Used for syncing accounts created offline by QuickSaveService.
+  Future<void> importAccount(Account account) async {
+    if (_userId == null) throw Exception("User not logged in");
+
+    await _firestore
+        .collection('users')
+        .doc(_userId)
+        .collection('accounts')
+        .doc(account.id)
+        .set(account.toMap());
+
+    // Optimistically add to local list if not present
+    if (!_accounts.any((a) => a.id == account.id)) {
+      _accounts.add(account);
+      notifyListeners();
+    }
   }
 
   Future<void> updateAccount(Account account) async {
@@ -576,6 +603,18 @@ class AccountProvider with ChangeNotifier {
       return "${account.bankName} ${account.accountNumber}".trim();
     } catch (e) {
       return '';
+    }
+  }
+
+  Future<void> _cacheAccountsLocally() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final List<Map<String, dynamic>> accountsMap = _accounts
+          .map((e) => e.toMap())
+          .toList();
+      await prefs.setString(_prefAccountsCache, jsonEncode(accountsMap));
+    } catch (e) {
+      debugPrint("Error caching accounts locally: $e");
     }
   }
 

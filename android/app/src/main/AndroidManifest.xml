@@ -48,6 +48,12 @@
 
         </service>
 
+        <receiver android:name=".QuickSaveReceiver" android:exported="false">
+             <intent-filter>
+                <action android:name="com.kapav.wallzy.QUICK_SAVE_ACTION" />
+            </intent-filter>
+        </receiver>
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert'; // Added for JSON encoding
 
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -8,6 +9,8 @@ import '../../tag/services/tag_info.dart';
 import '../../auth/provider/auth_provider.dart';
 
 class MetaProvider with ChangeNotifier {
+  static const String _prefTagsCache =
+      'quick_save_tags_cache'; // Key for caching
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   AuthProvider authProvider; // Changed from final
   StreamSubscription? _tagsSubscription;
@@ -70,6 +73,8 @@ class MetaProvider with ChangeNotifier {
             .toList();
         _isLoading = false;
         notifyListeners();
+        // Save to local prefs for background service
+        _cacheTagsLocally();
       }
     } catch (e) {
       debugPrint("Tags cache load error: $e");
@@ -87,6 +92,8 @@ class MetaProvider with ChangeNotifier {
               .toList();
           _isLoading = false;
           notifyListeners();
+          // Save to local prefs for background service
+          _cacheTagsLocally();
         });
   }
 
@@ -280,5 +287,17 @@ class MetaProvider with ChangeNotifier {
   List<Tag> getActiveEventFolders() {
     // Return tags that have Event Mode enabled locally
     return _tags.where((t) => _eventModeTagIds.contains(t.id)).toList();
+  }
+
+  Future<void> _cacheTagsLocally() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final List<Map<String, dynamic>> tagsMap = _tags
+          .map((e) => e.toMap())
+          .toList();
+      await prefs.setString(_prefTagsCache, jsonEncode(tagsMap));
+    } catch (e) {
+      debugPrint("Error caching tags locally: $e");
+    }
   }
 }

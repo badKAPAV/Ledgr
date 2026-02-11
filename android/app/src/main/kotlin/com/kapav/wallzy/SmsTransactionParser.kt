@@ -18,8 +18,8 @@ import java.util.UUID
 object SmsTransactionParser {
 
     private const val TAG = "SmsTransactionParser"
-    const val PREFS_NAME = "SmsPendingTransactions"
-    const val KEY_PENDING_TRANSACTIONS = "pending_transactions"
+    const val PREFS_NAME = "FlutterSharedPreferences"
+    const val KEY_PENDING_TRANSACTIONS = "flutter.pending_sms_transactions"
 
     // --- CATEGORY KEYWORDS ---
     private val groceryKeywords = listOf("bigbasket", "blinkit", "zepto", "instamart", "grofers", "dmart", "reliance fresh", "nature's basket", "kirana", "supermarket", "vegetable", "fruit", "grocery")
@@ -266,7 +266,8 @@ object SmsTransactionParser {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
-            .addAction(0, "Add to Ledgr", pendingIntent)
+            .addAction(0, "Edit", pendingIntent)
+            .addAction(0, "Quick Save", getQuickSavePendingIntent(context, notificationId, transactionJson))
             .build()
 
         notificationManager.notify(notificationId, notification)
@@ -276,6 +277,50 @@ object SmsTransactionParser {
         val intent = Intent("com.kapav.wallzy.NEW_PENDING_SMS_ACTION")
         intent.setPackage(context.packageName)
         context.sendBroadcast(intent)
+    }
+
+    private fun getQuickSavePendingIntent(context: Context, notificationId: Int, transactionJson: String): PendingIntent {
+        val intent = Intent(context, QuickSaveReceiver::class.java).apply {
+            action = "com.kapav.wallzy.QUICK_SAVE_ACTION"
+            putExtra("notification_id", notificationId)
+            putExtra("transaction_json", transactionJson)
+        }
+        return PendingIntent.getBroadcast(
+            context,
+            notificationId,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+    }
+
+    fun removeTransaction(context: Context, id: String) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val existingJson = prefs.getString(KEY_PENDING_TRANSACTIONS, "[]")
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        try {
+            val jsonArray = JSONArray(existingJson)
+            val newList = JSONArray()
+            var removed = false
+            for (i in 0 until jsonArray.length()) {
+                val obj = jsonArray.getJSONObject(i)
+                if (obj.getString("id") == id) {
+                    val notificationId = obj.optInt("notificationId", -1)
+                    if (notificationId != -1) {
+                        notificationManager.cancel(notificationId)
+                    }
+                    removed = true
+                } else {
+                    newList.put(obj)
+                }
+            }
+            if (removed) {
+                prefs.edit().putString(KEY_PENDING_TRANSACTIONS, newList.toString()).apply()
+                Log.d(TAG, "Removed transaction $id")
+            }
+        } catch (e: JSONException) {
+            Log.e(TAG, "Error removing transaction", e)
+        }
     }
 }
 

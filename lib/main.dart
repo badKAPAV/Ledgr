@@ -3,6 +3,7 @@ import 'package:wallzy/core/themes/theme_provider.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -29,12 +30,15 @@ import 'package:wallzy/firebase_options.dart';
 import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wallzy/features/transaction/services/quick_save_service.dart';
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     if (task == SubscriptionService.dueSubscriptionTask) {
       await SubscriptionService.checkAndNotifyDueSubscriptions();
+    } else if (task == QuickSaveService.quickSaveTask) {
+      await QuickSaveService().processQuickSave(inputData ?? {});
     }
     return Future.value(true);
   });
@@ -97,8 +101,12 @@ void main() async {
     } catch (_) {}
   }
 
-  // Initialize and register the background task
-  await Workmanager().initialize(callbackDispatcher);
+  // Initialize and register the background task for SMS and Subscriptions
+  debugPrint("Initializing Workmanager...");
+  await Workmanager().initialize(
+    callbackDispatcher,
+    isInDebugMode: kDebugMode, // Use kDebugMode for better logging during dev
+  );
   Workmanager().registerPeriodicTask(
     "due-subscriptions-check", // Unique name
     SubscriptionService.dueSubscriptionTask,

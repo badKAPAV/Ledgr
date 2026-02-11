@@ -221,7 +221,7 @@ class _AppDrawerState extends State<AppDrawer> {
                   ),
                   _MinimalDrawerTile(
                     icon: HugeIcons.strokeRoundedAnalytics01,
-                    title: 'Reports',
+                    title: 'Reports & Categories',
                     isSelected: widget.selectedItem == DrawerItem.reports,
                     onTap: () => _handleNav(
                       context,
@@ -243,28 +243,8 @@ class _AppDrawerState extends State<AppDrawer> {
                   const SizedBox(height: 24), // Spacer between groups
                   // --- MANAGE SECTION ---
                   _MinimalDrawerTile(
-                    icon: HugeIcons.strokeRoundedRotate02,
-                    title: 'Recurring Payments',
-                    isSelected: widget.selectedItem == DrawerItem.subscriptions,
-                    onTap: () => _handleNav(
-                      context,
-                      const SubscriptionsScreen(),
-                      DrawerItem.subscriptions,
-                    ),
-                  ),
-                  _MinimalDrawerTile(
-                    icon: HugeIcons.strokeRoundedUserMultiple,
-                    title: 'People',
-                    isSelected: widget.selectedItem == DrawerItem.people,
-                    onTap: () => _handleNav(
-                      context,
-                      const PeopleScreen(),
-                      DrawerItem.people,
-                    ),
-                  ),
-                  _MinimalDrawerTile(
                     icon: HugeIcons.strokeRoundedFolder02,
-                    title: 'Folders',
+                    title: 'My Folders',
                     isSelected: widget.selectedItem == DrawerItem.folders,
                     onTap: () => _handleNav(
                       context,
@@ -273,13 +253,33 @@ class _AppDrawerState extends State<AppDrawer> {
                     ),
                   ),
                   _MinimalDrawerTile(
+                    icon: HugeIcons.strokeRoundedUserMultiple,
+                    title: 'People & Debts',
+                    isSelected: widget.selectedItem == DrawerItem.people,
+                    onTap: () => _handleNav(
+                      context,
+                      const PeopleScreen(),
+                      DrawerItem.people,
+                    ),
+                  ),
+                  _MinimalDrawerTile(
                     icon: HugeIcons.strokeRoundedPieChart06,
-                    title: 'Goals',
+                    title: 'Financial Goals',
                     isSelected: widget.selectedItem == DrawerItem.goals,
                     onTap: () => _handleNav(
                       context,
                       const GoalsScreen(),
                       DrawerItem.goals,
+                    ),
+                  ),
+                  _MinimalDrawerTile(
+                    icon: HugeIcons.strokeRoundedRotate02,
+                    title: 'Recurring Payments',
+                    isSelected: widget.selectedItem == DrawerItem.subscriptions,
+                    onTap: () => _handleNav(
+                      context,
+                      const SubscriptionsScreen(),
+                      DrawerItem.subscriptions,
                     ),
                   ),
 
@@ -311,7 +311,7 @@ class _AppDrawerState extends State<AppDrawer> {
                   ),
                   _MinimalDrawerTile(
                     icon: HugeIcons.strokeRoundedAiChat01,
-                    title: 'Feedback',
+                    title: 'Feedback & Issues',
                     isSelected: widget.selectedItem == DrawerItem.feedback,
                     onTap: () => _handleNav(
                       context,
