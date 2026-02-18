@@ -1,8 +1,10 @@
+// ignore_for_file: unused_field
+
 import 'package:collection/collection.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:wallzy/common/chart/custom_chart.dart';
 import 'package:wallzy/core/themes/theme.dart';
 import 'package:wallzy/features/accounts/models/account.dart';
 import 'package:wallzy/features/accounts/widgets/account_info_modal_sheet.dart';
@@ -12,6 +14,7 @@ import 'package:wallzy/features/transaction/models/transaction.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
 import 'package:wallzy/features/transaction/widgets/transactions_list/grouped_transaction_list.dart';
 import 'package:wallzy/features/transaction/widgets/transaction_detail_screen.dart';
+import 'package:wallzy/common/progress_bar/segmented_progress_bar.dart';
 
 class _MonthlySummary {
   final DateTime month;
@@ -187,10 +190,6 @@ class _AccountIncomeDetailsScreenState
     // The "Empty" space color needs to be visible on the dark 'inverseSurface' background
     final emptyColor = colorScheme.onSurface.withAlpha(38);
 
-    // Calculate Flex values for the bar segments
-    final int usedFlex = (utilization * 100).toInt();
-    final int availableFlex = ((1 - utilization) * 100).toInt();
-
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(24),
@@ -268,39 +267,14 @@ class _AccountIncomeDetailsScreenState
 
           const SizedBox(height: 12),
 
-          // Visual Ratio Bar (Split Rounded Containers)
-          SizedBox(
+          // Visual Ratio Bar (SegmentedProgressBar)
+          SegmentedProgressBar(
             height: 12,
-            child: Row(
-              children: [
-                // Used Portion
-                if (usedFlex > 0)
-                  Expanded(
-                    flex: usedFlex,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: healthColor,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-
-                // Gap (only if both parts exist)
-                if (usedFlex > 0 && availableFlex > 0) const SizedBox(width: 6),
-
-                // Available Portion
-                if (availableFlex > 0)
-                  Expanded(
-                    flex: availableFlex,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: emptyColor,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+            gap: 6,
+            segments: [
+              if (used > 0) Segment(value: used, color: healthColor),
+              if (available > 0) Segment(value: available, color: emptyColor),
+            ],
           ),
 
           const SizedBox(height: 16),
@@ -481,242 +455,36 @@ class _AccountIncomeDetailsScreenState
   }
 
   Widget _buildGraphSection(NumberFormat currencyFormat) {
-    const double barWidth = 50.0;
-    const double barSpacing = 24.0;
-    final double chartWidth =
-        _monthlySummaries.length * (barWidth + barSpacing) + 40;
     final appColors = Theme.of(context).extension<AppColors>()!;
 
-    return SizedBox(
-      height: 250,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 16, top: 10, right: 10),
-            child: SizedBox(
-              height: 190,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Max\n${currencyFormat.format(_maxAmount)}',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Mean (Paid)',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: appColors.income,
-                        ),
-                      ),
-                      Text(
-                        currencyFormat.format(_meanIncome),
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Mean (Used)',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: appColors.expense,
-                        ),
-                      ),
-                      Text(
-                        currencyFormat.format(_meanExpense),
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 1),
-                ],
-              ),
-            ),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              reverse: true,
-              child: SizedBox(
-                width: chartWidth,
-                height: 280,
-                child: Stack(
-                  children: [
-                    BarChart(_buildBarChartData(currencyFormat)),
-                    LineChart(_buildLineChartData(currencyFormat)),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  BarTouchData _buildBarTouchData() {
-    return BarTouchData(
-      touchTooltipData: BarTouchTooltipData(
-        tooltipPadding: EdgeInsets.zero,
-        getTooltipItem: (group, groupIndex, rod, rodIndex) => null,
-      ),
-      touchCallback: (FlTouchEvent event, barTouchResponse) {
-        if (event is FlTapUpEvent && barTouchResponse?.spot != null) {
-          final index = barTouchResponse!.spot!.touchedBarGroupIndex;
-          if (index >= 0 && index < _monthlySummaries.length) {
-            _selectMonth(_monthlySummaries[index].month);
-          }
-        }
-      },
-    );
-  }
-
-  BarChartData _buildBarChartData(NumberFormat currencyFormat) {
-    return BarChartData(
-      maxY: _maxAmount == 0 ? 1 : _maxAmount * 1.2,
-      barTouchData: _buildBarTouchData(),
-      titlesData: _buildTitlesData(currencyFormat),
-      borderData: FlBorderData(show: false),
-      gridData: const FlGridData(show: false),
-      barGroups: _buildBarGroups(context),
-      alignment: BarChartAlignment.spaceAround,
-    );
-  }
-
-  LineChartData _buildLineChartData(NumberFormat currencyFormat) {
-    final appColors = Theme.of(context).extension<AppColors>()!;
-    return LineChartData(
-      minY: 0,
-      maxY: _maxAmount == 0 ? 1 : _maxAmount * 1.2,
-      minX: 0,
-      maxX: _monthlySummaries.length.toDouble(),
-      gridData: const FlGridData(show: false),
-      titlesData: _buildTitlesData(currencyFormat, showLabels: false),
-      borderData: FlBorderData(show: false),
-      lineBarsData: [
-        LineChartBarData(
-          spots: List.generate(_monthlySummaries.length, (index) {
-            final summary = _monthlySummaries[index];
-            return FlSpot(index.toDouble() + 0.5, summary.totalIncome);
-          }),
-          isCurved: true,
-          color: appColors.income,
-          barWidth: 3,
-          isStrokeCapRound: true,
-          dotData: const FlDotData(show: true),
-          belowBarData: BarAreaData(show: false),
-        ),
-      ],
-    );
-  }
-
-  FlTitlesData _buildTitlesData(
-    NumberFormat currencyFormat, {
-    bool showLabels = true,
-  }) {
-    final appColors = Theme.of(context).extension<AppColors>()!;
-    return FlTitlesData(
-      show: true,
-      rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-      topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-      leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-      bottomTitles: AxisTitles(
-        sideTitles: SideTitles(
-          showTitles: true,
-          getTitlesWidget: (double value, TitleMeta meta) {
-            if (!showLabels) return const SizedBox.shrink();
-            final index = value.toInt();
-            if (index < 0 || index >= _monthlySummaries.length) {
-              return const SizedBox();
-            }
-
-            final summary = _monthlySummaries[index];
-            final isSelected = summary.month == _selectedMonth;
-
-            return SideTitleWidget(
-              meta: meta,
-              space: 12.0,
-              child: GestureDetector(
-                onTap: () => _selectMonth(summary.month),
-                child: AnimatedContainer(
-                  width: 70,
-                  padding: const EdgeInsets.all(6),
-                  decoration: isSelected
-                      ? BoxDecoration(
-                          color: Theme.of(context).colorScheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(8),
-                        )
-                      : null,
-                  duration: const Duration(milliseconds: 200),
-                  child: Column(
-                    children: [
-                      Text(
-                        DateFormat('MMM \'yy').format(summary.month),
-                        style: TextStyle(
-                          color: isSelected
-                              ? Theme.of(context).colorScheme.onPrimaryContainer
-                              : Theme.of(context).colorScheme.onSurface,
-                          fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        currencyFormat.format(
-                          summary.totalIncome,
-                        ), // Repayments
-                        style: TextStyle(color: appColors.income, fontSize: 10),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        currencyFormat.format(
-                          summary.totalExpense,
-                        ), // Purchases
-                        style: TextStyle(
-                          color: appColors.expense,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-          reservedSize: 77,
-        ),
-      ),
-    );
-  }
-
-  List<BarChartGroupData> _buildBarGroups(BuildContext context) {
-    final appColors = Theme.of(context).extension<AppColors>()!;
-
-    return List.generate(_monthlySummaries.length, (index) {
-      final summary = _monthlySummaries[index];
-      final isSelected = summary.month == _selectedMonth;
-      return BarChartGroupData(
-        x: index,
-        barRods: [
-          BarChartRodData(
-            toY: summary.totalExpense, // Purchases
-            color: isSelected
-                ? appColors.expense
-                : appColors.expense.withAlpha(80),
-            width: 25,
-            borderRadius: const BorderRadius.all(Radius.circular(4)),
-          ),
-        ],
+    // Map your monthly summaries into the data format the new chart expects
+    final chartData = _monthlySummaries.map((summary) {
+      return CustomChartData(
+        label: DateFormat('MMM \'yy').format(summary.month),
+        barValue: summary.totalExpense, // Expenses as the Bars
+        lineValue: summary.totalIncome, // Income as the Line
+        barTooltip: currencyFormat.format(summary.totalExpense),
+        lineTooltip: currencyFormat.format(summary.totalIncome),
       );
-    });
+    }).toList();
+
+    // Find the index of the currently selected month to highlight it
+    final selectedIdx = _monthlySummaries.indexWhere(
+      (s) => s.month == _selectedMonth,
+    );
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16.0),
+      child: CustomComboChart(
+        data: chartData,
+        selectedIndex: selectedIdx >= 0 ? selectedIdx : null,
+        barColor: appColors.expense,
+        lineColor: appColors.income,
+        onSelectedIndexChanged: (index) {
+          _selectMonth(_monthlySummaries[index].month);
+        },
+      ),
+    );
   }
 
   // --- REDESIGNED MONTHLY SUMMARY (Split Container Style) ---
@@ -743,14 +511,6 @@ class _AccountIncomeDetailsScreenState
     // Net Change: Positive means we paid off more than we spent (Good)
     final netChange = payments - spends;
     final totalVolume = payments + spends;
-
-    // Flex ratios
-    final int payFlex = totalVolume == 0
-        ? 0
-        : ((payments / totalVolume) * 100).toInt();
-    final int spendFlex = totalVolume == 0
-        ? 0
-        : ((spends / totalVolume) * 100).toInt();
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
@@ -822,39 +582,17 @@ class _AccountIncomeDetailsScreenState
             ),
             const SizedBox(height: 24),
 
-            // Visual Ratio Bar (Split Containers)
-            if (totalVolume > 0)
-              SizedBox(
-                height: 12,
-                child: Row(
-                  children: [
-                    // Payment Bar (Green)
-                    if (payFlex > 0)
-                      Expanded(
-                        flex: payFlex,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: appColors.income,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    // Gap
-                    if (payFlex > 0 && spendFlex > 0) const SizedBox(width: 6),
-                    // Spend Bar (Red)
-                    if (spendFlex > 0)
-                      Expanded(
-                        flex: spendFlex,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: appColors.expense,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
+            // Visual Ratio Bar (SegmentedProgressBar)
+            SegmentedProgressBar(
+              height: 12,
+              gap: 6,
+              segments: [
+                if (payments > 0)
+                  Segment(value: payments, color: appColors.income),
+                if (spends > 0)
+                  Segment(value: spends, color: appColors.expense),
+              ],
+            ),
 
             if (totalVolume > 0) const SizedBox(height: 20),
 

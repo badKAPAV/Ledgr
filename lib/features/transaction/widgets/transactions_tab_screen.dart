@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:wallzy/common/pie_chart/pie_chart_widget.dart';
-import 'package:wallzy/common/pie_chart/pie_model.dart';
+import 'package:wallzy/common/progress_bar/segmented_progress_bar.dart';
 import 'package:wallzy/core/themes/theme.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
@@ -223,7 +222,6 @@ class _NetFlowDashboard extends StatelessWidget {
       symbol: currencySymbol,
       decimalDigits: 0,
     );
-    final total = result.totalIncome + result.totalExpense;
 
     final theme = Theme.of(context);
     final appColors = theme.extension<AppColors>()!;
@@ -236,89 +234,62 @@ class _NetFlowDashboard extends StatelessWidget {
         borderRadius: BorderRadius.circular(32),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 1. Net Balance (Prominent)
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // --- NEW LEDGR PIE CHART ENGINE ---
-              SizedBox(
-                height: 100,
-                width: 100,
-                child: LedgrPieChart(
-                  thickness: 14,
-                  gap: 24,
-                  emptyColor: theme.colorScheme.surfaceContainerHighest
-                      .withAlpha(100),
-                  sections: (total > 0)
-                      ? [
-                          PieData(
-                            value: result.totalIncome,
-                            color: appColors.income,
-                          ),
-                          PieData(
-                            value: result.totalExpense,
-                            color: appColors.expense,
-                          ),
-                        ]
-                      : [], // Empty list triggers empty state
+              Text(
+                "NET BALANCE",
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.outline,
+                  letterSpacing: 1.5,
                 ),
               ),
-              const SizedBox(width: 24),
-
-              // --- BALANCE TEXT ---
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Net Balance",
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.outline,
-                      ),
-                    ),
-                    Text(
-                      currencyFormat.format(result.balance),
-                      style: theme.textTheme.displaySmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 32,
-                      ),
-                    ),
-                  ],
+              Text(
+                currencyFormat.format(result.balance),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  height: 1.0,
+                  fontFamily: 'momo',
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 24),
 
-          // --- FLOW ROWS ---
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest.withAlpha(128),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _FlowStat(
-                    label: "In",
-                    amount: result.totalIncome,
-                    color: appColors.income,
-                  ),
-                ),
-                Container(
-                  width: 1,
-                  height: 24,
-                  color: theme.colorScheme.outlineVariant,
-                ),
-                Expanded(
-                  child: _FlowStat(
-                    label: "Out",
-                    amount: result.totalExpense,
-                    color: appColors.expense,
-                  ),
-                ),
-              ],
-            ),
+          const SizedBox(height: 16),
+
+          // 2. Segmented Progress Bar (Comparison)
+          SegmentedProgressBar(
+            height: 12,
+            gap: 4.0,
+            borderRadius: BorderRadius.circular(6),
+            segments: [
+              Segment(value: result.totalIncome, color: appColors.income),
+              Segment(value: result.totalExpense, color: appColors.expense),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // 3. Labels (In vs Out)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _SimplifiedFlowStat(
+                icon: HugeIcons.strokeRoundedArrowDownRight01,
+                amount: result.totalIncome,
+                color: appColors.income,
+                isLeft: true,
+              ),
+              _SimplifiedFlowStat(
+                icon: HugeIcons.strokeRoundedArrowUpRight01,
+                amount: result.totalExpense,
+                color: appColors.expense,
+                isLeft: false,
+              ),
+            ],
           ),
         ],
       ),
@@ -326,41 +297,42 @@ class _NetFlowDashboard extends StatelessWidget {
   }
 }
 
-class _FlowStat extends StatelessWidget {
-  final String label;
+class _SimplifiedFlowStat extends StatelessWidget {
+  final dynamic icon;
   final double amount;
   final Color color;
+  final bool isLeft;
 
-  const _FlowStat({
-    required this.label,
+  const _SimplifiedFlowStat({
+    required this.icon,
     required this.amount,
     required this.color,
+    required this.isLeft,
   });
 
   @override
   Widget build(BuildContext context) {
+    // final theme = Theme.of(context);
     final settingsProvider = Provider.of<SettingsProvider>(context);
     final currencySymbol = settingsProvider.currencySymbol;
     final currencyFormat = NumberFormat.compactCurrency(
       symbol: currencySymbol,
       decimalDigits: 0,
     );
-    return Column(
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisAlignment: isLeft
+          ? MainAxisAlignment.start
+          : MainAxisAlignment.end,
       children: [
-        Text(
-          label.toUpperCase(),
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.outline,
-          ),
-        ),
-        const SizedBox(height: 4),
+        HugeIcon(icon: icon, size: 16, color: color),
+        const SizedBox(width: 4),
         Text(
           currencyFormat.format(amount),
           style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            fontWeight: FontWeight.w900,
             color: color,
           ),
         ),

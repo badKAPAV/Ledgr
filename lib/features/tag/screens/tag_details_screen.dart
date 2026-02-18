@@ -474,8 +474,8 @@ class _CategoryDonutPod extends StatelessWidget {
                   alignment: Alignment.center,
                   children: [
                     LedgrPieChart(
-                      thickness: 18,
-                      gap: 24, // Gap for visual separation
+                      thickness: 20,
+                      gap: 4, // Gap for visual separation
                       emptyColor: theme.colorScheme.surfaceContainerHighest
                           .withAlpha(100),
                       sections: sections,

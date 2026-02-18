@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:collection/collection.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -16,6 +17,7 @@ import 'package:wallzy/features/transaction/models/transaction.dart';
 class TransactionFilter {
   final DateTime? startDate;
   final DateTime? endDate;
+  final List<String>? accounts; // Added accounts filter
   final List<String>? categories;
   final List<Tag>? tags;
   final List<Person>? people;
@@ -27,6 +29,7 @@ class TransactionFilter {
   const TransactionFilter({
     this.startDate,
     this.endDate,
+    this.accounts,
     this.categories,
     this.tags,
     this.people,
@@ -41,6 +44,7 @@ class TransactionFilter {
   TransactionFilter copyWith({
     ValueGetter<DateTime?>? startDate,
     ValueGetter<DateTime?>? endDate,
+    ValueGetter<List<String>?>? accounts,
     ValueGetter<List<String>?>? categories,
     ValueGetter<List<Tag>?>? tags,
     ValueGetter<List<Person>?>? people,
@@ -52,6 +56,7 @@ class TransactionFilter {
     return TransactionFilter(
       startDate: startDate != null ? startDate() : this.startDate,
       endDate: endDate != null ? endDate() : this.endDate,
+      accounts: accounts != null ? accounts() : this.accounts,
       categories: categories != null ? categories() : this.categories,
       tags: tags != null ? tags() : this.tags,
       people: people != null ? people() : this.people,
@@ -73,6 +78,7 @@ class TransactionFilter {
           runtimeType == other.runtimeType &&
           startDate == other.startDate &&
           endDate == other.endDate &&
+          const ListEquality().equals(accounts, other.accounts) &&
           const ListEquality().equals(categories, other.categories) &&
           const ListEquality().equals(tags, other.tags) &&
           const ListEquality().equals(people, other.people) &&
@@ -88,6 +94,7 @@ class TransactionFilter {
     type,
     minAmount,
     maxAmount,
+    const ListEquality().hash(accounts),
     const ListEquality().hash(categories),
     const ListEquality().hash(tags),
     const ListEquality().hash(people),
@@ -450,6 +457,20 @@ class TransactionProvider with ChangeNotifier, WidgetsBindingObserver {
           .collection('transactions')
           .doc(transaction.transactionId)
           .set(_transactionToMapWithPeople(transaction));
+
+      // Handle Linking
+      if (transaction.linkedTransactionId != null) {
+        final linkedTx = _transactions.firstWhereOrNull(
+          (t) => t.transactionId == transaction.linkedTransactionId,
+        );
+        if (linkedTx != null) {
+          final updatedLinkedTx = linkedTx.copyWith(
+            isTransfer: true,
+            linkedTransactionId: () => transaction.transactionId,
+          );
+          await updateTransaction(updatedLinkedTx);
+        }
+      }
     } finally {
       _isSaving = false;
       notifyListeners();
@@ -564,6 +585,121 @@ class TransactionProvider with ChangeNotifier, WidgetsBindingObserver {
     }
   }
 
+  Future<void> linkTransactions(
+    TransactionModel t1,
+    TransactionModel t2,
+  ) async {
+    final user = authProvider.user;
+    if (user == null) return;
+    _isSaving = true;
+    notifyListeners();
+
+    try {
+      final updatedT1 = t1.copyWith(
+        isTransfer: true,
+        linkedTransactionId: () => t2.transactionId,
+      );
+      final updatedT2 = t2.copyWith(
+        isTransfer: true,
+        linkedTransactionId: () => t1.transactionId,
+      );
+
+      final batch = _firestore.batch();
+      batch.update(
+        _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('transactions')
+            .doc(t1.transactionId),
+        {'isTransfer': true, 'linkedTransactionId': t2.transactionId},
+      );
+      batch.update(
+        _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('transactions')
+            .doc(t2.transactionId),
+        {'isTransfer': true, 'linkedTransactionId': t1.transactionId},
+      );
+
+      await batch.commit();
+
+      // Optimistic local update (provider listener handles snapshot too but this is instant)
+      final idx1 = _transactions.indexWhere(
+        (t) => t.transactionId == t1.transactionId,
+      );
+      if (idx1 != -1) _transactions[idx1] = updatedT1;
+
+      final idx2 = _transactions.indexWhere(
+        (t) => t.transactionId == t2.transactionId,
+      );
+      if (idx2 != -1) _transactions[idx2] = updatedT2;
+    } catch (e) {
+      debugPrint("Failed to link transactions: $e");
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> unlinkTransaction(TransactionModel transaction) async {
+    final user = authProvider.user;
+    if (user == null) return;
+
+    if (transaction.linkedTransactionId == null) return;
+
+    _isSaving = true;
+    notifyListeners();
+
+    try {
+      final linkedId = transaction.linkedTransactionId!;
+      final linkedTx = _transactions.firstWhereOrNull(
+        (t) => t.transactionId == linkedId,
+      );
+
+      final batch = _firestore.batch();
+
+      // Update current transaction
+      batch.update(
+        _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('transactions')
+            .doc(transaction.transactionId),
+        {'isTransfer': false, 'linkedTransactionId': null},
+      );
+
+      // Update linked transaction if it exists
+      if (linkedTx != null) {
+        batch.update(
+          _firestore
+              .collection('users')
+              .doc(user.uid)
+              .collection('transactions')
+              .doc(linkedId),
+          {'isTransfer': false, 'linkedTransactionId': null},
+        );
+      } else {
+        // Even if not in local list, attempt update in DB
+        batch.update(
+          _firestore
+              .collection('users')
+              .doc(user.uid)
+              .collection('transactions')
+              .doc(linkedId),
+          {'isTransfer': false, 'linkedTransactionId': null},
+        );
+      }
+
+      await batch.commit();
+    } catch (e) {
+      debugPrint("Failed to unlink transactions: $e");
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+  }
+
   FilterResult getFilteredResults(TransactionFilter filter) {
     final filteredList = _transactions.where((t) {
       final inRange =
@@ -571,6 +707,8 @@ class TransactionProvider with ChangeNotifier, WidgetsBindingObserver {
               !t.timestamp.isBefore(filter.startDate!)) &&
           (filter.endDate == null || t.timestamp.isBefore(filter.endDate!));
       if (!inRange) return false;
+      // Filter out transfer parts if user wants purely income/expense view?
+      // For now, keep as is unless specified.
       final typeMatch = filter.type == null || t.type == filter.type;
       if (!typeMatch) return false;
       final categoryMatch =
@@ -595,6 +733,11 @@ class TransactionProvider with ChangeNotifier, WidgetsBindingObserver {
               ) ??
               false);
       if (!tagMatch) return false;
+      final accountMatch =
+          filter.accounts == null ||
+          filter.accounts!.isEmpty ||
+          (t.accountId != null && filter.accounts!.contains(t.accountId));
+      if (!accountMatch) return false;
       final personMatch =
           filter.people == null ||
           filter.people!.isEmpty ||
@@ -607,20 +750,85 @@ class TransactionProvider with ChangeNotifier, WidgetsBindingObserver {
       return true;
     }).toList();
 
+    // Filtered list is ready. Now calculate totals with linking logic.
     double income = 0.0;
     double expense = 0.0;
+
+    // We need to track processed linked transactions to avoid double counting
+    // if both sides of the link are present in the filtered list.
+    final processedLinkedIds = <String>{};
+
     for (final t in filteredList) {
-      if (t.type == 'income') {
-        income += t.amount;
-      } else if (t.type == 'expense' && t.purchaseType == 'debit') {
-        expense += t.amount;
+      if (t.isTransfer == true && t.linkedTransactionId != null) {
+        if (processedLinkedIds.contains(t.transactionId)) continue;
+
+        // Find the linked transaction
+        // It might be in the filtered list or outside (if outside, we still probably want to net it against this one?)
+        // The user requirement is "Linked Transactions should only contribute their net to the expenses or income."
+        // Usually this implies we look at the pair.
+
+        final linkedTx = _transactions.firstWhereOrNull(
+          (lt) => lt.transactionId == t.linkedTransactionId,
+        );
+
+        if (linkedTx != null) {
+          // Mark both as processed for this calculation loop so we don't double count the pair
+          // if both are in the current view.
+          processedLinkedIds.add(t.transactionId);
+          processedLinkedIds.add(linkedTx.transactionId);
+
+          double amount1 = t.type == 'income' ? t.amount : -t.amount;
+          double amount2 = linkedTx.type == 'income'
+              ? linkedTx.amount
+              : -linkedTx.amount;
+          double net = amount1 + amount2;
+
+          if (net > 0) {
+            income += net;
+          } else {
+            expense += net.abs();
+          }
+        } else {
+          // Fallback if linked tx not found (shouldn't happen often)
+          if (t.type == 'income') {
+            income += t.amount;
+          } else if (t.type == 'expense') {
+            expense += t.amount;
+          }
+        }
+      } else {
+        // Normal transaction
+        if (t.type == 'income') {
+          income += t.amount;
+        } else if (t.type == 'expense' && t.purchaseType == 'debit') {
+          expense += t.amount;
+        }
       }
     }
+
     return FilterResult(
       transactions: filteredList,
       totalIncome: income,
       totalExpense: expense,
     );
+  }
+
+  // Helper method for AnalyticsWidget to get net totals for a specific range/type
+  double getNetTotal({
+    required DateTime start,
+    required DateTime end,
+    required String type, // 'income' or 'expense'
+  }) {
+    // Reuse getFilteredResults to get net amounts
+    final result = getFilteredResults(
+      TransactionFilter(startDate: start, endDate: end),
+    );
+
+    if (type == 'income') {
+      return result.totalIncome;
+    } else {
+      return result.totalExpense;
+    }
   }
 
   double getTotal({

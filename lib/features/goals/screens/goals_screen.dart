@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:wallzy/app_drawer.dart';
 import 'package:wallzy/common/widgets/empty_report_placeholder.dart';
 import 'package:wallzy/features/goals/provider/goals_provider.dart';
 import 'package:wallzy/features/accounts/provider/account_provider.dart';
@@ -12,6 +11,7 @@ import 'package:wallzy/features/goals/screens/add_edit_goal_screen.dart';
 import 'package:wallzy/features/goals/screens/goal_details_modal_sheet.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/common/icon_picker/icons.dart';
+import 'package:wallzy/common/progress_bar/segmented_progress_bar.dart';
 
 class GoalsScreen extends StatefulWidget {
   const GoalsScreen({super.key});
@@ -21,90 +21,10 @@ class GoalsScreen extends StatefulWidget {
 }
 
 class _GoalsScreenState extends State<GoalsScreen> {
-  bool _isSearching = false;
-  String _searchQuery = '';
-  final TextEditingController _searchController = TextEditingController();
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  void _startSearch() {
-    setState(() {
-      _isSearching = true;
-    });
-  }
-
-  void _stopSearch() {
-    setState(() {
-      _isSearching = false;
-      _searchQuery = '';
-      _searchController.clear();
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: const AppDrawer(selectedItem: DrawerItem.goals, isRoot: false),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        surfaceTintColor: Colors.transparent,
-        centerTitle: true,
-        automaticallyImplyLeading: false,
-        leading: const DrawerButton(),
-        title: _isSearching
-            ? TextField(
-                controller: _searchController,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  hintText: "Search goals",
-                  border: InputBorder.none,
-                  hintStyle: TextStyle(color: Colors.grey),
-                ),
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: 18,
-                ),
-                onChanged: (val) {
-                  setState(() {
-                    _searchQuery = val;
-                  });
-                },
-              )
-            : const Text(
-                "Financial Goals",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-        actions: [
-          IconButton.filledTonal(
-            tooltip: 'Search',
-            onPressed: () {
-              if (_isSearching) {
-                _stopSearch();
-              } else {
-                _startSearch();
-              }
-            },
-            icon: HugeIcon(
-              icon: _isSearching
-                  ? HugeIcons.strokeRoundedCancel01
-                  : HugeIcons.strokeRoundedSearch01,
-              strokeWidth: 2,
-              size: 20,
-            ),
-            style: IconButton.styleFrom(
-              backgroundColor: Theme.of(
-                context,
-              ).colorScheme.surfaceContainerHighest,
-            ),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
       floatingActionButton: _buildGlassFab(context),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       body: Consumer3<GoalsProvider, AccountProvider, TransactionProvider>(
@@ -139,25 +59,17 @@ class _GoalsScreenState extends State<GoalsScreen> {
             return _GoalStat(goal: goal, currentAmount: currentAmount);
           }).toList();
 
-          // Filter
-          final filteredStats = goalStats.where((stat) {
-            final matchesSearch = stat.goal.title.toLowerCase().contains(
-              _searchQuery.toLowerCase(),
-            );
-            return matchesSearch;
-          }).toList();
-
           return CustomScrollView(
             physics: const BouncingScrollPhysics(),
             slivers: [
-              if (filteredStats.isNotEmpty)
+              if (goalStats.isNotEmpty)
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(24, 8, 24, 12),
                     child: Row(
                       children: [
                         Text(
-                          _isSearching ? "SEARCH RESULTS" : "ALL GOALS",
+                          "ALL GOALS",
                           style: Theme.of(context).textTheme.labelSmall
                               ?.copyWith(
                                 fontWeight: FontWeight.bold,
@@ -178,7 +90,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
-                            "${filteredStats.length}",
+                            "${goalStats.length}",
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
@@ -191,22 +103,19 @@ class _GoalsScreenState extends State<GoalsScreen> {
                   ),
                 ),
 
-              if (filteredStats.isEmpty)
+              if (goalStats.isEmpty)
                 SliverFillRemaining(
                   hasScrollBody: false,
                   child: EmptyReportPlaceholder(
-                    message: _isSearching
-                        ? "No goals found"
-                        : "Set your first financial goal!",
+                    message: "Set your first financial goal!",
                     icon: HugeIcons.strokeRoundedTarget02,
                   ),
                 )
               else
                 SliverList(
                   delegate: SliverChildBuilderDelegate(
-                    (context, index) =>
-                        _FunkyGoalTile(stat: filteredStats[index]),
-                    childCount: filteredStats.length,
+                    (context, index) => _FunkyGoalTile(stat: goalStats[index]),
+                    childCount: goalStats.length,
                   ),
                 ),
 
@@ -396,14 +305,18 @@ class _FunkyGoalTile extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               // Progress Bar
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 6,
-                  backgroundColor: colorScheme.surfaceContainerHighest,
-                  valueColor: AlwaysStoppedAnimation<Color>(goalColor),
-                ),
+              SegmentedProgressBar(
+                height: 6,
+                gap: 4.0,
+                borderRadius: BorderRadius.circular(3),
+                segments: [
+                  Segment(value: stat.currentAmount, color: goalColor),
+                  if (stat.currentAmount < stat.goal.targetAmount)
+                    Segment(
+                      value: stat.goal.targetAmount - stat.currentAmount,
+                      color: colorScheme.surfaceContainerHighest,
+                    ),
+                ],
               ),
               const SizedBox(height: 8),
               // Current Amount

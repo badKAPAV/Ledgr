@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:wallzy/features/accounts/screens/add_edit_account_screen.dart';
-import 'package:wallzy/features/settings/screens/app_settings_screen.dart';
+import 'package:wallzy/features/settings/screens/settings_screen.dart';
 import 'package:wallzy/features/transaction/screens/add_edit_transaction_screen.dart';
 
 class HomeEmptyState extends StatelessWidget {

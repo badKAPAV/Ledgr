@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
 import 'package:wallzy/features/transaction/provider/transaction_list_item.dart';
+import 'package:wallzy/features/settings/provider/settings_provider.dart';
 
 class GroupedTransactionList extends StatelessWidget {
   final List<TransactionModel> transactions;
@@ -80,19 +82,40 @@ class GroupedTransactionList extends StatelessWidget {
     final transactionsForDate = groupedTransactions[dateKey]!;
     final theme = Theme.of(context);
 
+    final totalExpense = transactionsForDate
+        .where((tx) => tx.type == 'expense')
+        .fold(0.0, (sum, tx) => sum + tx.amount);
+
+    final settingsProvider = Provider.of<SettingsProvider>(context);
+    final currencySymbol = settingsProvider.currencySymbol;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: EdgeInsets.fromLTRB(24, index == 0 ? 8 : 16, 24, 8),
-          child: Text(
-            dateKey.toUpperCase(),
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
-              color: theme.colorScheme.secondary,
-            ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                dateKey.toUpperCase(),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                  color: theme.colorScheme.secondary,
+                ),
+              ),
+              if (totalExpense > 0)
+                Text(
+                  "- ${NumberFormat.currency(symbol: currencySymbol, decimalDigits: 0).format(totalExpense)}",
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                    color: theme.colorScheme.error.withAlpha(200),
+                  ),
+                ),
+            ],
           ),
         ),
         // UPDATED: iterate with index to determine first/last

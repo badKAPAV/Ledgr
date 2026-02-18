@@ -1,3 +1,4 @@
+import 'package:wallzy/common/app_lock/app_lock_provider.dart';
 import 'package:wallzy/core/services/sms_rule_service.dart';
 import 'package:wallzy/core/themes/theme_provider.dart';
 import 'package:dynamic_color/dynamic_color.dart';
@@ -20,6 +21,7 @@ import 'package:wallzy/features/subscription/provider/subscription_provider.dart
 import 'package:wallzy/features/subscription/services/subscription_service.dart';
 import 'package:wallzy/features/people/provider/people_provider.dart';
 import 'package:wallzy/features/goals/provider/goals_provider.dart';
+import 'package:wallzy/features/planning/provider/budget_provider.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:wallzy/core/themes/theme.dart';
 import 'package:wallzy/features/auth/provider/auth_provider.dart';
@@ -126,6 +128,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => FeedbackProvider()),
         ChangeNotifierProvider(create: (_) => SmsFeedbackProvider()),
         ChangeNotifierProvider(create: (_) => HomeWidgetsProvider()),
+        ChangeNotifierProvider(create: (_) => AppLockProvider()),
         ChangeNotifierProxyProvider<AuthProvider, AccountProvider>(
           create: (_) => AccountProvider(),
           update: (_, auth, previousAccountProvider) {
@@ -180,6 +183,22 @@ void main() async {
             authProvider: Provider.of<AuthProvider>(context, listen: false),
           ),
           update: (_, auth, previous) => previous!..updateAuthProvider(auth),
+        ),
+        ChangeNotifierProxyProvider2<
+          AuthProvider,
+          TransactionProvider,
+          BudgetProvider
+        >(
+          create: (context) => BudgetProvider(
+            authProvider: Provider.of<AuthProvider>(context, listen: false),
+            transactionProvider: Provider.of<TransactionProvider>(
+              context,
+              listen: false,
+            ),
+          ),
+          update: (_, auth, transactions, previous) => previous!
+            ..updateAuthProvider(auth)
+            ..updateTransactionProvider(transactions),
         ),
       ],
       child: const MyApp(),

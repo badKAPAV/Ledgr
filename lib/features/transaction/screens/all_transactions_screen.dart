@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:wallzy/common/tabbar/custom_tab_bar.dart';
 import 'package:wallzy/features/transaction/screens/search_transactions_screen.dart';
 import 'package:wallzy/features/transaction/widgets/categories_tab_screen.dart';
 import 'package:wallzy/features/transaction/widgets/transactions_tab_screen.dart';
@@ -31,42 +32,44 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final height = MediaQuery.of(context).size.height;
+
     return Scaffold(
       drawer: const AppDrawer(selectedItem: DrawerItem.reports, isRoot: false),
       appBar: AppBar(
-        title: const Text('Reports'),
+        toolbarHeight: height * 0.08,
+        title: CustomTabBar(
+          tabs: [
+            CustomTabItem(
+              label: 'History',
+              icon: HugeIcons.strokeRoundedTransactionHistory,
+            ),
+            CustomTabItem(
+              label: 'Categories',
+              icon: HugeIcons.strokeRoundedPieChart02,
+            ),
+          ],
+          controller: _tabController,
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        ),
         centerTitle: true,
         automaticallyImplyLeading: false,
         leading: const DrawerButton(),
         surfaceTintColor: Colors.transparent,
-        bottom: TabBar(
-          unselectedLabelStyle: Theme.of(context).textTheme.bodyMedium
-              ?.copyWith(
-                fontWeight: FontWeight.normal,
-                // color: Theme.of(context).colorScheme.primary,
-              ),
-          indicatorWeight: 5,
-          indicator: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary, // indicator color
-            borderRadius: BorderRadius.circular(25), // rounded edges
-          ),
-          indicatorPadding: EdgeInsets.fromLTRB(0, 45, 0, 0),
-          dividerColor: Colors.transparent,
-          indicatorSize: TabBarIndicatorSize.label,
-          controller: _tabController,
-          labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          unselectedLabelColor: Theme.of(
-            context,
-          ).colorScheme.onSurfaceVariant.withAlpha(150),
-          tabs: const [
-            Tab(text: 'Transactions'),
-            Tab(text: 'Categories'),
-            // Tab(text: 'People'),
-          ],
-        ),
+        // bottom: CustomTabBar(
+        //   tabs: [
+        //     CustomTabItem(
+        //       label: 'Transactions',
+        //       icon: HugeIcons.strokeRoundedTransactionHistory,
+        //     ),
+        //     CustomTabItem(
+        //       label: 'Categories',
+        //       icon: HugeIcons.strokeRoundedPieChart02,
+        //     ),
+        //   ],
+        //   controller: _tabController,
+        //   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        // ),
         actions: [
           IconButton.filledTonal(
             onPressed: () {

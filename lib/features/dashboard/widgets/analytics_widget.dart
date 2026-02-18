@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -39,42 +40,58 @@ class AnalyticsWidget extends StatefulWidget {
   State<AnalyticsWidget> createState() => _AnalyticsWidgetState();
 }
 
-class _AnalyticsWidgetState extends State<AnalyticsWidget> {
-  int? _selectedIndex;
+class _AnalyticsWidgetState extends State<AnalyticsWidget>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
 
-  // Cache max values for stable animation
-  double _absMaxPositive = 1.0;
-  double _absMaxNegative = 1.0;
+  int _selectedIndex = -1; // -1 means show latest/default
+  double _maxY = 1.0;
   List<_PeriodSummary> _summaries = [];
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+    _animation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutQuart,
+    );
     _calculateSummaries();
+    _controller.forward();
   }
 
   @override
   void didUpdateWidget(covariant AnalyticsWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.selectedTimeframe != widget.selectedTimeframe) {
-      _selectedIndex = null; // Reset before recalculating
       _calculateSummaries();
+      _controller.reset();
+      _controller.forward();
     }
   }
 
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   void _calculateSummaries() {
-    final txProvider = Provider.of<TransactionProvider>(context);
+    final txProvider = Provider.of<TransactionProvider>(context, listen: false);
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     final now = DateTime.now();
 
     List<_PeriodSummary> newSummaries = [];
-    double maxPos = 0;
-    double maxNeg = 0;
+    double localMax = 0;
 
-    // Show 6 bars for good density
-    int barCount = 6;
+    // 7 points for a nice curve
+    int pointCount = 7;
 
-    for (int i = barCount - 1; i >= 0; i--) {
+    for (int i = pointCount - 1; i >= 0; i--) {
       DateTimeRange range;
       String label;
       String fullLabel;
@@ -122,19 +139,19 @@ class _AnalyticsWidgetState extends State<AnalyticsWidget> {
           break;
       }
 
-      final income = txProvider.getTotal(
+      final income = txProvider.getNetTotal(
         start: range.start,
         end: range.end,
         type: 'income',
       );
-      final expense = txProvider.getTotal(
+      final expense = txProvider.getNetTotal(
         start: range.start,
         end: range.end,
         type: 'expense',
       );
 
-      if (income > maxPos) maxPos = income;
-      if (expense > maxNeg) maxNeg = expense;
+      if (income > localMax) localMax = income;
+      if (expense > localMax) localMax = expense;
 
       newSummaries.add(
         _PeriodSummary(
@@ -149,10 +166,26 @@ class _AnalyticsWidgetState extends State<AnalyticsWidget> {
 
     setState(() {
       _summaries = newSummaries;
-      _absMaxPositive = maxPos > 0 ? maxPos : 1.0;
-      _absMaxNegative = maxNeg > 0 ? maxNeg : 1.0;
-      _selectedIndex ??= _summaries.length - 1;
+      _maxY = localMax > 0 ? localMax * 1.1 : 1.0; // Add 10% breathing room
+      _selectedIndex = _summaries.length - 1; // Default to latest
     });
+  }
+
+  void _handleTouch(Offset localPosition, double width) {
+    if (_summaries.isEmpty) return;
+    final step = width / (_summaries.length - 1);
+    // Find closest index
+    int index = (localPosition.dx / step).round().clamp(
+      0,
+      _summaries.length - 1,
+    );
+
+    if (index != _selectedIndex) {
+      HapticFeedback.selectionClick();
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
   }
 
   @override
@@ -162,82 +195,64 @@ class _AnalyticsWidgetState extends State<AnalyticsWidget> {
     final currencySymbol = settings.currencySymbol;
     final appColors = theme.extension<AppColors>()!;
 
-    final selectedData =
-        (_selectedIndex != null && _selectedIndex! < _summaries.length)
-        ? _summaries[_selectedIndex!]
-        : _summaries.last;
+    final selectedData = _summaries.isNotEmpty
+        ? _summaries[_selectedIndex]
+        : _PeriodSummary(
+            label: '',
+            fullDateLabel: '',
+            income: 0,
+            expense: 0,
+            range: DateTimeRange(start: DateTime.now(), end: DateTime.now()),
+          );
 
     return Container(
-      clipBehavior: Clip.none,
+      height: 240, // Fixed height as requested
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(32),
         border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+          color: theme.colorScheme.outlineVariant.withOpacity(0.3),
         ),
       ),
       child: Stack(
-        clipBehavior: Clip.none,
         children: [
-          // 1. Main Content Column (Graph + Spacer for Header)
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Spacer to prevent graph from overlapping the header row
-              // The header row is approx 58px tall
-              const SizedBox(height: 72),
+              const SizedBox(height: 56),
 
-              // 2. The Graph Area
-              SizedBox(
-                height: 120,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final double totalMagnitude =
-                        _absMaxPositive + _absMaxNegative;
-                    final double positiveRatio = totalMagnitude == 0
-                        ? 0.5
-                        : _absMaxPositive / totalMagnitude;
-
-                    const double labelHeight = 24.0;
-
-                    return TweenAnimationBuilder<double>(
-                      tween: Tween<double>(begin: 0.5, end: positiveRatio),
-                      duration: const Duration(milliseconds: 600),
-                      curve: Curves.easeOutCubic,
-                      builder: (context, animatedRatio, child) {
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: _summaries.asMap().entries.map((entry) {
-                            final index = entry.key;
-                            final data = entry.value;
-                            final isSelected = _selectedIndex == index;
-
-                            return Expanded(
-                              child: GestureDetector(
-                                behavior: HitTestBehavior.opaque,
-                                onTapDown: (_) {
-                                  HapticFeedback.selectionClick();
-                                  setState(() {
-                                    _selectedIndex = index;
-                                  });
-                                },
-                                child: _GraphBar(
-                                  data: data,
-                                  isSelected: isSelected,
-                                  parentHeight: constraints.maxHeight,
-                                  positiveRatio: animatedRatio,
-                                  maxPositive: _absMaxPositive,
-                                  maxNegative: _absMaxNegative,
-                                  labelHeight: labelHeight,
-                                  theme: theme,
-                                  appColors: appColors,
-                                  currencySymbol: currencySymbol,
-                                ),
-                              ),
-                            );
-                          }).toList(),
+              // 2. The Line Chart
+              Expanded(
+                child: AnimatedBuilder(
+                  animation: _animation,
+                  builder: (context, child) {
+                    return LayoutBuilder(
+                      builder: (context, constraints) {
+                        return GestureDetector(
+                          onHorizontalDragUpdate: (details) => _handleTouch(
+                            details.localPosition,
+                            constraints.maxWidth,
+                          ),
+                          onTapDown: (details) => _handleTouch(
+                            details.localPosition,
+                            constraints.maxWidth,
+                          ),
+                          child: CustomPaint(
+                            size: Size(
+                              constraints.maxWidth,
+                              constraints.maxHeight,
+                            ),
+                            painter: _SplineChartPainter(
+                              data: _summaries,
+                              maxY: _maxY,
+                              selectedIndex: _selectedIndex,
+                              animationValue: _animation.value,
+                              theme: theme,
+                              incomeColor: appColors.income,
+                              expenseColor: appColors.expense,
+                            ),
+                          ),
                         );
                       },
                     );
@@ -246,9 +261,6 @@ class _AnalyticsWidgetState extends State<AnalyticsWidget> {
               ),
             ],
           ),
-
-          // 2. Floating Header Row (Pill + Stats)
-          // Using Positioned + Row ensures the expansion floats over the graph
           Positioned(
             top: 0,
             left: 0,
@@ -256,14 +268,11 @@ class _AnalyticsWidgetState extends State<AnalyticsWidget> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Date Selector (Left, Fixed Width)
                 _TimeframePill(
                   selected: widget.selectedTimeframe,
                   onChanged: widget.onTimeframeChanged,
                 ),
                 const SizedBox(width: 8),
-
-                // Stats (Right, Expanded)
                 Expanded(
                   child: Row(
                     children: [
@@ -296,7 +305,226 @@ class _AnalyticsWidgetState extends State<AnalyticsWidget> {
   }
 }
 
-// --- SUB WIDGETS ---
+// --- PAINTER: The Core Visualization ---
+
+class _SplineChartPainter extends CustomPainter {
+  final List<_PeriodSummary> data;
+  final double maxY;
+  final int selectedIndex;
+  final double animationValue;
+  final ThemeData theme;
+  final Color incomeColor;
+  final Color expenseColor;
+
+  _SplineChartPainter({
+    required this.data,
+    required this.maxY,
+    required this.selectedIndex,
+    required this.animationValue,
+    required this.theme,
+    required this.incomeColor,
+    required this.expenseColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (data.isEmpty) return;
+
+    final double w = size.width;
+    final double h = size.height;
+    // Reserve bottom space for labels
+    final double chartH = h - 20;
+    final double stepX = w / (data.length - 1);
+
+    // 1. Draw Grid/Baseline
+    final linePaint = Paint()
+      ..color = theme.colorScheme.outlineVariant.withOpacity(0.2)
+      ..strokeWidth = 1;
+    canvas.drawLine(Offset(0, chartH), Offset(w, chartH), linePaint);
+
+    // Helper to get Points
+    Offset getPoint(int i, double value) {
+      final x = i * stepX;
+      // Invert Y because canvas 0 is top
+      final y = chartH - ((value / maxY) * chartH * animationValue);
+      return Offset(x, y);
+    }
+
+    // 2. Build Paths (Catmull-Rom Spline for smoothness)
+    final Path incomePath = Path();
+    final Path expensePath = Path();
+
+    // Fill Paths (for gradients)
+    final Path incomeFill = Path();
+    final Path expenseFill = Path();
+
+    if (data.isNotEmpty) {
+      incomePath.moveTo(
+        getPoint(0, data[0].income).dx,
+        getPoint(0, data[0].income).dy,
+      );
+      expensePath.moveTo(
+        getPoint(0, data[0].expense).dx,
+        getPoint(0, data[0].expense).dy,
+      );
+
+      incomeFill.moveTo(0, chartH);
+      incomeFill.lineTo(
+        getPoint(0, data[0].income).dx,
+        getPoint(0, data[0].income).dy,
+      );
+
+      expenseFill.moveTo(0, chartH);
+      expenseFill.lineTo(
+        getPoint(0, data[0].expense).dx,
+        getPoint(0, data[0].expense).dy,
+      );
+
+      for (int i = 0; i < data.length - 1; i++) {
+        final p0 = getPoint(i, data[i].income);
+        final p1 = getPoint(i + 1, data[i + 1].income);
+
+        // Simple cubic bezier control points for smooth flow
+        final controlPoint1 = Offset(p0.dx + stepX / 2, p0.dy);
+        final controlPoint2 = Offset(p1.dx - stepX / 2, p1.dy);
+
+        incomePath.cubicTo(
+          controlPoint1.dx,
+          controlPoint1.dy,
+          controlPoint2.dx,
+          controlPoint2.dy,
+          p1.dx,
+          p1.dy,
+        );
+        incomeFill.cubicTo(
+          controlPoint1.dx,
+          controlPoint1.dy,
+          controlPoint2.dx,
+          controlPoint2.dy,
+          p1.dx,
+          p1.dy,
+        );
+
+        final e0 = getPoint(i, data[i].expense);
+        final e1 = getPoint(i + 1, data[i + 1].expense);
+        final eCp1 = Offset(e0.dx + stepX / 2, e0.dy);
+        final eCp2 = Offset(e1.dx - stepX / 2, e1.dy);
+
+        expensePath.cubicTo(eCp1.dx, eCp1.dy, eCp2.dx, eCp2.dy, e1.dx, e1.dy);
+        expenseFill.cubicTo(eCp1.dx, eCp1.dy, eCp2.dx, eCp2.dy, e1.dx, e1.dy);
+      }
+
+      // Close fills
+      incomeFill.lineTo(w, chartH);
+      incomeFill.close();
+
+      expenseFill.lineTo(w, chartH);
+      expenseFill.close();
+    }
+
+    // 3. Draw Fills (Gradients)
+    final incomeGradient = LinearGradient(
+      colors: [incomeColor.withOpacity(0.2), incomeColor.withOpacity(0.0)],
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+    ).createShader(Rect.fromLTWH(0, 0, w, chartH));
+
+    final expenseGradient = LinearGradient(
+      colors: [expenseColor.withOpacity(0.2), expenseColor.withOpacity(0.0)],
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+    ).createShader(Rect.fromLTWH(0, 0, w, chartH));
+
+    canvas.drawPath(incomeFill, Paint()..shader = incomeGradient);
+    canvas.drawPath(expenseFill, Paint()..shader = expenseGradient);
+
+    // 4. Draw Lines
+    final stroke = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    canvas.drawPath(incomePath, stroke..color = incomeColor);
+    canvas.drawPath(expensePath, stroke..color = expenseColor);
+
+    // 5. Draw Selected Indicator & Labels
+    // Scrubber Line
+    final selectedX = selectedIndex * stepX;
+    final scrubberPaint = Paint()
+      ..color = theme.colorScheme.onSurface.withOpacity(0.1)
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+
+    // Dashed line logic
+    double dashY = 0;
+    while (dashY < chartH) {
+      canvas.drawLine(
+        Offset(selectedX, dashY),
+        Offset(selectedX, dashY + 4),
+        scrubberPaint,
+      );
+      dashY += 8;
+    }
+
+    // Dots on selected points
+    final dotPaint = Paint()..style = PaintingStyle.fill;
+
+    // Income Dot
+    final iPos = getPoint(selectedIndex, data[selectedIndex].income);
+    canvas.drawCircle(iPos, 6, dotPaint..color = theme.colorScheme.surface);
+    canvas.drawCircle(iPos, 4, dotPaint..color = incomeColor);
+
+    // Expense Dot
+    final ePos = getPoint(selectedIndex, data[selectedIndex].expense);
+    canvas.drawCircle(ePos, 6, dotPaint..color = theme.colorScheme.surface);
+    canvas.drawCircle(ePos, 4, dotPaint..color = expenseColor);
+
+    // 6. X-Axis Labels
+    final textStyle = TextStyle(
+      color: theme.colorScheme.outline,
+      fontSize: 10,
+      fontWeight: FontWeight.w500,
+    );
+
+    // Draw first, middle, last to avoid crowding, or all if few
+    for (int i = 0; i < data.length; i++) {
+      // Draw label if it's selected OR it's a key point (first/last)
+      // To keep it clean, maybe only start and end? Or all if it fits.
+      // Let's draw selected label highlighted, others faded.
+
+      final isSelected = i == selectedIndex;
+      final span = TextSpan(
+        text: data[i].label,
+        style: textStyle.copyWith(
+          color: isSelected
+              ? theme.colorScheme.onSurface
+              : theme.colorScheme.outline.withOpacity(0.5),
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
+      );
+
+      final tp = TextPainter(
+        text: span,
+        textAlign: TextAlign.center,
+        textDirection: ui.TextDirection.ltr,
+      );
+      tp.layout();
+
+      // Center text on the x coordinate
+      tp.paint(canvas, Offset(i * stepX - tp.width / 2, h - tp.height));
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _SplineChartPainter oldDelegate) {
+    return oldDelegate.animationValue != animationValue ||
+        oldDelegate.selectedIndex != selectedIndex ||
+        oldDelegate.data != data;
+  }
+}
+
+// --- HELPERS (Copied from previous snippet for context) ---
 
 class _StatColumn extends StatelessWidget {
   final String currencySymbol;
@@ -318,13 +546,12 @@ class _StatColumn extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      // Fixed height to match the collapsed Timeframe Pill
       height: 50,
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2),
+          color: theme.colorScheme.outlineVariant.withOpacity(0.2),
         ),
       ),
       child: Row(
@@ -334,7 +561,7 @@ class _StatColumn extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(5),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
+              color: color.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -349,19 +576,24 @@ class _StatColumn extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  NumberFormat.compactCurrency(
-                    symbol: currencySymbol,
-                  ).format(amount),
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 15,
-                    height: 1.0,
-                    letterSpacing: -0.5,
-                    color: color,
+                // Animated Switcher for smooth number transitions
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: Text(
+                    NumberFormat.compactCurrency(
+                      symbol: currencySymbol,
+                    ).format(amount),
+                    key: ValueKey(amount),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                      height: 1.0,
+                      letterSpacing: -0.5,
+                      color: color,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -392,13 +624,12 @@ class _TimeframePillState extends State<_TimeframePill> {
         widget.selected.name[0].toUpperCase() +
         widget.selected.name.substring(1);
 
-    // Distinct styling for button
     final decoration = BoxDecoration(
       color: theme.colorScheme.primaryContainer,
       borderRadius: BorderRadius.circular(16),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withValues(alpha: _isExpanded ? 0.1 : 0.05),
+          color: Colors.black.withOpacity(_isExpanded ? 0.1 : 0.05),
           blurRadius: _isExpanded ? 12 : 4,
           offset: Offset(0, _isExpanded ? 6 : 2),
         ),
@@ -418,8 +649,7 @@ class _TimeframePillState extends State<_TimeframePill> {
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          width: 100, // Fixed width for alignment
-          // Minimum height matches the stats (56)
+          width: 100,
           constraints: const BoxConstraints(minHeight: 50),
           decoration: decoration,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
@@ -431,7 +661,6 @@ class _TimeframePillState extends State<_TimeframePill> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Collapsed View (Center vertically in 56px height)
                 if (!_isExpanded)
                   SizedBox(
                     height: 50,
@@ -453,8 +682,6 @@ class _TimeframePillState extends State<_TimeframePill> {
                       ],
                     ),
                   ),
-
-                // Expanded View
                 if (_isExpanded)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -464,7 +691,6 @@ class _TimeframePillState extends State<_TimeframePill> {
                         final isSelected = widget.selected == tf;
                         final text =
                             tf.name[0].toUpperCase() + tf.name.substring(1);
-
                         return GestureDetector(
                           onTap: () {
                             widget.onChanged(tf);
@@ -484,7 +710,7 @@ class _TimeframePillState extends State<_TimeframePill> {
                                 color: isSelected
                                     ? theme.colorScheme.primary
                                     : theme.colorScheme.onSecondaryContainer
-                                          .withValues(alpha: 0.7),
+                                          .withOpacity(0.7),
                               ),
                             ),
                           ),
@@ -497,160 +723,6 @@ class _TimeframePillState extends State<_TimeframePill> {
           ),
         ),
       ),
-    );
-  }
-}
-
-// --- THE ROBUST GRAPH BAR (Unchanged) ---
-class _GraphBar extends StatelessWidget {
-  final _PeriodSummary data;
-  final bool isSelected;
-  final double parentHeight;
-  final double positiveRatio;
-  final double maxPositive;
-  final double maxNegative;
-  final double labelHeight;
-  final ThemeData theme;
-  final AppColors appColors;
-  final String currencySymbol;
-
-  const _GraphBar({
-    required this.data,
-    required this.isSelected,
-    required this.parentHeight,
-    required this.positiveRatio,
-    required this.maxPositive,
-    required this.maxNegative,
-    required this.labelHeight,
-    required this.theme,
-    required this.appColors,
-    required this.currencySymbol,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final double graphHeight = parentHeight - labelHeight;
-    final double posZoneHeight = graphHeight * positiveRatio;
-    const double tooltipReserve = 0.0;
-
-    return Column(
-      children: [
-        SizedBox(
-          height: posZoneHeight,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final double drawAvailable =
-                  (constraints.maxHeight - tooltipReserve).clamp(
-                    0.0,
-                    double.infinity,
-                  );
-
-              double barHeight = 0;
-              if (maxPositive > 0 && drawAvailable > 0) {
-                barHeight = (data.income / maxPositive) * drawAvailable;
-              }
-              if (data.income > 0 && barHeight < 6) barHeight = 6;
-
-              return Stack(
-                alignment: Alignment.bottomCenter,
-                clipBehavior: Clip.none,
-                children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 500),
-                    curve: Curves.easeOutBack,
-                    width: 12,
-                    height: barHeight,
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? appColors.income
-                          : appColors.income.withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
-        SizedBox(
-          height: labelHeight,
-          child: Center(
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Container(
-                  height: 1,
-                  width: double.infinity,
-                  color: theme.colorScheme.outlineVariant.withValues(
-                    alpha: 0.2,
-                  ),
-                ),
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isSelected ? 8 : 2,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? theme.colorScheme.secondaryContainer
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    data.label,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      fontSize: 10,
-                      fontWeight: isSelected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                      color: isSelected
-                          ? theme.colorScheme.onSecondaryContainer
-                          : theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final double drawAvailable =
-                  (constraints.maxHeight - tooltipReserve).clamp(
-                    0.0,
-                    double.infinity,
-                  );
-
-              double barHeight = 0;
-              if (maxNegative > 0 && drawAvailable > 0) {
-                barHeight = (data.expense / maxNegative) * drawAvailable;
-              }
-              if (data.expense > 0 && barHeight < 6) barHeight = 6;
-
-              return Stack(
-                alignment: Alignment.topCenter,
-                clipBehavior: Clip.none,
-                children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 500),
-                    curve: Curves.easeOutBack,
-                    width: 12,
-                    height: barHeight,
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? appColors.expense
-                          : appColors.expense.withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
-      ],
     );
   }
 }

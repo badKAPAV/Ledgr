@@ -394,21 +394,19 @@ class _AuthEmailScreenState extends State<AuthEmailScreen> {
               onPressed: authProvider.isLoading ? null : _handleGoogleSignIn,
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                side: BorderSide(color: colorScheme.outline),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(50),
                 ),
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black,
               ),
-              icon: HugeIcon(
-                icon: HugeIcons.strokeRoundedGoogle,
-                color: colorScheme.onSurface,
-              ),
+              icon: Image.asset('assets/images/google_icon.png', height: 24),
               label: Text(
                 'Continue with Google',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: colorScheme.onSurface,
+                  color: Colors.black,
                 ),
               ),
             ),

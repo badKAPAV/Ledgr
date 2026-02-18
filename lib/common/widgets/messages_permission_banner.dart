@@ -4,10 +4,7 @@ import 'package:hugeicons/hugeicons.dart';
 
 class MessagesPermissionBanner extends StatefulWidget {
   final VoidCallback? onPermissionGranted;
-
-  /// Set this to true to force the banner to show for UI testing
   final bool debugForceShow;
-
   final bool isSmall;
 
   const MessagesPermissionBanner({
@@ -35,7 +32,7 @@ class MessagesPermissionBanner extends StatefulWidget {
 
 class _MessagesPermissionBannerState extends State<MessagesPermissionBanner>
     with WidgetsBindingObserver {
-  bool _hasPermission = true; // Assume true initially to avoid flicker
+  bool _hasPermission = true;
 
   @override
   void initState() {
@@ -60,42 +57,35 @@ class _MessagesPermissionBannerState extends State<MessagesPermissionBanner>
   Future<void> _checkPermission() async {
     try {
       final bool realStatus = await MessagesPermissionBanner.checkPermission();
-
-      // LOGIC CHANGE: If debugForceShow is true, we act as if we DON'T have permission
       final bool effectiveStatus = widget.debugForceShow ? false : realStatus;
 
       if (mounted) {
         setState(() {
           _hasPermission = effectiveStatus;
         });
-
-        // Only trigger callback if we REALLY have permission and aren't forcing debug
         if (effectiveStatus) {
           widget.onPermissionGranted?.call();
         }
       }
     } catch (e) {
-      debugPrint("Error checking notification listener status: $e");
+      debugPrint("Error checking status: $e");
     }
   }
 
   Future<void> _openListenerSettings() async {
     try {
-      // Closes the dialog first
       Navigator.of(context).pop();
       await MessagesPermissionBanner._platform.invokeMethod(
         'openNotificationListenerSettings',
       );
     } catch (e) {
-      debugPrint("Error opening notification settings: $e");
+      debugPrint("Error opening settings: $e");
     }
   }
 
   Future<void> _openAppInfo() async {
     try {
-      // Closes the dialog first
       Navigator.of(context).pop();
-      // Ensure your Kotlin/Java MainActivity handles 'openAppInfo'
       await MessagesPermissionBanner._platform.invokeMethod('openAppInfo');
     } catch (e) {
       debugPrint("Error opening app info: $e");
@@ -103,129 +93,11 @@ class _MessagesPermissionBannerState extends State<MessagesPermissionBanner>
   }
 
   void _showInstructionDialog() {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            const Text("Enable AutoLog"),
-            const SizedBox(width: 4),
-            HugeIcon(
-              icon: HugeIcons.strokeRoundedMenu03,
-              strokeWidth: 3,
-              size: 24,
-              color: colorScheme.primary,
-            ),
-          ],
-        ),
-        scrollable: true,
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // --- Step 1: Standard Instruction ---
-            _InstructionStep(
-              number: "1",
-              text:
-                  "Tap the 'Go to Settings' button below. Scroll down and find 'Ledgr' in the list.",
-              colorScheme: colorScheme,
-            ),
-            const SizedBox(height: 12),
-            _InstructionStep(
-              number: "2",
-              text: "Turn the switch ON to allow notification access.",
-              colorScheme: colorScheme,
-            ),
-
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16.0),
-              child: Divider(),
-            ),
-
-            // --- Step 2: Restricted Settings (Troubleshooting) ---
-            Text(
-              "Is the switch greyed out?",
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: colorScheme.error,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              "Android sometimes restricts this permission for downloaded apps. To fix this:",
-              style: theme.textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 8),
-            _InstructionStep(
-              number: "A",
-              text:
-                  "Tap the 'Open App Info' button below. Go to 'Permissions'.",
-              colorScheme: colorScheme,
-              isSubStep: true,
-            ),
-            const SizedBox(height: 8),
-            _InstructionStep(
-              number: "B",
-              text: "Tap the 3 dots (top right) → 'Allow Restricted Settings'.",
-              colorScheme: colorScheme,
-              isSubStep: true,
-            ),
-            const SizedBox(height: 8),
-            _InstructionStep(
-              number: "C",
-              text: "Come back here and try enabling access again.",
-              colorScheme: colorScheme,
-              isSubStep: true,
-            ),
-
-            const SizedBox(height: 24),
-
-            // --- Privacy Assurance ---
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest.withValues(
-                  alpha: 0.5,
-                ),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.security_rounded,
-                    size: 16,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      "Ledgr processes all data on-device. No personal data is saved or uploaded other than your transaction records.",
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          // Button 1: App Info (Troubleshooting)
-          TextButton(
-            onPressed: _openAppInfo,
-            child: const Text("Open App Info"),
-          ),
-          // Button 2: The Main Action
-          FilledButton(
-            onPressed: _openListenerSettings,
-            child: const Text("Go to Settings"),
-          ),
-        ],
+      builder: (context) => _PremiumInstructionDialog(
+        onOpenSettings: _openListenerSettings,
+        onOpenAppInfo: _openAppInfo,
       ),
     );
   }
@@ -237,53 +109,82 @@ class _MessagesPermissionBannerState extends State<MessagesPermissionBanner>
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
+    // --- Small Version (e.g. for Settings Page) ---
     if (widget.isSmall) {
-      return Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: _showInstructionDialog,
+      return Container(
+        decoration: BoxDecoration(
+          color: colorScheme.errorContainer.withValues(alpha: 0.3),
           borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: 8.0,
-              horizontal: 12.0,
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  "Turn on AutoLog",
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.primary,
+          border: Border.all(
+            color: colorScheme.error.withValues(alpha: 0.5),
+            width: 1,
+          ),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: _showInstructionDialog,
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: 10.0,
+                horizontal: 16.0,
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    size: 18,
+                    color: colorScheme.error,
                   ),
-                ),
-                const SizedBox(width: 4),
-                HugeIcon(
-                  icon: HugeIcons.strokeRoundedMenu03,
-                  strokeWidth: 3,
-                  size: 14,
-                  color: colorScheme.primary,
-                ),
-                const SizedBox(width: 4),
-                Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 10,
-                  color: colorScheme.primary,
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      "AutoLog is disabled",
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.error,
+                      ),
+                    ),
+                  ),
+                  HugeIcon(
+                    icon: HugeIcons.strokeRoundedArrowRight02,
+                    color: theme.colorScheme.primary,
+                    strokeWidth: 2,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       );
     }
 
+    // --- Main Premium Banner (e.g. Home Screen) ---
     return Container(
-      margin: const EdgeInsets.fromLTRB(0, 0, 0, 16),
+      margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: colorScheme.primary),
+        // A subtle gradient to make it stand out from standard cards
+        gradient: LinearGradient(
+          colors: [
+            colorScheme.primaryContainer,
+            colorScheme.surfaceContainerHighest,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.shadow.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(
+          color: colorScheme.primary.withValues(alpha: 0.2),
+          width: 1,
+        ),
       ),
       child: Material(
         color: Colors.transparent,
@@ -291,52 +192,58 @@ class _MessagesPermissionBannerState extends State<MessagesPermissionBanner>
           onTap: _showInstructionDialog,
           borderRadius: BorderRadius.circular(24),
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(20.0),
             child: Row(
               children: [
-                HugeIcon(
-                  icon: HugeIcons.strokeRoundedNotificationSquare,
-                  color: colorScheme.primary,
-                  size: 24,
+                // Attention Grabbing Icon
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: colorScheme.primary.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedMagicWand01,
+                    color: colorScheme.onPrimary,
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Text(
-                            "Turn on AutoLog",
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: colorScheme.onSurface,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          HugeIcon(
-                            icon: HugeIcons.strokeRoundedMenu03,
-                            strokeWidth: 3,
-                            size: 16,
-                            color: colorScheme.primary,
-                          ),
-                          // Icon(Icons.auto_awesome_rounded, size: 12),
-                        ],
+                      Text(
+                        "Automate your tracking",
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: colorScheme.onSurface,
+                          letterSpacing: -0.5,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        "Never miss a transaction again",
+                        "Never manually add a transaction again. Sync directly from alerts.",
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: colorScheme.onSurfaceVariant,
+                          height: 1.3,
                         ),
                       ),
                     ],
                   ),
                 ),
-                Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 14,
-                  color: colorScheme.onSurfaceVariant,
+                const SizedBox(width: 8),
+                HugeIcon(
+                  icon: HugeIcons.strokeRoundedArrowRight02,
+                  color: theme.colorScheme.primary,
+                  strokeWidth: 2,
                 ),
               ],
             ),
@@ -347,43 +254,219 @@ class _MessagesPermissionBannerState extends State<MessagesPermissionBanner>
   }
 }
 
-// Helper Widget for clean dialog code
-class _InstructionStep extends StatelessWidget {
+// --- REDESIGNED DIALOG ---
+
+class _PremiumInstructionDialog extends StatefulWidget {
+  final VoidCallback onOpenSettings;
+  final VoidCallback onOpenAppInfo;
+
+  const _PremiumInstructionDialog({
+    required this.onOpenSettings,
+    required this.onOpenAppInfo,
+  });
+
+  @override
+  State<_PremiumInstructionDialog> createState() =>
+      _PremiumInstructionDialogState();
+}
+
+class _PremiumInstructionDialogState extends State<_PremiumInstructionDialog> {
+  bool _showTroubleshooting = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      backgroundColor: colorScheme.surface,
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 1. Trust Header
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: colorScheme.primaryContainer.withValues(alpha: 0.5),
+                shape: BoxShape.circle,
+              ),
+              child: HugeIcon(
+                icon: HugeIcons.strokeRoundedSecurityCheck,
+                size: 32,
+                color: colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              "Enable AutoLog",
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "Ledgr uses secure on-device processing to read transaction notifications. No personal data ever leaves your phone.",
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // 2. Simple Steps
+            _StepRow(
+              number: "1",
+              text: "Tap the button below to open Settings.",
+              colorScheme: colorScheme,
+            ),
+            const SizedBox(height: 12),
+            _StepRow(
+              number: "2",
+              text: "Find 'Ledgr' and toggle the switch ON.",
+              colorScheme: colorScheme,
+            ),
+
+            // 3. Troubleshooting Expander
+            const SizedBox(height: 24),
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  _showTroubleshooting = !_showTroubleshooting;
+                });
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: _showTroubleshooting
+                      ? colorScheme.errorContainer.withValues(alpha: 0.2)
+                      : colorScheme.surfaceContainerHighest.withValues(
+                          alpha: 0.3,
+                        ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: _showTroubleshooting
+                      ? Border.all(
+                          color: colorScheme.error.withValues(alpha: 0.2),
+                        )
+                      : null,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          _showTroubleshooting
+                              ? Icons.keyboard_arrow_up_rounded
+                              : Icons.help_outline_rounded,
+                          size: 16,
+                          color: _showTroubleshooting
+                              ? colorScheme.error
+                              : colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          "Switch greyed out? / Can't enable?",
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            color: _showTroubleshooting
+                                ? colorScheme.error
+                                : colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (_showTroubleshooting) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        "Android restricts this setting for some downloaded apps. To unlock it:",
+                        style: theme.textTheme.bodySmall,
+                      ),
+                      const SizedBox(height: 8),
+                      _SubStep(text: "1. Tap 'Open App Info' below"),
+                      _SubStep(
+                        text:
+                            "2. Tap the 3 dots (top-right) → 'Allow Restricted Settings'",
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton(
+                          onPressed: widget.onOpenAppInfo,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: colorScheme.onSurface,
+                            side: BorderSide(
+                              color: colorScheme.outline.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: const Text("Open App Info"),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // 4. Main Action
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: FilledButton(
+                onPressed: widget.onOpenSettings,
+                style: FilledButton.styleFrom(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: const Text(
+                  "Go to Settings",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StepRow extends StatelessWidget {
   final String number;
   final String text;
   final ColorScheme colorScheme;
-  final bool isSubStep;
 
-  const _InstructionStep({
+  const _StepRow({
     required this.number,
     required this.text,
     required this.colorScheme,
-    this.isSubStep = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: 20,
-          height: 20,
+          width: 24,
+          height: 24,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: isSubStep
-                ? colorScheme.surfaceContainerHighest
-                : colorScheme.primaryContainer,
+            color: colorScheme.primary,
             shape: BoxShape.circle,
           ),
           child: Text(
             number,
             style: TextStyle(
-              fontSize: 11,
+              color: colorScheme.onPrimary,
               fontWeight: FontWeight.bold,
-              color: isSubStep
-                  ? colorScheme.onSurfaceVariant
-                  : colorScheme.onPrimaryContainer,
+              fontSize: 12,
             ),
           ),
         ),
@@ -391,10 +474,33 @@ class _InstructionStep extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: TextStyle(color: colorScheme.onSurface, fontSize: 14),
+            style: TextStyle(
+              fontSize: 14,
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _SubStep extends StatelessWidget {
+  final String text;
+  const _SubStep({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4.0),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 12,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
+      ),
     );
   }
 }

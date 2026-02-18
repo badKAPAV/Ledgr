@@ -21,6 +21,8 @@ class TransactionModel {
   final bool? isCredit;
   final DateTime? reminderDate;
   final String? receiptUrl;
+  final bool? isTransfer;
+  final String? linkedTransactionId;
 
   TransactionModel({
     this.people,
@@ -40,6 +42,8 @@ class TransactionModel {
     this.isCredit,
     this.reminderDate,
     this.receiptUrl,
+    this.isTransfer,
+    this.linkedTransactionId,
   });
 
   factory TransactionModel.fromMap(Map<String, dynamic> data) {
@@ -79,6 +83,8 @@ class TransactionModel {
           ? DateTime.parse(data['reminderDate'])
           : null,
       receiptUrl: data['receiptUrl'],
+      isTransfer: data['isTransfer'],
+      linkedTransactionId: data['linkedTransactionId'],
     );
   }
 
@@ -101,6 +107,8 @@ class TransactionModel {
       'isCredit': isCredit,
       'reminderDate': reminderDate?.toIso8601String(),
       'receiptUrl': receiptUrl,
+      'isTransfer': isTransfer,
+      'linkedTransactionId': linkedTransactionId,
     };
   }
 }
@@ -124,6 +132,8 @@ extension TransactionCopyWith on TransactionModel {
     bool? isCredit,
     DateTime? reminderDate,
     ValueGetter<String?>? receiptUrl,
+    bool? isTransfer,
+    ValueGetter<String?>? linkedTransactionId,
   }) {
     return TransactionModel(
       people: people ?? this.people,
@@ -145,6 +155,10 @@ extension TransactionCopyWith on TransactionModel {
       isCredit: isCredit ?? this.isCredit,
       reminderDate: reminderDate ?? this.reminderDate,
       receiptUrl: receiptUrl != null ? receiptUrl() : this.receiptUrl,
+      isTransfer: isTransfer ?? this.isTransfer,
+      linkedTransactionId: linkedTransactionId != null
+          ? linkedTransactionId()
+          : this.linkedTransactionId,
     );
   }
 }

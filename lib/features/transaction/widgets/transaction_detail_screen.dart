@@ -22,6 +22,7 @@ import 'package:wallzy/common/helpers/dashed_border.dart';
 import 'package:wallzy/features/transaction/widgets/add_receipt_modal_sheet.dart';
 import 'package:wallzy/features/subscription/models/subscription.dart';
 import 'package:wallzy/features/subscription/screens/subscription_details_screen.dart';
+import 'package:wallzy/features/transaction/widgets/link_transaction_modal_sheet.dart';
 
 class TransactionDetailScreen extends StatelessWidget {
   final TransactionModel transaction;
@@ -200,6 +201,9 @@ class TransactionDetailScreen extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.8,
+      ),
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
@@ -517,7 +521,265 @@ class TransactionDetailScreen extends StatelessWidget {
                             },
                           ),
 
-                          // --- NOTE WIDGET ---
+                          const SizedBox(height: 12),
+
+                          // --- LINK TRANSACTION LOGIC ---
+                          Consumer<TransactionProvider>(
+                            builder: (context, txProvider, _) {
+                              final linkedTx = txProvider.transactions
+                                  .firstWhereOrNull(
+                                    (t) =>
+                                        t.transactionId ==
+                                        tx.linkedTransactionId,
+                                  );
+
+                              if (linkedTx != null) {
+                                // Calculate Net Amount
+                                double netAmount = 0.0;
+                                // Assuming positive for income, negative for expense for net calc?
+                                // Or purely based on type.
+                                double amount1 = tx.type == 'income'
+                                    ? tx.amount
+                                    : -tx.amount;
+                                double amount2 = linkedTx.type == 'income'
+                                    ? linkedTx.amount
+                                    : -linkedTx.amount;
+                                netAmount = amount1 + amount2;
+
+                                return Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.fromLTRB(
+                                    6,
+                                    10,
+                                    6,
+                                    6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.surfaceContainerHigh,
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: colorScheme.outlineVariant
+                                          .withOpacity(0.2),
+                                    ),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              left: 12.0,
+                                            ),
+                                            child: Text(
+                                              "LINKED TRANSACTION",
+                                              style: theme.textTheme.labelSmall
+                                                  ?.copyWith(
+                                                    fontWeight: FontWeight.bold,
+                                                    color: colorScheme.outline,
+                                                    letterSpacing: 1.0,
+                                                  ),
+                                            ),
+                                          ),
+                                          const Spacer(),
+                                          InkWell(
+                                            onTap: () async {
+                                              final confirm = await showDialog<bool>(
+                                                context: context,
+                                                builder: (ctx) => ModernAlertDialog(
+                                                  title: "Unlink Transaction?",
+                                                  description:
+                                                      "This will remove the link between these transactions.",
+                                                  icon: HugeIcons
+                                                      .strokeRoundedUnlink01,
+                                                  actions: [
+                                                    TextButton(
+                                                      style:
+                                                          TextButton.styleFrom(
+                                                            foregroundColor:
+                                                                colorScheme
+                                                                    .outline,
+                                                            backgroundColor:
+                                                                colorScheme
+                                                                    .outline
+                                                                    .withOpacity(
+                                                                      0.2,
+                                                                    ),
+                                                          ),
+                                                      child: const Text(
+                                                        "Cancel",
+                                                      ),
+                                                      onPressed: () =>
+                                                          Navigator.pop(
+                                                            ctx,
+                                                            false,
+                                                          ),
+                                                    ),
+                                                    TextButton(
+                                                      style: TextButton.styleFrom(
+                                                        foregroundColor:
+                                                            colorScheme
+                                                                .errorContainer,
+                                                        backgroundColor:
+                                                            colorScheme.error,
+                                                      ),
+                                                      child: const Text(
+                                                        "Unlink",
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      onPressed: () =>
+                                                          Navigator.pop(
+                                                            ctx,
+                                                            true,
+                                                          ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+
+                                              if (confirm == true) {
+                                                await txProvider
+                                                    .unlinkTransaction(tx);
+                                              }
+                                            },
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 10,
+                                                    vertical: 4,
+                                                  ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  HugeIcon(
+                                                    icon: HugeIcons
+                                                        .strokeRoundedUnlink01,
+                                                    size: 16,
+                                                    color: colorScheme.error,
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    "Unlink",
+                                                    style: theme
+                                                        .textTheme
+                                                        .labelMedium
+                                                        ?.copyWith(
+                                                          color:
+                                                              colorScheme.error,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 10),
+                                      _SlimInfoRow(
+                                        isTransferWidget: true,
+                                        icon: linkedTx.type == 'income'
+                                            ? HugeIcons
+                                                  .strokeRoundedArrowDownRight01
+                                            : HugeIcons
+                                                  .strokeRoundedArrowUpRight01,
+                                        title: linkedTx.description.isNotEmpty
+                                            ? linkedTx.description
+                                            : linkedTx.category,
+                                        subtitle: currencyFormat.format(
+                                          linkedTx.amount,
+                                        ),
+                                        color: linkedTx.type == 'income'
+                                            ? appColors.income
+                                            : appColors.expense,
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 12,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: colorScheme
+                                              .surfaceContainerLowest,
+                                          borderRadius: BorderRadius.only(
+                                            topLeft: Radius.circular(6),
+                                            topRight: Radius.circular(6),
+                                            bottomLeft: Radius.circular(16),
+                                            bottomRight: Radius.circular(16),
+                                          ),
+                                          // border: Border.all(
+                                          //   color: colorScheme.primary,
+                                          // ),
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              "Net Total",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: colorScheme
+                                                    .onSurfaceVariant,
+                                              ),
+                                            ),
+                                            Text(
+                                              "${netAmount >= 0 ? '+' : ''}${currencyFormat.format(netAmount)}",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w900,
+                                                fontSize: 16,
+                                                color: netAmount >= 0
+                                                    ? appColors.income
+                                                    : appColors.expense,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              } else {
+                                return _ActionTile(
+                                  icon: HugeIcons.strokeRoundedLink01,
+                                  label: "Link Transaction",
+                                  isDashed: true,
+                                  color: colorScheme.primary,
+                                  onTap: () async {
+                                    final selectedTx =
+                                        await showModalBottomSheet<
+                                          TransactionModel
+                                        >(
+                                          context: context,
+                                          isScrollControlled: true,
+                                          backgroundColor: Colors.transparent,
+                                          builder: (_) =>
+                                              LinkTransactionModalSheet(
+                                                excludeTransaction: tx,
+                                                sourceTransactionType: tx.type,
+                                              ),
+                                        );
+
+                                    if (selectedTx != null) {
+                                      await txProvider.linkTransactions(
+                                        tx,
+                                        selectedTx,
+                                      );
+                                    }
+                                  },
+                                );
+                              }
+                            },
+                          ),
                           if (tx.description.isNotEmpty) ...[
                             const SizedBox(height: 12),
                             Container(
@@ -618,12 +880,14 @@ class _SlimInfoRow extends StatelessWidget {
   final String title;
   final String subtitle;
   final Color color;
+  final bool isTransferWidget;
 
   const _SlimInfoRow({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.color,
+    this.isTransferWidget = false,
   });
 
   @override
@@ -632,8 +896,17 @@ class _SlimInfoRow extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(16),
+        color: isTransferWidget
+            ? Theme.of(context).colorScheme.surfaceContainerLow
+            : Theme.of(context).colorScheme.surfaceContainer,
+        borderRadius: isTransferWidget
+            ? BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+                bottomLeft: Radius.circular(6),
+                bottomRight: Radius.circular(6),
+              )
+            : BorderRadius.circular(16),
         border: Border.all(
           color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.2),
         ),

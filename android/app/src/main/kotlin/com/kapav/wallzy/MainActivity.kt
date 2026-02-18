@@ -8,14 +8,14 @@ import android.content.IntentFilter
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 
-class MainActivity: FlutterActivity() {
+class MainActivity: FlutterFragmentActivity() {
     // 1. CHANNEL CONSTANTS
     private val SMS_CHANNEL = "com.kapav.wallzy/sms"          // LEGACY (Your existing code depends on this)
     private val SETTINGS_CHANNEL = "com.kapav.wallzy/settings" // NEW (Only for rule updates)
@@ -65,7 +65,7 @@ class MainActivity: FlutterActivity() {
             if (call.method == "updateSmsRules") {
                 val jsonContent = call.argument<String>("json")
                 if (jsonContent != null) {
-                    PatternRepository.saveNewRules(context, jsonContent)
+                    PatternRepository.saveNewRules(applicationContext, jsonContent)
                     result.success(true)
                 } else {
                     result.error("INVALID_ARGS", "Json content was null", null)

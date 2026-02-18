@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -25,6 +26,7 @@ import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
 import 'package:wallzy/features/transaction/services/receipt_service.dart';
 import 'package:wallzy/features/transaction/widgets/add_edit_transaction_widgets/transaction_widgets.dart';
 import 'package:wallzy/features/transaction/widgets/add_receipt_modal_sheet.dart';
+import 'package:wallzy/features/transaction/widgets/link_transaction_modal_sheet.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class TransactionForm extends StatefulWidget {
@@ -89,11 +91,13 @@ class TransactionFormState extends State<TransactionForm> {
   Uint8List? _newReceiptData;
   String? _existingReceiptUrl;
   bool _isDeletingReceipt = false;
+  TransactionModel? _selectedLinkedTransaction;
 
   // View State for Power Fields
   bool _showFolders = false;
   bool _showSubscription = false;
   bool _showReceipt = false;
+  bool _showLinkedTransaction = false;
 
   bool _isDirty = false;
   bool _isLoadingAccount = true;
@@ -188,6 +192,24 @@ class TransactionFormState extends State<TransactionForm> {
         _existingReceiptUrl = tx.receiptUrl;
         _showReceipt = true;
       }
+
+      // Load Linked Transaction
+      if (tx.linkedTransactionId != null) {
+        // Will need to fetch the full object if we want to display details nicely
+        // For now, trigger a load or just set the ID and let UI handle it?
+        // Better to try finding it in provider
+        final provider = Provider.of<TransactionProvider>(
+          context,
+          listen: false,
+        );
+        final found = provider.transactions.firstWhereOrNull(
+          (t) => t.transactionId == tx.linkedTransactionId,
+        );
+        if (found != null) {
+          _selectedLinkedTransaction = found;
+          _showLinkedTransaction = true;
+        }
+      }
     } else {
       // New Transaction Logic
       if (widget.initialAmount != null) {
@@ -253,7 +275,10 @@ class TransactionFormState extends State<TransactionForm> {
       // Reset View State
       _showFolders = false;
       _showSubscription = false;
+      _showFolders = false;
+      _showSubscription = false;
       _showReceipt = false;
+      _showLinkedTransaction = false;
 
       _isDirty = false;
     });
@@ -429,8 +454,16 @@ class TransactionFormState extends State<TransactionForm> {
         purchaseType: purchaseType,
         currency: currencyCode,
         receiptUrl: () => finalReceiptUrl,
+        isTransfer: _selectedLinkedTransaction != null ? true : null,
+        linkedTransactionId: () => _selectedLinkedTransaction?.transactionId,
       );
       await txProvider.updateTransaction(updatedTransaction);
+      if (_selectedLinkedTransaction != null) {
+        await txProvider.linkTransactions(
+          updatedTransaction,
+          _selectedLinkedTransaction!,
+        );
+      }
 
       // Handle Debts
       if (_selectedPerson != null && _isLoan) {
@@ -459,8 +492,16 @@ class TransactionFormState extends State<TransactionForm> {
         currency: currencyCode,
         purchaseType: purchaseType,
         receiptUrl: finalReceiptUrl,
+        isTransfer: _selectedLinkedTransaction != null ? true : null,
+        linkedTransactionId: _selectedLinkedTransaction?.transactionId,
       );
       await txProvider.addTransaction(newTransaction);
+      if (_selectedLinkedTransaction != null) {
+        await txProvider.linkTransactions(
+          newTransaction,
+          _selectedLinkedTransaction!,
+        );
+      }
 
       if (_selectedPerson != null && _isLoan) {
         await _updatePersonDebt(peopleProvider, amount);
@@ -835,6 +876,17 @@ class TransactionFormState extends State<TransactionForm> {
                           )
                         : const SizedBox.shrink(),
                   ),
+
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    child: _showLinkedTransaction
+                        ? Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _buildLinkedTransactionCard(),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
                 ],
               ),
             ),
@@ -879,7 +931,7 @@ class TransactionFormState extends State<TransactionForm> {
                     if (!_showSubscription &&
                         widget.mode == TransactionMode.expense)
                       TransactionActionChip(
-                        icon: HugeIcons.strokeRoundedRepeat,
+                        icon: HugeIcons.strokeRoundedRotate02,
                         label: "Link Recurring",
                         onTap: () {
                           setState(() => _showSubscription = true);
@@ -893,6 +945,15 @@ class TransactionFormState extends State<TransactionForm> {
                       label: "Convert",
                       onTap: _openCurrencyConverter,
                     ),
+                    if (!_showLinkedTransaction)
+                      TransactionActionChip(
+                        icon: HugeIcons.strokeRoundedLink01,
+                        label: "Link Transfer Transaction",
+                        onTap: () {
+                          setState(() => _showLinkedTransaction = true);
+                          _showLinkTransactionModal();
+                        },
+                      ),
                   ],
                 ),
               ),
@@ -1082,6 +1143,42 @@ class TransactionFormState extends State<TransactionForm> {
             ),
           ),
       ],
+    );
+  }
+
+  Widget _buildLinkedTransactionCard() {
+    return FunkyPickerTile(
+      icon: Icons.link_rounded,
+      label: "Linked Transaction",
+      value: _selectedLinkedTransaction?.description ?? "Select Transaction",
+      leadingValueWidget: _selectedLinkedTransaction != null
+          ? CircleAvatar(
+              radius: 8,
+              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+              child: Icon(
+                _selectedLinkedTransaction!.type == 'income'
+                    ? Icons.arrow_downward_rounded
+                    : Icons.arrow_upward_rounded,
+                size: 10,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            )
+          : null,
+      valueColor: _selectedLinkedTransaction != null
+          ? Theme.of(context).colorScheme.onSurface
+          : null,
+      onTap: _showLinkTransactionModal,
+      trailingAction: Padding(
+        padding: const EdgeInsets.only(left: 4.0),
+        child: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          child: const Icon(Icons.close, size: 14),
+          onTap: () => setState(() {
+            _showLinkedTransaction = false;
+            _selectedLinkedTransaction = null;
+          }),
+        ),
+      ),
     );
   }
 
@@ -1284,6 +1381,33 @@ class TransactionFormState extends State<TransactionForm> {
         _amountController.text = result.toStringAsFixed(2);
         _markAsDirty();
       });
+    }
+  }
+
+  void _showLinkTransactionModal() async {
+    final result = await showModalBottomSheet<TransactionModel>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => LinkTransactionModalSheet(
+        excludeTransaction: widget.transaction,
+        sourceTransactionType: widget.mode == TransactionMode.expense
+            ? 'expense'
+            : 'income',
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        _selectedLinkedTransaction = result;
+        _showLinkedTransaction = true;
+        _markAsDirty();
+      });
+    } else {
+      // If cancelled and no transaction selected, hide the card
+      if (_selectedLinkedTransaction == null) {
+        setState(() => _showLinkedTransaction = false);
+      }
     }
   }
 

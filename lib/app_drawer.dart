@@ -6,8 +6,8 @@ import 'package:flutter_svg/svg.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:wallzy/features/currency_convert/screens/currency_convert_screen.dart';
 import 'package:wallzy/features/feedback/screens/feedback_screen.dart';
-import 'package:wallzy/features/goals/screens/goals_screen.dart';
-import 'package:wallzy/features/settings/screens/app_settings_screen.dart';
+import 'package:wallzy/features/planning/screens/planning_screen.dart';
+import 'package:wallzy/features/settings/screens/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -15,7 +15,6 @@ import 'package:wallzy/features/auth/provider/auth_provider.dart';
 import 'package:wallzy/features/accounts/screens/accounts_screen.dart';
 import 'package:wallzy/features/people/screens/people_screen.dart';
 import 'package:wallzy/features/profile/screens/user_profile_screen.dart';
-import 'package:wallzy/features/subscription/screens/subscriptions_screen.dart';
 import 'package:wallzy/features/transaction/screens/all_transactions_screen.dart';
 import 'package:wallzy/features/tag/screens/tags_screen.dart';
 import 'package:wallzy/features/guide/screens/how_to_use_screen.dart';
@@ -26,10 +25,9 @@ enum DrawerItem {
   home,
   reports,
   accounts,
-  subscriptions,
   people,
   folders,
-  goals,
+  planning,
   currencyConverter,
   howToUse,
   feedback,
@@ -221,7 +219,7 @@ class _AppDrawerState extends State<AppDrawer> {
                   ),
                   _MinimalDrawerTile(
                     icon: HugeIcons.strokeRoundedAnalytics01,
-                    title: 'Reports & Categories',
+                    title: 'Analytics & Budgets',
                     isSelected: widget.selectedItem == DrawerItem.reports,
                     onTap: () => _handleNav(
                       context,
@@ -244,7 +242,7 @@ class _AppDrawerState extends State<AppDrawer> {
                   // --- MANAGE SECTION ---
                   _MinimalDrawerTile(
                     icon: HugeIcons.strokeRoundedFolder02,
-                    title: 'My Folders',
+                    title: 'Folders & Events',
                     isSelected: widget.selectedItem == DrawerItem.folders,
                     onTap: () => _handleNav(
                       context,
@@ -263,61 +261,80 @@ class _AppDrawerState extends State<AppDrawer> {
                     ),
                   ),
                   _MinimalDrawerTile(
-                    icon: HugeIcons.strokeRoundedPieChart06,
-                    title: 'Financial Goals',
-                    isSelected: widget.selectedItem == DrawerItem.goals,
+                    icon: HugeIcons.strokeRoundedTools,
+                    title: 'Planning',
+                    isSelected: widget.selectedItem == DrawerItem.planning,
                     onTap: () => _handleNav(
                       context,
-                      const GoalsScreen(),
-                      DrawerItem.goals,
-                    ),
-                  ),
-                  _MinimalDrawerTile(
-                    icon: HugeIcons.strokeRoundedRotate02,
-                    title: 'Recurring Payments',
-                    isSelected: widget.selectedItem == DrawerItem.subscriptions,
-                    onTap: () => _handleNav(
-                      context,
-                      const SubscriptionsScreen(),
-                      DrawerItem.subscriptions,
+                      const PlanningScreen(),
+                      DrawerItem.planning,
                     ),
                   ),
 
                   const SizedBox(height: 24),
 
                   // --- SUPPORT SECTION ---
-                  _MinimalDrawerTile(
-                    icon: HugeIcons.strokeRoundedMoneyExchange03,
-                    title: 'Currency Converter',
-                    isSelected:
-                        widget.selectedItem == DrawerItem.currencyConverter,
-                    onTap: () => _handleNav(
-                      context,
-                      const CurrencyConverterScreen(),
-                      DrawerItem.currencyConverter,
-                      forcePush: true,
-                    ),
-                  ),
-                  _MinimalDrawerTile(
-                    icon: HugeIcons.strokeRoundedIdea01,
-                    title: 'How to use',
-                    isSelected: widget.selectedItem == DrawerItem.howToUse,
-                    onTap: () => _handleNav(
-                      context,
-                      const HowToUseScreen(),
-                      DrawerItem.howToUse,
-                      forcePush: true,
-                    ),
-                  ),
-                  _MinimalDrawerTile(
-                    icon: HugeIcons.strokeRoundedAiChat01,
-                    title: 'Feedback & Issues',
-                    isSelected: widget.selectedItem == DrawerItem.feedback,
-                    onTap: () => _handleNav(
-                      context,
-                      const FeedbackScreen(),
-                      DrawerItem.feedback,
-                      forcePush: true,
+                  Theme(
+                    data: theme.copyWith(dividerColor: Colors.transparent),
+                    child: ExpansionTile(
+                      leading: HugeIcon(
+                        icon: HugeIcons.strokeRoundedMenu01,
+                        size: 22,
+                        strokeWidth: 2,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      title: Text(
+                        'More Options',
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w500,
+                          color: colorScheme.onSurface,
+                          fontSize: 15,
+                        ),
+                      ),
+                      tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+                      childrenPadding: const EdgeInsets.only(left: 12),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
+                      ),
+                      children: [
+                        _MinimalDrawerTile(
+                          icon: HugeIcons.strokeRoundedMoneyExchange03,
+                          title: 'Currency Converter',
+                          isSelected:
+                              widget.selectedItem ==
+                              DrawerItem.currencyConverter,
+                          onTap: () => _handleNav(
+                            context,
+                            const CurrencyConverterScreen(),
+                            DrawerItem.currencyConverter,
+                            forcePush: true,
+                          ),
+                        ),
+                        _MinimalDrawerTile(
+                          icon: HugeIcons.strokeRoundedIdea01,
+                          title: 'How to use',
+                          isSelected:
+                              widget.selectedItem == DrawerItem.howToUse,
+                          onTap: () => _handleNav(
+                            context,
+                            const HowToUseScreen(),
+                            DrawerItem.howToUse,
+                            forcePush: true,
+                          ),
+                        ),
+                        _MinimalDrawerTile(
+                          icon: HugeIcons.strokeRoundedAiChat01,
+                          title: 'Feedback & Issues',
+                          isSelected:
+                              widget.selectedItem == DrawerItem.feedback,
+                          onTap: () => _handleNav(
+                            context,
+                            const FeedbackScreen(),
+                            DrawerItem.feedback,
+                            forcePush: true,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   _MinimalDrawerTile(

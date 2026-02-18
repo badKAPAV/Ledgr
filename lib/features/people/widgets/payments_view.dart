@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:fl_chart/fl_chart.dart';
+import 'package:wallzy/common/widgets/animated_gauge_chart.dart';
 import 'package:wallzy/core/themes/theme.dart';
 import 'package:wallzy/features/people/models/person.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
@@ -269,6 +269,7 @@ class _PaymentsAnalysisScreenState extends State<PaymentsAnalysisScreen> {
                   child: _PaymentChartPod(
                     summaries: currentTypeSummaries,
                     totalAmount: totalForChart,
+                    selectedType: _selectedType,
                   ),
                 ),
               ),
@@ -276,10 +277,7 @@ class _PaymentsAnalysisScreenState extends State<PaymentsAnalysisScreen> {
             // 3. Segmented Toggle (Always visible)
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 24,
-                ),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
                 child: _SegmentedPaymentToggle(
                   selectedType: _selectedType,
                   onTypeSelected: (type) {
@@ -359,8 +357,13 @@ class _PaymentsAnalysisScreenState extends State<PaymentsAnalysisScreen> {
 class _PaymentChartPod extends StatelessWidget {
   final List<PersonSummary> summaries;
   final double totalAmount;
+  final String selectedType;
 
-  const _PaymentChartPod({required this.summaries, required this.totalAmount});
+  const _PaymentChartPod({
+    required this.summaries,
+    required this.totalAmount,
+    required this.selectedType,
+  });
 
   Color _getColorForPerson(String name) {
     final hash = name.hashCode;
@@ -399,21 +402,51 @@ class _PaymentChartPod extends StatelessWidget {
       child: Column(
         children: [
           SizedBox(
-            height: 180,
+            height: 140,
+            width: 280,
             child: hasData
-                ? PieChart(
-                    PieChartData(
-                      sections: summaries.map((s) {
-                        return PieChartSectionData(
-                          value: s.totalAmount,
-                          color: _getColorForPerson(s.person.fullName),
-                          radius: 50,
-                          showTitle: false,
-                        );
-                      }).toList(),
-                      sectionsSpace: 2,
-                      centerSpaceRadius: 50,
-                    ),
+                ? Stack(
+                    alignment: Alignment.bottomCenter,
+                    children: [
+                      AnimatedGaugeChart(
+                        items: summaries
+                            .map(
+                              (s) => GaugeChartItem(
+                                label: s.person.fullName,
+                                amount: s.totalAmount,
+                              ),
+                            )
+                            .toList(),
+                        totalAmount: totalAmount,
+                        gapDegrees: 2,
+                        useRoundedEdges: false,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              currencyFormat.format(totalAmount),
+                              style: theme.textTheme.displaySmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: theme.colorScheme.onSurface,
+                                fontSize: 32,
+                                height: 1.0,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "Total ${selectedType == 'expense' ? 'Sent' : 'Received'}",
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.outline,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   )
                 : Center(
                     child: Text(

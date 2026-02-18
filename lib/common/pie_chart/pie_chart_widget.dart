@@ -42,10 +42,19 @@ class _LedgrPieChartState extends State<LedgrPieChart>
   @override
   void didUpdateWidget(LedgrPieChart oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.sections != oldWidget.sections || widget.gap != oldWidget.gap) {
+    if (widget.gap != oldWidget.gap ||
+        !_areSectionsEqual(widget.sections, oldWidget.sections)) {
       _controller.reset();
       _controller.forward();
     }
+  }
+
+  bool _areSectionsEqual(List<PieData> a, List<PieData> b) {
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
   }
 
   @override

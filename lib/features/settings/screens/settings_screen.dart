@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // For Haptics
 import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
+import 'package:wallzy/common/app_lock/app_lock_provider.dart';
 import 'package:wallzy/common/widgets/custom_alert_dialog.dart';
 import 'package:wallzy/core/themes/theme_provider.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
@@ -445,6 +446,37 @@ class _AppSettingsScreenState extends State<AppSettingsScreen>
                   borderRadius: BorderRadius.circular(16),
                 ),
                 onTap: () => _showTrustCircleDialog(context),
+              ),
+              SwitchListTile(
+                title: Text(
+                  "App Lock",
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+                subtitle: Text(
+                  "Secure Ledgr with your screen lock",
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontSize: 12,
+                  ),
+                ),
+                secondary: HugeIcon(icon: HugeIcons.strokeRoundedFingerPrint),
+                value: Provider.of<AppLockProvider>(context).isLockEnabled,
+                onChanged: (val) async {
+                  final success = await Provider.of<AppLockProvider>(
+                    context,
+                    listen: false,
+                  ).toggleLock(val);
+
+                  if (!success && mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Authentication failed')),
+                    );
+                  }
+                },
               ),
             ],
           ),

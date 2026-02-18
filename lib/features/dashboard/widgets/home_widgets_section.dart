@@ -10,6 +10,8 @@ import 'package:wallzy/features/dashboard/home_widgets/folder_watchlist/folder_s
 import 'package:wallzy/features/dashboard/home_widgets/goals_watchlist/goals_watchlist_widget.dart';
 import 'package:wallzy/features/dashboard/home_widgets/goals_watchlist/goals_selection_sheet.dart';
 
+import 'package:wallzy/common/widgets/smart_stack_widget.dart';
+
 class HomeWidgetsSection extends StatelessWidget {
   const HomeWidgetsSection({super.key});
 
@@ -22,132 +24,43 @@ class HomeWidgetsSection extends StatelessWidget {
         // 1. If no widgets, show the big "Add" button
         if (widgets.isEmpty) {
           return _AddWidgetButton(
-            widthTiles: 4,
-            heightTiles: 1,
             isFullWidth: true,
+            // Default height 60
             onTap: () => _showWidgetTypeSheet(context),
           );
         }
 
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            final double maxWidth = constraints.maxWidth;
-            const double spacing = 12.0;
-            final double tileWidth = (maxWidth - (3 * spacing)) / 4;
-
-            double getWidgetWidth(int tiles) =>
-                (tiles * tileWidth) + ((tiles - 1) * spacing);
-
-            // 2. Row Packing & Display Logic
-            final bool canAddFolder = !widgets.any(
-              (w) => w.type == HomeWidgetType.folderWatchlist,
-            );
-            final bool canAddGoals = !widgets.any(
-              (w) => w.type == HomeWidgetType.goalsWatchlist,
-            );
-            final bool canAddMore = canAddFolder || canAddGoals;
-
-            List<Widget> widgetRows = [];
-            List<Widget> currentRowChildren = [];
-            int currentRowUsedWidth = 0;
-
-            // Helper to push current children as a row
-            void pushCurrentRow() {
-              if (currentRowChildren.isNotEmpty) {
-                widgetRows.add(
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: currentRowChildren,
-                  ),
-                );
-                currentRowChildren = [];
-                currentRowUsedWidth = 0;
-              }
-            }
-
-            for (var widgetModel in widgets) {
-              // Row Break: Current widget doesn't fit
-              if (currentRowUsedWidth + widgetModel.width > 4) {
-                // Fill partial row if space exists
-                if (canAddMore && currentRowUsedWidth < 4) {
-                  final addWidthTiles = 4 - currentRowUsedWidth;
-                  currentRowChildren.add(
-                    SizedBox(
-                      width: getWidgetWidth(addWidthTiles),
-                      child: _AddWidgetButton(
-                        widthTiles: addWidthTiles,
-                        heightTiles: 2,
-                        onTap: () => _showWidgetTypeSheet(context),
-                      ),
-                    ),
-                  );
-                }
-                pushCurrentRow();
-              }
-
-              // Add current widget
-              currentRowChildren.add(
-                SizedBox(
-                  width: getWidgetWidth(widgetModel.width),
-                  child: _WidgetContainer(model: widgetModel),
-                ),
-              );
-
-              // Horizontal spacing
-              if (currentRowUsedWidth + widgetModel.width < 4) {
-                currentRowChildren.add(const SizedBox(width: spacing));
-              }
-
-              currentRowUsedWidth += widgetModel.width;
-
-              // Row Break: Row is full
-              if (currentRowUsedWidth == 4) {
-                pushCurrentRow();
-              }
-            }
-
-            // Handle leftovers or bottom "Add" button
-            if (currentRowChildren.isNotEmpty) {
-              // Fill partial row
-              if (canAddMore) {
-                final addWidthTiles = 4 - currentRowUsedWidth;
-                currentRowChildren.add(
-                  SizedBox(
-                    width: getWidgetWidth(addWidthTiles),
-                    child: _AddWidgetButton(
-                      widthTiles: addWidthTiles,
-                      heightTiles: 2,
-                      onTap: () => _showWidgetTypeSheet(context),
-                    ),
-                  ),
-                );
-              }
-              pushCurrentRow();
-            } else if (canAddMore) {
-              // Add a slim full-width "Add" button if grid is "perfect"
-              widgetRows.add(
-                _AddWidgetButton(
-                  widthTiles: 4,
-                  heightTiles: 1,
-                  isFullWidth: true,
-                  compact: true,
-                  onTap: () => _showWidgetTypeSheet(context),
-                ),
-              );
-            }
-
-            // Assembly: Build column with vertical spacing
-            List<Widget> finalDisplayList = [];
-            for (int i = 0; i < widgetRows.length; i++) {
-              finalDisplayList.add(widgetRows[i]);
-              if (i < widgetRows.length - 1) {
-                finalDisplayList.add(const SizedBox(height: spacing));
-              }
-            }
-
-            return Column(children: finalDisplayList);
-          },
+        // 2. Stack display logic
+        final bool canAddFolder = !widgets.any(
+          (w) => w.type == HomeWidgetType.folderWatchlist,
         );
+        final bool canAddGoals = !widgets.any(
+          (w) => w.type == HomeWidgetType.goalsWatchlist,
+        );
+        final bool canAddMore = canAddFolder || canAddGoals;
+
+        List<Widget> stackChildren = [];
+
+        // Add Active Widgets
+        for (var widgetModel in widgets) {
+          stackChildren.add(_WidgetContainer(model: widgetModel));
+        }
+
+        // Add "Add Widget" Card if applicable
+        if (canAddMore) {
+          stackChildren.add(
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: _AddWidgetButton(
+                isFullWidth: true,
+                height: double.infinity,
+                onTap: () => _showWidgetTypeSheet(context),
+              ),
+            ),
+          );
+        }
+
+        return SmartStackWidget(height: 160, children: stackChildren);
       },
     );
   }
@@ -320,17 +233,13 @@ class _WidgetContainer extends StatelessWidget {
 
 // --- THE ADD BUTTON ---
 class _AddWidgetButton extends StatelessWidget {
-  final int widthTiles;
-  final int heightTiles;
   final bool isFullWidth;
-  final bool compact;
+  final double? height; // Add height parameter
   final VoidCallback onTap;
 
   const _AddWidgetButton({
-    required this.widthTiles,
-    required this.heightTiles,
     this.isFullWidth = false,
-    this.compact = false,
+    this.height,
     required this.onTap,
   });
 
@@ -345,7 +254,7 @@ class _AddWidgetButton extends StatelessWidget {
         gap: 5.0,
         borderRadius: BorderRadius.circular(24),
         child: Container(
-          height: 60,
+          height: height ?? 60, // Use provided height or default to 60
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: theme.colorScheme.surface,

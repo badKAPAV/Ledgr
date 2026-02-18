@@ -1,8 +1,8 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // For HapticFeedback
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:wallzy/common/widgets/animated_gauge_chart.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/features/subscription/screens/add_subscription_screen.dart';
 import 'package:wallzy/features/subscription/screens/all_subscriptions_screen.dart';
@@ -17,8 +17,6 @@ import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
 import 'package:wallzy/common/widgets/date_filter_selector.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:wallzy/common/widgets/empty_report_placeholder.dart';
-
-import 'package:wallzy/app_drawer.dart';
 
 // --- DATA MODELS (UNCHANGED) ---
 
@@ -216,16 +214,6 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
     final currencySymbol = settingsProvider.currencySymbol;
 
     return Scaffold(
-      drawer: const AppDrawer(
-        selectedItem: DrawerItem.subscriptions,
-        isRoot: false,
-      ),
-      appBar: AppBar(
-        title: const Text('Recurring Payments'),
-        centerTitle: true,
-        automaticallyImplyLeading: false,
-        leading: const DrawerButton(),
-      ),
       backgroundColor: theme.scaffoldBackgroundColor,
       floatingActionButton: _buildGlassFab(context),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
@@ -565,65 +553,74 @@ class _SubscriptionDashboardPod extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(32),
       ),
       child: Column(
         children: [
-          SizedBox(
-            height: 200,
-            child: hasData
-                ? Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      PieChart(
-                        PieChartData(
-                          sections: summaries.map((summary) {
-                            final percentage =
-                                (summary.totalAmount / totalAmount) * 100;
-                            return PieChartSectionData(
-                              value: percentage,
-                              color: _getColorForSubscription(summary.name),
-                              radius: 40,
-                              showTitle: false,
-                            );
-                          }).toList(),
-                          sectionsSpace: 2,
-                          centerSpaceRadius: 60,
+          if (hasData)
+            SizedBox(
+              height: 140,
+              width: 280,
+              child: Stack(
+                alignment: Alignment.bottomCenter,
+                children: [
+                  AnimatedGaugeChart(
+                    items: summaries.map((s) {
+                      return GaugeChartItem(
+                        label: s.name,
+                        amount: s.totalAmount,
+                        color: _getColorForSubscription(s.name),
+                      );
+                    }).toList(),
+                    totalAmount: totalAmount,
+                    gapDegrees: 2,
+                    useRoundedEdges: false,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          currencyFormat.format(totalAmount),
+                          style: theme.textTheme.displaySmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: theme.colorScheme.onSurface,
+                            fontSize: 32,
+                            height: 1.0,
+                          ),
                         ),
-                      ),
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            "Total Spent",
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: theme.colorScheme.outline,
-                            ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "Total Spent",
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.outline,
+                            letterSpacing: 0.5,
                           ),
-                          Text(
-                            currencyFormat.format(totalAmount),
-                            style: theme.textTheme.headlineMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  )
-                : Center(
-                    child: Text(
-                      "No Data",
-                      style: TextStyle(color: theme.colorScheme.outline),
+                        ),
+                      ],
                     ),
                   ),
-          ),
-          const SizedBox(height: 24),
+                ],
+              ),
+            )
+          else
+            SizedBox(
+              height: 150,
+              child: Center(
+                child: Text(
+                  "No Data",
+                  style: TextStyle(color: theme.colorScheme.outline),
+                ),
+              ),
+            ),
+          const SizedBox(height: 32),
           if (hasData)
             Wrap(
-              spacing: 12,
+              spacing: 16,
               runSpacing: 12,
               alignment: WrapAlignment.center,
               children: topSummaries.map((s) {
@@ -641,9 +638,15 @@ class _SubscriptionDashboardPod extends StatelessWidget {
                     const SizedBox(width: 6),
                     Text(
                       s.name,
-                      style: const TextStyle(
-                        fontSize: 12,
+                      style: theme.textTheme.bodySmall?.copyWith(
                         fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      currencyFormat.format(s.totalAmount),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.outline,
                       ),
                     ),
                   ],

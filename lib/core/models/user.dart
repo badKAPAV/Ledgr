@@ -7,6 +7,7 @@ class UserModel {
   final bool isProUser;
   final DateTime? dob;
   final bool hasPassword;
+  final double? monthlyBudget;
 
   const UserModel({
     required this.uid,
@@ -17,6 +18,7 @@ class UserModel {
     this.isProUser = false,
     this.dob,
     this.hasPassword = false,
+    this.monthlyBudget,
   });
 
   factory UserModel.fromMap(String uid, Map<String, dynamic> data) {
@@ -31,6 +33,7 @@ class UserModel {
       isProUser: data['isProUser'] ?? false,
       dob: data['dob'] != null ? DateTime.parse(data['dob']) : null,
       hasPassword: data['hasPassword'] ?? false,
+      monthlyBudget: (data['monthlyBudget'] as num?)?.toDouble(),
     );
   }
 
@@ -43,6 +46,7 @@ class UserModel {
       'isProUser': isProUser,
       'dob': dob?.toIso8601String(),
       'hasPassword': hasPassword,
+      'monthlyBudget': monthlyBudget,
     };
   }
 
@@ -55,6 +59,7 @@ class UserModel {
     bool? isProUser,
     DateTime? dob,
     bool? hasPassword,
+    double? monthlyBudget,
   }) {
     return UserModel(
       uid: uid ?? this.uid,
@@ -65,6 +70,7 @@ class UserModel {
       isProUser: isProUser ?? this.isProUser,
       dob: dob ?? this.dob,
       hasPassword: hasPassword ?? this.hasPassword,
+      monthlyBudget: monthlyBudget ?? this.monthlyBudget,
     );
   }
 }

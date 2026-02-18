@@ -19,6 +19,7 @@ import 'package:wallzy/features/transaction/models/transaction.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
 import 'package:wallzy/features/transaction/widgets/transaction_detail_screen.dart';
 import 'package:wallzy/features/transaction/widgets/transactions_list/grouped_transaction_list.dart';
+import 'package:wallzy/common/progress_bar/segmented_progress_bar.dart';
 
 import 'package:wallzy/app_drawer.dart';
 
@@ -402,12 +403,6 @@ class _NetWorthBlock extends StatelessWidget {
       decimalDigits: 0,
     );
 
-    // Calculate flex ratios (prevent division by zero)
-    final totalVolume = totalAssets + totalDebt;
-    // If no data, show equal empty bars or full primary
-    final int assetFlex = totalVolume == 0 ? 1 : (totalAssets * 100).toInt();
-    final int debtFlex = totalVolume == 0 ? 0 : (totalDebt * 100).toInt();
-
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(24),
@@ -490,37 +485,16 @@ class _NetWorthBlock extends StatelessWidget {
 
           const SizedBox(height: 24),
 
-          // The Two Separate Rounded Containers
-          SizedBox(
+          // The Segmented Progress Bar
+          SegmentedProgressBar(
             height: 12,
-            child: Row(
-              children: [
-                // Assets portion
-                if (assetFlex > 0)
-                  Expanded(
-                    flex: assetFlex,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                // Gap
-                if (assetFlex > 0 && debtFlex > 0) const SizedBox(width: 6),
-                // Liabilities portion
-                if (debtFlex > 0)
-                  Expanded(
-                    flex: debtFlex,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.error,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+            gap: 6,
+            segments: [
+              if (totalAssets > 0)
+                Segment(value: totalAssets, color: theme.colorScheme.primary),
+              if (totalDebt > 0)
+                Segment(value: totalDebt, color: theme.colorScheme.error),
+            ],
           ),
 
           const SizedBox(height: 20),

@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
+import 'package:wallzy/common/app_lock/app_lock_biometric_guard_wrapper.dart';
 import 'package:wallzy/common/widgets/footer_graphic.dart';
 import 'package:wallzy/common/widgets/messages_permission_banner.dart';
 import 'package:wallzy/features/auth/provider/auth_provider.dart';
@@ -38,10 +39,13 @@ import 'package:uuid/uuid.dart';
 import 'package:wallzy/features/dashboard/widgets/sliver_app_bar_widget.dart';
 import 'package:wallzy/features/dashboard/widgets/action_deck_widget.dart';
 import 'package:wallzy/features/dashboard/widgets/analytics_widget.dart';
+import 'package:wallzy/features/dashboard/widgets/net_worth_widget.dart';
+import 'package:wallzy/common/widgets/smart_stack_widget.dart';
 import 'package:wallzy/features/dashboard/widgets/recent_activity_widget.dart';
 import 'package:wallzy/features/dashboard/widgets/glass_radial_menu.dart';
 import 'package:intl/intl.dart';
 import 'package:wallzy/features/summary/screens/timed_summary_screen.dart';
+import 'package:wallzy/features/dashboard/widgets/event_folder_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -287,69 +291,85 @@ class _HomeScreenState extends State<HomeScreen>
         .take(8)
         .toList();
 
-    return Scaffold(
-      key: const ValueKey('main_dashboard'),
-      drawer: _isProcessingSms ? null : const AppDrawer(isRoot: true),
-      body: Stack(
-        children: [
-          CustomScrollView(
-            controller: _scrollController,
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              // 1. HERO HEADER
-              HomeSliverAppBar(selectedTimeframe: _selectedTimeframe),
+    return BiometricGuard(
+      child: Scaffold(
+        key: const ValueKey('main_dashboard'),
+        drawer: _isProcessingSms ? null : const AppDrawer(isRoot: true),
+        body: Stack(
+          children: [
+            CustomScrollView(
+              controller: _scrollController,
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                // 1. HERO HEADER
+                HomeSliverAppBar(selectedTimeframe: _selectedTimeframe),
 
-              // 2. ACTION DECK
-              const SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0),
-                  child: MessagesPermissionBanner(),
+                // 2. ACTION DECK
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: MessagesPermissionBanner(),
+                  ),
                 ),
-              ),
-              if (_pendingSmsTransactions.isNotEmpty ||
-                  _dueSubscriptions.isNotEmpty)
-                SliverToBoxAdapter(
-                  child: ActionDeckWidget(
-                    pendingSmsTransactions: _pendingSmsTransactions,
-                    dueSubscriptions: _dueSubscriptions,
-                    onPendingSmsTap: _navigateToTransactionFromData,
-                    onPendingSmsDismiss: (tx) async {
-                      await _platform.invokeMethod('removePendingTransaction', {
-                        'id': tx['id'],
-                      });
-                      setState(() {
-                        _pendingSmsTransactions.removeWhere(
-                          (e) => e['id'] == tx['id'],
+                if (_pendingSmsTransactions.isNotEmpty ||
+                    _dueSubscriptions.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: ActionDeckWidget(
+                      pendingSmsTransactions: _pendingSmsTransactions,
+                      dueSubscriptions: _dueSubscriptions,
+                      onPendingSmsTap: _navigateToTransactionFromData,
+                      onPendingSmsDismiss: (tx) async {
+                        await _platform.invokeMethod(
+                          'removePendingTransaction',
+                          {'id': tx['id']},
                         );
-                      });
-                    },
-                    onDueSubscriptionTap: _navigateToAddSubscriptionTransaction,
-                    onDueSubscriptionDismiss: (sub) {
-                      // Logic for logic dismissal if needed, or re-use removePending logic?
-                      // Original used _showDismissDueSubscriptionDialog which just removed.
-                      // But Subscriptions are localPrefs?
-                      // Ah, _dueSubscriptions logic in original code:
-                      // Not implemented. It just called _showDismissConfirmationDialog
-                      // which only removed SMS from native side.
-                      // It didn't remove subscription due alert from the list permanently?
-                      // Actually, `_dueSubscriptions` is loaded from SharedPreferences.
-                      // I should add removing from that list + save.
-                      setState(() {
-                        _dueSubscriptions.remove(sub);
-                      });
-                      _saveDueSubscriptions();
-                    },
-                    onIgnoreAll: _handleDismissAllPending,
-                    onShowAllTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => PendingSmsScreen(
-                            transactions: _pendingSmsTransactions,
-                            onAdd: (tx) async {
-                              final result =
-                                  await _navigateToTransactionFromData(tx);
-                              if (result == true) {
+                        setState(() {
+                          _pendingSmsTransactions.removeWhere(
+                            (e) => e['id'] == tx['id'],
+                          );
+                        });
+                      },
+                      onDueSubscriptionTap:
+                          _navigateToAddSubscriptionTransaction,
+                      onDueSubscriptionDismiss: (sub) {
+                        // Logic for logic dismissal if needed, or re-use removePending logic?
+                        // Original used _showDismissDueSubscriptionDialog which just removed.
+                        // But Subscriptions are localPrefs?
+                        // Ah, _dueSubscriptions logic in original code:
+                        // Not implemented. It just called _showDismissConfirmationDialog
+                        // which only removed SMS from native side.
+                        // It didn't remove subscription due alert from the list permanently?
+                        // Actually, `_dueSubscriptions` is loaded from SharedPreferences.
+                        // I should add removing from that list + save.
+                        setState(() {
+                          _dueSubscriptions.remove(sub);
+                        });
+                        _saveDueSubscriptions();
+                      },
+                      onIgnoreAll: _handleDismissAllPending,
+                      onShowAllTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PendingSmsScreen(
+                              transactions: _pendingSmsTransactions,
+                              onAdd: (tx) async {
+                                final result =
+                                    await _navigateToTransactionFromData(tx);
+                                if (result == true) {
+                                  _platform.invokeMethod(
+                                    'removePendingTransaction',
+                                    {'id': tx['id']},
+                                  );
+                                  setState(() {
+                                    _pendingSmsTransactions.removeWhere(
+                                      (e) => e['id'] == tx['id'],
+                                    );
+                                  });
+                                }
+                                return result == true;
+                              },
+                              onDismiss: (tx) {
                                 _platform.invokeMethod(
                                   'removePendingTransaction',
                                   {'id': tx['id']},
@@ -359,23 +379,126 @@ class _HomeScreenState extends State<HomeScreen>
                                     (e) => e['id'] == tx['id'],
                                   );
                                 });
-                              }
-                              return result == true;
-                            },
-                            onDismiss: (tx) {
-                              _platform.invokeMethod(
-                                'removePendingTransaction',
-                                {'id': tx['id']},
-                              );
-                              setState(() {
-                                _pendingSmsTransactions.removeWhere(
-                                  (e) => e['id'] == tx['id'],
-                                );
-                              });
-                            },
-                            onUndo: (tx) {
-                              // Undo logic...
-                            },
+                              },
+                              onUndo: (tx) {
+                                // Undo logic...
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+
+                // 2.5 SUMMARY BANNER
+                // Reactive Check: Show if not dismissed AND data exists (OR Test Mode)
+                SliverToBoxAdapter(
+                  child: Builder(
+                    builder: (context) {
+                      // 1. Check Prev Month Date
+                      if (_prevMonthDate == null)
+                        return const SizedBox.shrink();
+
+                      // 2. Check Visibility (Logic + Test Flag)
+                      final bool isTestMode = TimedSummaryScreen.allowTestMode;
+                      final bool isDismissed = _isSummaryDismissed == true;
+
+                      if (!isTestMode && isDismissed) {
+                        return const SizedBox.shrink();
+                      }
+
+                      if (!isTestMode) {
+                        final hasData = transactionProvider.transactions.any(
+                          (tx) =>
+                              tx.timestamp.year == _prevMonthDate!.year &&
+                              tx.timestamp.month == _prevMonthDate!.month,
+                        );
+                        if (!hasData) return const SizedBox.shrink();
+                      }
+
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          16.0,
+                          0.0,
+                          16.0,
+                          16.0,
+                        ),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(50),
+                            border: Border.all(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primary.withOpacity(0.5),
+                              width: 2,
+                            ),
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            borderRadius: BorderRadius.circular(50),
+                            child: InkWell(
+                              onTap: () async {
+                                // Dismiss logic
+                                final prefs =
+                                    await SharedPreferences.getInstance();
+                                final key =
+                                    'summary_dismissed_${_prevMonthDate!.year}_${_prevMonthDate!.month}';
+                                await prefs.setBool(key, true);
+
+                                if (mounted) {
+                                  setState(() {
+                                    _isSummaryDismissed = true;
+                                  });
+
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => TimedSummaryScreen(
+                                        initialDate: _prevMonthDate,
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                              borderRadius: BorderRadius.circular(50),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20.0,
+                                  vertical: 14.0,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.insights,
+                                      size: 20,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        "View summary for ${DateFormat('MMMM').format(_prevMonthDate!)}",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 14,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onSurface,
+                                        ),
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.arrow_forward_ios,
+                                      size: 14,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.outline,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       );
@@ -383,146 +506,57 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                 ),
 
-              // 2.5 SUMMARY BANNER
-              // Reactive Check: Show if not dismissed AND data exists (OR Test Mode)
-              SliverToBoxAdapter(
-                child: Builder(
-                  builder: (context) {
-                    // 1. Check Prev Month Date
-                    if (_prevMonthDate == null) return const SizedBox.shrink();
-
-                    // 2. Check Visibility (Logic + Test Flag)
-                    final bool isTestMode = TimedSummaryScreen.allowTestMode;
-                    final bool isDismissed = _isSummaryDismissed == true;
-
-                    // If test mode is ON, we show it regardless of dismissal or data (maybe?)
-                    // Requirement: "make it have a flag so that the container ... is always visible for testing"
-                    if (!isTestMode && isDismissed) {
-                      return const SizedBox.shrink();
-                    }
-
-                    // 3. Check Data Availability (skip if test mode?)
-                    // "Always visible for testing" implies skip data check too.
-                    if (!isTestMode) {
-                      final hasData = transactionProvider.transactions.any(
-                        (tx) =>
-                            tx.timestamp.year == _prevMonthDate!.year &&
-                            tx.timestamp.month == _prevMonthDate!.month,
-                      );
-                      if (!hasData) return const SizedBox.shrink();
-                    }
-
-                    return Padding(
-                      padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 16.0),
-                      child: Material(
-                        color: Theme.of(context).colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(24),
-                        child: InkWell(
-                          onTap: () async {
-                            // Dismiss logic
-                            final prefs = await SharedPreferences.getInstance();
-                            final key =
-                                'summary_dismissed_${_prevMonthDate!.year}_${_prevMonthDate!.month}';
-                            await prefs.setBool(key, true);
-
-                            if (mounted) {
+                // 3. ANALYTICS POD
+                if (transactionProvider.transactions.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 0),
+                      child: SmartStackWidget(
+                        height: 240,
+                        children: [
+                          AnalyticsWidget(
+                            selectedTimeframe: _selectedTimeframe,
+                            onTimeframeChanged: (val) {
                               setState(() {
-                                _isSummaryDismissed = true;
+                                _selectedTimeframe = val;
                               });
-
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => TimedSummaryScreen(
-                                    initialDate: _prevMonthDate,
-                                  ),
-                                ),
-                              );
-                            }
-                          },
-                          borderRadius: BorderRadius.circular(24),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.insights,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onPrimaryContainer,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    "View summary for ${DateFormat('MMMM').format(_prevMonthDate!)}",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onPrimaryContainer,
-                                    ),
-                                  ),
-                                ),
-                                Icon(
-                                  Icons.arrow_forward_ios,
-                                  size: 16,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onPrimaryContainer,
-                                ),
-                              ],
-                            ),
+                            },
                           ),
-                        ),
+                          NetWorthWidget(),
+                          EventFolderWidget(),
+                        ],
                       ),
-                    );
-                  },
-                ),
-              ),
-
-              // 3. ANALYTICS POD
-              if (transactionProvider.transactions.isNotEmpty)
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 0),
-                    child: AnalyticsWidget(
-                      selectedTimeframe: _selectedTimeframe,
-                      onTimeframeChanged: (val) {
-                        setState(() {
-                          _selectedTimeframe = val;
-                        });
-                      },
                     ),
+                  ),
+
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    child: HomeWidgetsSection(),
                   ),
                 ),
 
-              const SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  child: HomeWidgetsSection(),
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+                // 4. RECENT ACTIVITY
+                SliverToBoxAdapter(
+                  child: RecentActivityWidget(
+                    transactions: recentTransactions,
+                    onTap: (tx) => _showTransactionDetails(context, tx),
+                  ),
                 ),
-              ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-              // 4. RECENT ACTIVITY
-              SliverToBoxAdapter(
-                child: RecentActivityWidget(
-                  transactions: recentTransactions,
-                  onTap: (tx) => _showTransactionDetails(context, tx),
-                ),
-              ),
-
-              const SliverToBoxAdapter(child: FooterGraphic()),
-            ],
-          ),
-          Positioned(
-            bottom: 50, // Margin from the bottom
-            left: 0,
-            right: 0,
-            child: Center(child: _buildGlassFab()),
-          ),
-        ],
+                const SliverToBoxAdapter(child: FooterGraphic()),
+              ],
+            ),
+            Positioned(
+              bottom: 50, // Margin from the bottom
+              left: 0,
+              right: 0,
+              child: Center(child: _buildGlassFab()),
+            ),
+          ],
+        ),
       ),
     );
   }

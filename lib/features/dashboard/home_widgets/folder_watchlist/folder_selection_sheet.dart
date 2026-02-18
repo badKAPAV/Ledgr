@@ -73,7 +73,7 @@ class _FolderSelectionSheetState extends State<FolderSelectionSheet> {
 
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-      height: MediaQuery.of(context).size.height * 0.7,
+      height: MediaQuery.of(context).size.height * 0.8,
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),

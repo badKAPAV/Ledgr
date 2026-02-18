@@ -787,47 +787,44 @@ class _FolderPickerSheetState extends State<FolderPickerSheet> {
 
           // Search Bar
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Container(
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withOpacity(
-                  0.5,
-                ),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: TextField(
-                controller: _searchController,
-                autofocus: false,
-                decoration: InputDecoration(
-                  hintText: "Search or create a folder",
-                  prefixIcon: Padding(
-                    padding: const EdgeInsets.all(14.0),
-                    child: const HugeIcon(
-                      icon: HugeIcons.strokeRoundedSearch01,
-                      size: 10,
-                      strokeWidth: 2,
-                    ),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: TextField(
+              controller: _searchController,
+              autofocus: false,
+              decoration: InputDecoration(
+                hintText: "Search or create a folder",
+                prefixIcon: Padding(
+                  padding: const EdgeInsets.all(14.0),
+                  child: const HugeIcon(
+                    icon: HugeIcons.strokeRoundedSearch01,
+                    size: 10,
+                    strokeWidth: 2,
                   ),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  suffixIcon: _searchQuery.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.cancel_rounded, size: 20),
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() => _searchQuery = "");
-                          },
-                        )
-                      : null,
                 ),
-                onChanged: (v) => setState(() => _searchQuery = v),
-                onSubmitted: (v) {
-                  if (v.trim().isNotEmpty) _createAndSelect(v.trim());
-                },
+                filled: true,
+                fillColor: theme.colorScheme.surfaceContainerHighest,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.cancel_rounded, size: 20),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _searchQuery = "");
+                        },
+                      )
+                    : null,
               ),
+              onChanged: (v) => setState(() => _searchQuery = v),
+              onSubmitted: (v) {
+                if (v.trim().isNotEmpty) _createAndSelect(v.trim());
+              },
             ),
           ),
 

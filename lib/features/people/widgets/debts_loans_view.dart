@@ -1,5 +1,4 @@
-import 'package:wallzy/common/pie_chart/pie_chart_widget.dart';
-import 'package:wallzy/common/pie_chart/pie_model.dart';
+import 'package:wallzy/common/progress_bar/segmented_progress_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -142,8 +141,7 @@ class _DebtDashboardPod extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final appColors = theme.extension<AppColors>()!;
-    final total = totalYouOwe + totalOwesYou;
-    final hasData = total > 0;
+    final netBalance = totalOwesYou - totalYouOwe;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -152,55 +150,63 @@ class _DebtDashboardPod extends StatelessWidget {
         color: theme.colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(32),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Chart
-          SizedBox(
-            height: 100,
-            width: 100,
-            child: hasData
-                ? LedgrPieChart(
-                    thickness: 12,
-                    gap: 24,
-                    sections: [
-                      if (totalYouOwe > 0)
-                        PieData(value: totalYouOwe, color: appColors.expense),
-                      if (totalOwesYou > 0)
-                        PieData(value: totalOwesYou, color: appColors.income),
-                    ],
-                  )
-                : Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: theme.colorScheme.outlineVariant,
-                        width: 4,
-                      ),
-                    ),
-                  ),
+          // 1. Net Balance (Header)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "NET",
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.outline,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              Text(
+                currencyFormat.format(netBalance),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  height: 1.0,
+                  fontFamily: 'momo',
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 24),
-          // Stats Column
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _StatRow(
-                  label: "You Owe",
-                  amount: totalYouOwe,
-                  color: appColors.expense,
-                ),
-                Divider(
-                  height: 24,
-                  color: theme.colorScheme.outlineVariant.withAlpha(128),
-                ),
-                _StatRow(
-                  label: "Owes You",
-                  amount: totalOwesYou,
-                  color: appColors.income,
-                ),
-              ],
-            ),
+
+          const SizedBox(height: 16),
+
+          // 2. Segmented Progress Bar (Comparison)
+          SegmentedProgressBar(
+            height: 12,
+            gap: 4.0,
+            borderRadius: BorderRadius.circular(6),
+            segments: [
+              Segment(value: totalOwesYou, color: appColors.income),
+              Segment(value: totalYouOwe, color: appColors.expense),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // 3. Stats Labels
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _SimplifiedDebtStat(
+                label: "Owes You",
+                amount: totalOwesYou,
+                color: appColors.income,
+                isLeft: true,
+              ),
+              _SimplifiedDebtStat(
+                label: "You Owe",
+                amount: totalYouOwe,
+                color: appColors.expense,
+                isLeft: false,
+              ),
+            ],
           ),
         ],
       ),
@@ -208,37 +214,49 @@ class _DebtDashboardPod extends StatelessWidget {
   }
 }
 
-class _StatRow extends StatelessWidget {
+class _SimplifiedDebtStat extends StatelessWidget {
   final String label;
   final double amount;
   final Color color;
-  const _StatRow({
+  final bool isLeft;
+
+  const _SimplifiedDebtStat({
     required this.label,
     required this.amount,
     required this.color,
+    required this.isLeft,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final settingsProvider = Provider.of<SettingsProvider>(context);
     final currencySymbol = settingsProvider.currencySymbol;
     final currencyFormat = NumberFormat.compactCurrency(
       symbol: currencySymbol,
       decimalDigits: 0,
     );
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+    return Column(
+      crossAxisAlignment: isLeft
+          ? CrossAxisAlignment.start
+          : CrossAxisAlignment.end,
       children: [
         Text(
-          label,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+          label.toUpperCase(),
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.outline,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
         ),
+        const SizedBox(height: 2),
         Text(
           currencyFormat.format(amount),
           style: TextStyle(
+            fontSize: 14,
             fontWeight: FontWeight.w900,
             color: color,
-            fontSize: 16,
           ),
         ),
       ],

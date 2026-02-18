@@ -358,9 +358,7 @@ class QuickSaveService {
     }
 
     // 2. Immediate Cache Update (Crucial for next run)
-    await Future.delayed(
-      const Duration(milliseconds: 100),
-    ); // Small write buffer
+    await Future.delayed(const Duration(milliseconds: 100));
     final String? currentCacheJson = prefs.getString(
       'quick_save_accounts_cache',
     );
@@ -388,10 +386,11 @@ class QuickSaveService {
           'transaction_channel',
           'Transaction Updates',
           channelDescription: 'Notifications for transaction updates',
-          importance: Importance.high,
-          priority: Priority.high,
+          importance: Importance.low,
+          priority: Priority.low,
           showWhen: true,
           icon: 'ic_stat_ledgr',
+          timeoutAfter: 5000,
         );
     const NotificationDetails platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,

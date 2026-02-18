@@ -70,6 +70,10 @@ class AuthProvider with ChangeNotifier {
       if (userDoc != null && userDoc.exists) {
         _user = UserModel.fromMap(firebaseUser.uid, userDoc.data()!);
         _isNewUser = false;
+        // Sync local budget cache
+        if (_user?.monthlyBudget != null) {
+          await prefs.setDouble('local_monthly_budget', _user!.monthlyBudget!);
+        }
       } else {
         // Doc might not exist in cache. Try server.
       }
@@ -88,6 +92,13 @@ class AuthProvider with ChangeNotifier {
         if (serverDoc.exists) {
           _user = UserModel.fromMap(firebaseUser.uid, serverDoc.data()!);
           _isNewUser = false;
+          // Sync local budget cache
+          if (_user?.monthlyBudget != null) {
+            await prefs.setDouble(
+              'local_monthly_budget',
+              _user!.monthlyBudget!,
+            );
+          }
         } else {
           // No doc on server either -> New User
           _isNewUser = true;
@@ -110,6 +121,14 @@ class AuthProvider with ChangeNotifier {
         );
       }
     }
+
+    // 2. Load Local Budget Overrides
+    try {
+      final localBudget = prefs.getDouble('local_monthly_budget');
+      if (localBudget != null) {
+        _user = _user?.copyWith(monthlyBudget: localBudget);
+      }
+    } catch (_) {}
 
     // Save ID for background utility
     await prefs.setString('last_user_id', firebaseUser.uid);
@@ -434,6 +453,33 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> updateMonthlyBudget(double amount) async {
+    if (_user == null) return;
+
+    // 1. Update local state immediately (Optimistic)
+    _user = _user!.copyWith(monthlyBudget: amount);
+    notifyListeners();
+
+    // 2. Persist to SharedPreferences for instant retrieval on next launch
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setDouble('local_monthly_budget', amount);
+    } catch (e) {
+      debugPrint("Error saving budget to SharedPreferences: $e");
+    }
+
+    // 3. Update Firestore (Firestore handles its own offline queueing)
+    try {
+      await _firestore.collection('users').doc(_user!.uid).update({
+        'monthlyBudget': amount,
+      });
+    } catch (e) {
+      debugPrint("Error updating monthly budget in Firestore: $e");
+      // We don't rethrow here because the local state and offline sync
+      // are already handled by Flutter/Firestore.
+    }
+  }
+
   Future<void> signOut() async {
     // Clear local and cached data before signing out to ensure user privacy.
     try {
@@ -450,9 +496,10 @@ class AuthProvider with ChangeNotifier {
       // 4. Clear the image cache.
       await DefaultCacheManager().emptyCache();
 
-      // Clear local prefs for magic link
+      // Clear local prefs for magic link and budget
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('emailLink');
+      await prefs.remove('local_monthly_budget');
     } catch (e) {
       // Log errors but don't block sign-out. The user should always be able to sign out.
       debugPrint("Error clearing data on sign out: $e");
