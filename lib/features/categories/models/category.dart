@@ -35,7 +35,7 @@ class CategoryModel {
       keywords: List<String>.from(map['keywords']),
       budget: map['budget'],
       isDeleted: map['isDeleted'],
-      isDefault: map['isDefault'],
+      isDefault: map['isDefault'] ?? false,
     );
   }
 

@@ -153,7 +153,9 @@ class _AppDrawerState extends State<AppDrawer> {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: colorScheme.errorContainer.withOpacity(0.5),
+                        color: colorScheme.errorContainer.withValues(
+                          alpha: 0.5,
+                        ),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -441,7 +443,7 @@ class _MinimalDrawerTile extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         // If selected, show the light grey background seen in "Products"
         tileColor: isSelected
-            ? colorScheme.surfaceContainerHighest.withOpacity(0.5)
+            ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
             : Colors.transparent,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
         leading: HugeIcon(

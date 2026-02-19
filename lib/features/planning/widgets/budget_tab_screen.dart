@@ -19,6 +19,7 @@ class _BudgetTabScreenState extends State<BudgetTabScreen> {
   double _averageExpense = 0;
   double _intensity = 0.135;
   bool _isInit = true;
+  // ignore: unused_field
   bool _isStudying = true;
 
   @override
@@ -133,7 +134,7 @@ class _BudgetTabScreenState extends State<BudgetTabScreen> {
                                         fontFamily: 'momo',
                                         fontSize: 60,
                                         color: theme.colorScheme.onSurface
-                                            .withOpacity(0.3),
+                                            .withValues(alpha: 0.3),
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
@@ -189,8 +190,9 @@ class _BudgetTabScreenState extends State<BudgetTabScreen> {
                               Text(
                                 "SAVINGS GOAL",
                                 style: TextStyle(
-                                  color: theme.colorScheme.onSurface
-                                      .withOpacity(0.24),
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.24,
+                                  ),
                                   fontSize: 14,
                                   letterSpacing: 1.2,
                                   fontWeight: FontWeight.w700,
@@ -331,7 +333,7 @@ class _ArcPainter extends CustomPainter {
 
     // 1. Background Track
     final trackPaint = Paint()
-      ..color = colorScheme.onSurface.withOpacity(0.05)
+      ..color = colorScheme.onSurface.withValues(alpha: 0.05)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2
       ..strokeCap = StrokeCap.round;
@@ -357,7 +359,7 @@ class _ArcPainter extends CustomPainter {
     );
 
     final shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.3)
+      ..color = Colors.black.withValues(alpha: 0.3)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
     canvas.drawCircle(thumbPos, 22, shadowPaint);
 

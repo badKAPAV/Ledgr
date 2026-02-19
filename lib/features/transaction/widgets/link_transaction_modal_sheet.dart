@@ -100,7 +100,7 @@ class _LinkTransactionModalSheetState extends State<LinkTransactionModalSheet> {
               height: 5,
               margin: const EdgeInsets.only(top: 12, bottom: 20),
               decoration: BoxDecoration(
-                color: colorScheme.outlineVariant.withOpacity(0.5),
+                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(2.5),
               ),
             ),

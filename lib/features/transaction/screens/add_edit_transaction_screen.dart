@@ -21,6 +21,7 @@ class AddEditTransactionScreen extends StatefulWidget {
   final String? initialAccountNumber;
   final String? initialPayee;
   final String? initialCategory;
+  final String? initialCategoryId;
   final Person? initialPerson;
   final bool initialIsLoan;
   final String initialLoanSubtype;
@@ -37,6 +38,7 @@ class AddEditTransactionScreen extends StatefulWidget {
     this.initialAccountNumber,
     this.initialPayee,
     this.initialCategory,
+    this.initialCategoryId,
     this.initialPerson,
     this.initialIsLoan = false,
     this.initialLoanSubtype = 'new',
@@ -143,7 +145,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen>
                       borderRadius: BorderRadius.circular(25),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
@@ -192,6 +194,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen>
                     initialAccountNumber: widget.initialAccountNumber,
                     initialPayee: widget.initialPayee,
                     initialCategory: widget.initialCategory,
+                    initialCategoryId: widget.initialCategoryId,
                     initialPerson: widget.initialPerson,
                     initialIsLoan: widget.initialIsLoan,
                     initialLoanSubtype: widget.initialLoanSubtype,
@@ -206,6 +209,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen>
                     initialAccountNumber: widget.initialAccountNumber,
                     initialPayee: widget.initialPayee,
                     initialCategory: widget.initialCategory,
+                    initialCategoryId: widget.initialCategoryId,
                     initialPerson: widget.initialPerson,
                     initialIsLoan: widget.initialIsLoan,
                     initialLoanSubtype: widget.initialLoanSubtype,
@@ -227,13 +231,13 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen>
             if (_isEditing) {
               return SizedBox(
                 width: double.infinity,
-                height: 56,
+                height: 50,
                 child: FilledButton(
                   style: FilledButton.styleFrom(
                     elevation: 4,
                     shadowColor: theme.colorScheme.primary.withAlpha(100),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(50),
                     ),
                   ),
                   onPressed: txProvider.isSaving
@@ -262,15 +266,18 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen>
             return Row(
               children: [
                 Expanded(
+                  flex: 2,
                   child: SizedBox(
-                    height: 56,
+                    height: 50,
                     child: OutlinedButton(
                       style: OutlinedButton.styleFrom(
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(50),
                         ),
                         side: BorderSide(
-                          color: theme.colorScheme.primary.withOpacity(0.5),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.5,
+                          ),
                         ),
                         padding: EdgeInsets.zero,
                       ),
@@ -292,15 +299,15 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen>
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  flex: 2,
+                  flex: 3,
                   child: SizedBox(
-                    height: 56,
+                    height: 50,
                     child: FilledButton(
                       style: FilledButton.styleFrom(
                         elevation: 4,
                         shadowColor: theme.colorScheme.primary.withAlpha(100),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(50),
                         ),
                       ),
                       onPressed: txProvider.isSaving

@@ -93,7 +93,7 @@ class _SummaryPieChartState extends State<SummaryPieChart> {
             color: theme.colorScheme.surface,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 10,
                 spreadRadius: 2,
               ),
@@ -164,7 +164,7 @@ class _SummaryPieChartState extends State<SummaryPieChart> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.3),
+            color: color.withValues(alpha: 0.3),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),

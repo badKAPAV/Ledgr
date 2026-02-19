@@ -6,7 +6,7 @@ class OverlayPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = Colors.black.withOpacity(0.7);
+    final paint = Paint()..color = Colors.black.withValues(alpha: 0.7);
 
     // Create a path for the whole screen and subtract the crop box
     final backgroundPath = Path()

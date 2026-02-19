@@ -100,10 +100,12 @@ class _WidgetContainer extends StatelessWidget {
         height: 160, // Fixed height for 2 tiles (approx)
         decoration: BoxDecoration(
           color: model.needsSetup
-              ? theme.colorScheme.surfaceContainerHighest.withOpacity(0.5)
+              ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
               : theme.colorScheme.surfaceContainer,
           borderRadius: BorderRadius.circular(32),
-          border: Border.all(color: theme.colorScheme.outline.withOpacity(0.1)),
+          border: Border.all(
+            color: theme.colorScheme.outline.withValues(alpha: 0.1),
+          ),
         ),
         child: model.needsSetup
             ? _buildSetupState(theme)
@@ -249,7 +251,7 @@ class _AddWidgetButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: DashedBorder(
-        color: theme.colorScheme.primary.withOpacity(0.3),
+        color: theme.colorScheme.primary.withValues(alpha: 0.3),
         strokeWidth: 1.5,
         gap: 5.0,
         borderRadius: BorderRadius.circular(24),
@@ -266,13 +268,13 @@ class _AddWidgetButton extends StatelessWidget {
                   children: [
                     Icon(
                       Icons.add_rounded,
-                      color: theme.colorScheme.primary.withOpacity(0.5),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.5),
                     ),
                     const SizedBox(width: 8),
                     Text(
                       "Add Widgets",
                       style: TextStyle(
-                        color: theme.colorScheme.primary.withOpacity(0.5),
+                        color: theme.colorScheme.primary.withValues(alpha: 0.5),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -495,11 +497,11 @@ class _DummyFolderWatchlistWidget extends StatelessWidget {
         color: Theme.of(context).colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -531,7 +533,7 @@ class _DummyFolderWatchlistWidget extends StatelessWidget {
                           width: 26,
                           height: 26,
                           decoration: BoxDecoration(
-                            color: folder.color.withOpacity(0.15),
+                            color: folder.color.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Padding(
@@ -700,11 +702,11 @@ class _DummyGoalsWatchlistWidget extends StatelessWidget {
         color: Theme.of(context).colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -736,7 +738,7 @@ class _DummyGoalsWatchlistWidget extends StatelessWidget {
                           width: 26,
                           height: 26,
                           decoration: BoxDecoration(
-                            color: goal.color.withOpacity(0.15),
+                            color: goal.color.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(13),
                           ),
                           child: Padding(

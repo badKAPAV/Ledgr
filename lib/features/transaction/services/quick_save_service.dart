@@ -4,8 +4,10 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wallzy/features/accounts/models/account.dart';
 import 'package:wallzy/features/tag/models/tag.dart';
+import 'package:wallzy/features/categories/services/category_matcher.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
 import 'package:uuid/uuid.dart';
+import 'package:wallzy/features/transaction/widgets/add_edit_transaction_widgets/transaction_widgets.dart';
 
 class QuickSaveService {
   static const String quickSaveTask = 'quick_save_transaction';
@@ -287,6 +289,16 @@ class QuickSaveService {
         // debugPrint("Tag Error: $e");
       }
 
+      // --- MATCH CATEGORY ---
+      final matcher = CategoryMatcher();
+      await matcher.loadCategories();
+      final categoryId = matcher.matchCategory(
+        payee.isNotEmpty ? payee : category,
+        mode: type == 'income'
+            ? TransactionMode.income
+            : TransactionMode.expense,
+      );
+
       // --- CREATE TRANSACTION ---
       final String tempId = 'offline_${DateTime.now().millisecondsSinceEpoch}';
       final newTransaction = TransactionModel(
@@ -299,6 +311,7 @@ class QuickSaveService {
             : (category.isNotEmpty ? category : 'Quick Save Transaction'),
         paymentMethod: paymentMethod,
         category: category,
+        categoryId: categoryId,
         accountId: targetAccountId, // This holds our Created ID or Matched ID
         currency: 'INR',
         tags: selectedTags,

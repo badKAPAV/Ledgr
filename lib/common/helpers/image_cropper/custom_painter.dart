@@ -38,7 +38,7 @@ class CropperPainter extends CustomPainter {
     canvas.restore();
 
     // 2. Draw Dark Overlay with Cutout
-    final paint = Paint()..color = Colors.black.withOpacity(0.7);
+    final paint = Paint()..color = Colors.black.withValues(alpha: 0.7);
     final backgroundPath = Path()
       ..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
     final cutoutPath = Path()..addRect(cropRect);

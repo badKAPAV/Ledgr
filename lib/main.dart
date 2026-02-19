@@ -22,6 +22,7 @@ import 'package:wallzy/features/subscription/services/subscription_service.dart'
 import 'package:wallzy/features/people/provider/people_provider.dart';
 import 'package:wallzy/features/goals/provider/goals_provider.dart';
 import 'package:wallzy/features/planning/provider/budget_provider.dart';
+import 'package:wallzy/features/categories/provider/category_provider.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:wallzy/core/themes/theme.dart';
 import 'package:wallzy/features/auth/provider/auth_provider.dart';
@@ -124,6 +125,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()), // NEW
+        ChangeNotifierProvider(create: (_) => CategoryProvider()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => FeedbackProvider()),
         ChangeNotifierProvider(create: (_) => SmsFeedbackProvider()),

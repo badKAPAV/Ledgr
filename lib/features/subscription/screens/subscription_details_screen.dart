@@ -15,6 +15,7 @@ import 'package:wallzy/features/transaction/models/transaction.dart';
 import 'package:wallzy/features/transaction/widgets/transactions_list/grouped_transaction_list.dart';
 import 'package:wallzy/features/transaction/widgets/transaction_detail_screen.dart';
 import 'package:wallzy/features/subscription/widgets/subscription_info_modal_sheet.dart';
+import 'package:wallzy/features/categories/provider/category_provider.dart';
 
 class _MonthlySummary {
   final DateTime month;
@@ -100,6 +101,17 @@ class _SubscriptionDetailsScreenState extends State<SubscriptionDetailsScreen> {
       (s) => s.id == widget.subscription.id,
       orElse: () => widget.subscription,
     );
+  }
+
+  String _getCategoryName(Subscription sub) {
+    if (sub.categoryId != null) {
+      final category = context
+          .read<CategoryProvider>()
+          .categories
+          .firstWhereOrNull((c) => c.id == sub.categoryId);
+      if (category != null) return category.name;
+    }
+    return sub.category;
   }
 
   void _restoreSubscription() {
@@ -196,7 +208,7 @@ class _SubscriptionDetailsScreenState extends State<SubscriptionDetailsScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Recurring Payment',
+                  _getCategoryName(currentSubscription),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),

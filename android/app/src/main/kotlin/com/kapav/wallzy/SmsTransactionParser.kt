@@ -21,22 +21,8 @@ object SmsTransactionParser {
     const val PREFS_NAME = "FlutterSharedPreferences"
     const val KEY_PENDING_TRANSACTIONS = "flutter.pending_sms_transactions"
 
-    // --- CATEGORY KEYWORDS ---
-    private val groceryKeywords = listOf("bigbasket", "blinkit", "zepto", "instamart", "grofers", "dmart", "reliance fresh", "nature's basket", "kirana", "supermarket", "vegetable", "fruit", "grocery")
-    private val foodKeywords = listOf("zomato", "swiggy", "ubereats", "domino", "pizza", "burger", "kfc", "mcdonald", "cafe", "coffee", "starbucks", "tea", "dining", "kitchen", "restaurant", "baking", "bakery", "cake", "eats", "bar", "pub", "brew", "brewery", "brewpub")
-    private val transportKeywords = listOf("uber", "ola", "rapido", "indrive", "metro", "rail", "irctc", "fastag", "toll", "ticket", "cab", "auto")
-    private val fuelKeywords = listOf("petrol", "diesel", "shell", "hpcl", "bpcl", "ioc", "pump", "fuel", "gas station")
-    private val shoppingKeywords = listOf("amazon", "flipkart", "myntra", "ajio", "meesho", "nykaa", "tata", "reliance trends", "zudio", "pantaloons", "mall", "retail", "store", "mart", "cloth", "fashion", "decathlon", "nike", "adidas")
-    private val entertainmentKeywords = listOf("bookmyshow", "pvr", "inox", "netflix", "prime", "hotstar", "spotify", "youtube", "game", "steam", "playstation", "movie", "cinema", "subscription")
-    private val healthKeywords = listOf("pharmacy", "medplus", "apollo", "1mg", "practo", "hospital", "doctor", "clinic", "lab", "meds", "health", "dr.")
-    private val utilityKeywords = listOf("electricity", "bescom", "tneb", "discom", "gas", "water", "broadband", "internet", "wifi", "fiber", "dth", "cable")
-    private val investmentKeywords = listOf("zerodha", "groww", "kite", "sip", "mutual fund", "stock", "angel one", "upstox", "coin", "nps", "ppf", "smallcase")
-    private val educationKeywords = listOf("school", "college", "fee", "university", "udemy", "coursera", "learning", "class")
-    private val billKeywords = listOf("bill", "recharge", "invoice", "premium")
-    private val rentKeywords = listOf("rent", "nobroker", "nestaway")
-    private val loanKeywords = listOf("loan", "emi", "finance", "bajaj")
-    private val refundKeywords = listOf("refund", "reversal", "reversed")
-    private val salaryKeywords = listOf("salary", "payroll", "credit towards salary", "-salary", "salary-")
+    // NOTE: Hardcoded keyword lists have been removed. 
+    // The parser now relies 100% on the user's custom definitions synced from Flutter.
 
     /**
      * MAIN ENTRY POINT
@@ -46,36 +32,30 @@ object SmsTransactionParser {
         var matched = false
 
         for (rule in rules) {
-            // 1. Optimization: Filter by Sender (if provided)
             if (sender.isNotEmpty() && !rule.senderRegex.containsMatchIn(sender)) {
                 continue
             }
 
-            // 2. Match Message Body
             val matchResult = rule.messageRegex.find(message) ?: continue
 
             try {
-                // 3. Extract Amount (The Anchor)
                 val amountStr = matchResult.groups[rule.extractionStrategy.amountGroup]?.value?.replace(",", "")
                 val amount = amountStr?.toDoubleOrNull() ?: continue 
 
                 matched = true
 
-                // 4. Extract Core Details
                 val accGroup = rule.extractionStrategy.accountGroup
                 val account = if (accGroup != null) matchResult.groups[accGroup]?.value else null
 
                 val payeeGroup = rule.extractionStrategy.payeeGroup
                 val payee = if (payeeGroup != null) matchResult.groups[payeeGroup]?.value?.trim() else null
 
-                // 5. Extract Balance
                 var currentBalance: Double? = null
                 rule.extractionStrategy.balanceGroup?.let { group ->
                     val balStr = matchResult.groups[group]?.value?.replace(",", "")
                     currentBalance = balStr?.toDoubleOrNull()
                 }
 
-                // 6. Extract Date
                 var transactionTime = System.currentTimeMillis()
                 val dateGroup = rule.extractionStrategy.dateGroup
                 val dateFormat = rule.extractionStrategy.dateFormat
@@ -92,33 +72,32 @@ object SmsTransactionParser {
                     }
                 }
 
-                // 7. Consolidate Data
                 val type = rule.staticData["type"] ?: "expense"
                 val bankName = rule.staticData["bankName"]
                 val paymentMethod = rule.staticData["paymentMethod"] ?: "Unknown"
 
-                // 8. Category Logic (UPDATED 🚀)
+                // 8. Category Logic (100% Dynamic)
                 var category = rule.staticData["category"]
+                var categoryId: String? = null
+
                 if (category == null) {
-                    // Pass BOTH payee and message to the helper
-                    category = getCategory(payee, message, type)
-                    
-                    // Fallback for generic Income
-                    if (type == "income" && category == null) category = "Others"
+                    // This now returns the Category ID, not just the name, for better linking
+                    val matchedCat = getDynamicCategory(context, payee, message, type)
+                    category = matchedCat?.first
+                    categoryId = matchedCat?.second
                 }
 
-                // 9. Save & Notify
                 val transactionId = UUID.randomUUID().toString()
                 val notificationId = System.currentTimeMillis().toInt()
 
                 savePendingTransaction(
                     context, transactionId, type, amount, notificationId,
-                    paymentMethod, bankName, account, payee, category, transactionTime, currentBalance
+                    paymentMethod, bankName, account, payee, category, categoryId, transactionTime, currentBalance
                 )
 
                 showTransactionNotification(
                     context, transactionId, type, amount, notificationId,
-                    paymentMethod, bankName, account, payee, category, transactionTime
+                    paymentMethod, bankName, account, payee, category, categoryId, transactionTime
                 )
 
                 notifyActivityOfNewSms(context)
@@ -139,40 +118,63 @@ object SmsTransactionParser {
     // --- HELPER METHODS ---
 
     /**
-     * UPDATED: Uses Full Message for Context (Salary/Refund) but Payee for Merchants.
+     * Reads from SharedPreferences to find the best matching category based on user-defined keywords.
+     * Returns a Pair of <CategoryName, CategoryId>
      */
-    private fun getCategory(payee: String?, fullMessage: String, type: String): String? {
-        val lowerMsg = fullMessage.lowercase()
+    private fun getDynamicCategory(context: Context, payee: String?, fullMessage: String, type: String): Pair<String, String>? {
         val textToScan = (payee ?: fullMessage).lowercase()
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val categoriesJsonList = getStringListFromPrefs(prefs, "flutter.cached_category_map")
 
-        // 1. High Priority: Context Keywords (Scan FULL MESSAGE)
-        // This ensures "Salary" is found even if it was stripped from the Payee name.
-        if (refundKeywords.any { lowerMsg.contains(it) } && type == "income") return "Refund"
-        if (salaryKeywords.any { lowerMsg.contains(it) } && type == "income") return "Salary"
-        if (loanKeywords.any { lowerMsg.contains(it) }) return "Loan"
+        if (categoriesJsonList == null) return null
 
-        // 2. Low Priority: Merchant Keywords (Scan PAYEE preferably)
-        return when {
-            groceryKeywords.any { textToScan.contains(it) } -> "Grocery"
-            foodKeywords.any { textToScan.contains(it) } -> "Food"
-            fuelKeywords.any { textToScan.contains(it) } -> "Fuel"
-            transportKeywords.any { textToScan.contains(it) } -> "Transport"
-            entertainmentKeywords.any { textToScan.contains(it) } -> "Entertainment"
-            healthKeywords.any { textToScan.contains(it) } -> "Health"
-            shoppingKeywords.any { textToScan.contains(it) } -> "Shopping"
-            investmentKeywords.any { textToScan.contains(it) } -> "Investment"
-            educationKeywords.any { textToScan.contains(it) } -> "Education"
-            rentKeywords.any { textToScan.contains(it) } -> "Rent"
-            utilityKeywords.any { textToScan.contains(it) } -> "Utilities"
-            billKeywords.any { textToScan.contains(it) } -> "Bills"
-            else -> null
+        var bestMatchName: String? = null
+        var bestMatchId: String? = null
+        var bestMatchLength = 0
+
+        for (categoryStr in categoriesJsonList) {
+            try {
+                val categoryObj = JSONObject(categoryStr)
+                
+                // Skip deleted categories
+                if (categoryObj.optBoolean("isDeleted", false)) continue
+
+                val catMode = categoryObj.optString("mode", "expense")
+                
+                // Match type (expense/income)
+                if ((type == "expense" && catMode == "expense") || (type == "income" && catMode == "income")) {
+                    val keywords = categoryObj.optJSONArray("keywords")
+                    if (keywords != null) {
+                        for (i in 0 until keywords.length()) {
+                            val keyword = keywords.getString(i).lowercase().trim()
+                            if (keyword.isNotEmpty() && textToScan.contains(keyword)) {
+                                // Rule: Longest match wins
+                                if (keyword.length > bestMatchLength) {
+                                    bestMatchLength = keyword.length
+                                    bestMatchName = categoryObj.optString("name")
+                                    bestMatchId = categoryObj.optString("id")
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error parsing category JSON", e)
+            }
+        }
+
+        return if (bestMatchName != null && bestMatchId != null) {
+            Pair(bestMatchName, bestMatchId)
+        } else {
+            null
         }
     }
 
+    // ... (Keep existing savePendingTransaction, but add categoryId parameter)
     private fun savePendingTransaction(
         context: Context, id: String, type: String, amount: Double, notificationId: Int,
         paymentMethod: String, bankName: String?, accountNumber: String?, payee: String?, 
-        category: String?, timestamp: Long, balance: Double?
+        category: String?, categoryId: String?, timestamp: Long, balance: Double?
     ) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val existingJson = prefs.getString(KEY_PENDING_TRANSACTIONS, "[]")
@@ -194,6 +196,7 @@ object SmsTransactionParser {
             put("accountNumber", accountNumber)
             put("payee", payee)
             put("category", category)
+            if (categoryId != null) put("categoryId", categoryId) // Added categoryId
             if (balance != null) put("balance", balance)
         }
 
@@ -201,10 +204,11 @@ object SmsTransactionParser {
         prefs.edit().putString(KEY_PENDING_TRANSACTIONS, JSONArray(transactions).toString()).apply()
     }
 
+    // ... (Keep existing showTransactionNotification, but add categoryId parameter)
     private fun showTransactionNotification(
         context: Context, id: String, type: String, amount: Double, notificationId: Int,
-        paymentMethod: String, bankName: String?, accountNumber: String?, payee: String?, category: String?,
-        timestamp: Long
+        paymentMethod: String, bankName: String?, accountNumber: String?, payee: String?, 
+        category: String?, categoryId: String?, timestamp: Long
     ) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val channelId = "transaction_channel"
@@ -224,8 +228,10 @@ object SmsTransactionParser {
             put("accountNumber", accountNumber)
             put("payee", payee)
             put("category", category)
+            if (categoryId != null) put("categoryId", categoryId) // Added categoryId
         }.toString()
 
+        // ... (rest of showTransactionNotification remains the same)
         val launchIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
             action = "ADD_TRANSACTION_FROM_SMS"
@@ -291,6 +297,33 @@ object SmsTransactionParser {
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+    }
+
+    /**
+     * Safely reads a string list from SharedPreferences, handling both Set<String> 
+     * and JSON-encoded String types to avoid ClassCastException.
+     */
+    private fun getStringListFromPrefs(prefs: android.content.SharedPreferences, key: String): Set<String>? {
+        return try {
+            // Try reading as a Set first (Standard Flutter behavior)
+            prefs.getStringSet(key, null)
+        } catch (e: ClassCastException) {
+            // Fallback: Try reading as a single String (if JSON-encoded)
+            try {
+                val jsonStr = prefs.getString(key, null)
+                if (jsonStr != null && jsonStr.startsWith("[")) {
+                    val array = org.json.JSONArray(jsonStr)
+                    val set = mutableSetOf<String>()
+                    for (i in 0 until array.length()) {
+                        set.add(array.getString(i))
+                    }
+                    set
+                } else null
+            } catch (e2: Exception) {
+                Log.e(TAG, "Failed fallback read for $key", e2)
+                null
+            }
+        }
     }
 
     fun removeTransaction(context: Context, id: String) {

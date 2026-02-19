@@ -141,7 +141,7 @@ class _TagsScreenState extends State<TagsScreen> {
                             boxShadow: isSelected
                                 ? [
                                     BoxShadow(
-                                      color: color.withOpacity(0.4),
+                                      color: color.withValues(alpha: 0.4),
                                       blurRadius: 8,
                                       spreadRadius: 2,
                                     ),
@@ -533,7 +533,7 @@ class _TagsScreenState extends State<TagsScreen> {
                           backgroundColor: theme
                               .colorScheme
                               .surfaceContainerHighest
-                              .withOpacity(0.5),
+                              .withValues(alpha: 0.5),
                         ),
                       ),
                     ],
@@ -555,7 +555,7 @@ class _TagsScreenState extends State<TagsScreen> {
                       hintText: "e.g. Office Commute, London 2026",
                       filled: true,
                       fillColor: theme.colorScheme.surfaceContainerHighest
-                          .withOpacity(0.4),
+                          .withValues(alpha: 0.4),
                       prefixIcon: Icon(
                         Icons.label_outline_rounded,
                         color: theme.colorScheme.primary,
@@ -628,11 +628,11 @@ class _TagsScreenState extends State<TagsScreen> {
                           height: 50,
                           decoration: BoxDecoration(
                             color: theme.colorScheme.surfaceContainerHighest
-                                .withOpacity(0.4),
+                                .withValues(alpha: 0.4),
                             shape: BoxShape.circle,
                             border: Border.all(
                               color: theme.colorScheme.outlineVariant
-                                  .withOpacity(0.5),
+                                  .withValues(alpha: 0.5),
                               width: 1,
                             ),
                           ),
@@ -691,7 +691,7 @@ class _TagsScreenState extends State<TagsScreen> {
                             color:
                                 color ??
                                 theme.colorScheme.surfaceContainerHighest
-                                    .withOpacity(0.5),
+                                    .withValues(alpha: 0.5),
                             shape: BoxShape.circle,
                             border: isSelected
                                 ? Border.all(
@@ -701,14 +701,14 @@ class _TagsScreenState extends State<TagsScreen> {
                                 : color == null
                                 ? Border.all(
                                     color: theme.colorScheme.outlineVariant
-                                        .withOpacity(0.5),
+                                        .withValues(alpha: 0.5),
                                     width: 1,
                                   )
                                 : null,
                             boxShadow: [
                               if (isSelected && color != null)
                                 BoxShadow(
-                                  color: color.withOpacity(0.3),
+                                  color: color.withValues(alpha: 0.3),
                                   blurRadius: 12,
                                   spreadRadius: 2,
                                 ),
@@ -750,7 +750,7 @@ class _TagsScreenState extends State<TagsScreen> {
                     child: FilledButton(
                       style: FilledButton.styleFrom(
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(50),
                         ),
                         elevation: 0,
                       ),

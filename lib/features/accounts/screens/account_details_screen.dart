@@ -295,10 +295,12 @@ class _AccountDetailsScreenState extends State<AccountDetailsScreen> {
           // Using surfaceContainer for distinct card look
           color: colors.surfaceContainer,
           borderRadius: BorderRadius.circular(32),
-          border: Border.all(color: colors.outlineVariant.withOpacity(0.2)),
+          border: Border.all(
+            color: colors.outlineVariant.withValues(alpha: 0.2),
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -413,7 +415,7 @@ class _AccountDetailsScreenState extends State<AccountDetailsScreen> {
                 Container(
                   height: 30,
                   width: 1,
-                  color: colors.outlineVariant.withOpacity(0.5),
+                  color: colors.outlineVariant.withValues(alpha: 0.5),
                 ),
                 const SizedBox(width: 24),
                 // Expense Column

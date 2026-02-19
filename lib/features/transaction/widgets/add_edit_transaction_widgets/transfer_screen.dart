@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:wallzy/features/accounts/models/account.dart';
@@ -186,7 +187,7 @@ class TransferScreenState extends State<TransferScreen> {
                     Column(
                       children: [
                         FunkyPickerTile(
-                          icon: Icons.account_balance_wallet_outlined,
+                          icon: HugeIcons.strokeRoundedWallet01,
                           label: "From Account",
                           value: _fromAccount?.displayName,
                           onTap: () => _showAccountPicker(true),
@@ -194,7 +195,7 @@ class TransferScreenState extends State<TransferScreen> {
                         ),
                         const SizedBox(height: 20),
                         FunkyPickerTile(
-                          icon: Icons.savings_outlined,
+                          icon: HugeIcons.strokeRoundedPiggyBank,
                           label: "To Account",
                           value: _toAccount?.displayName,
                           onTap: () => _showAccountPicker(false),
@@ -216,8 +217,8 @@ class TransferScreenState extends State<TransferScreen> {
                           ),
                         ],
                       ),
-                      child: Icon(
-                        Icons.arrow_downward_rounded,
+                      child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedArrowDown01,
                         color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
@@ -256,7 +257,7 @@ class TransferScreenState extends State<TransferScreen> {
                 FunkyTextField(
                   controller: _descController,
                   label: "Description (Optional)",
-                  icon: Icons.notes_rounded,
+                  icon: HugeIcons.strokeRoundedNote01,
                 ),
 
                 const SizedBox(height: 100), // Space for FAB

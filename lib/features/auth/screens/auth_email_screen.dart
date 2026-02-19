@@ -328,7 +328,9 @@ class _AuthEmailScreenState extends State<AuthEmailScreen> {
                   borderRadius: BorderRadius.circular(16),
                 ),
                 filled: true,
-                fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                fillColor: colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.3,
+                ),
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
@@ -471,18 +473,18 @@ class _AuthEmailScreenState extends State<AuthEmailScreen> {
                   color: colorScheme.surface,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: colorScheme.outlineVariant.withOpacity(0.3),
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.3),
                     width: 1,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: colorScheme.shadow.withOpacity(0.08),
+                      color: colorScheme.shadow.withValues(alpha: 0.08),
                       blurRadius: 30,
                       offset: const Offset(0, 15),
                       spreadRadius: 0,
                     ),
                     BoxShadow(
-                      color: colorScheme.primary.withOpacity(0.1),
+                      color: colorScheme.primary.withValues(alpha: 0.1),
                       blurRadius: 40,
                       spreadRadius: 10,
                     ),

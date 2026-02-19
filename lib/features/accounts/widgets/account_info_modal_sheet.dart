@@ -348,7 +348,7 @@ class _AccountVisualCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.shadow.withOpacity(0.15),
+            color: colorScheme.shadow.withValues(alpha: 0.15),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -366,7 +366,7 @@ class _AccountVisualCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.3),
+                      color: Colors.white.withValues(alpha: 0.3),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(typeIcon, color: textColor, size: 20),
@@ -375,7 +375,7 @@ class _AccountVisualCard extends StatelessWidget {
                   Text(
                     account.bankName.toUpperCase(),
                     style: theme.textTheme.labelLarge?.copyWith(
-                      color: textColor.withOpacity(0.9),
+                      color: textColor.withValues(alpha: 0.9),
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.5,
                     ),
@@ -389,7 +389,7 @@ class _AccountVisualCard extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.25),
+                    color: Colors.white.withValues(alpha: 0.25),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -424,7 +424,7 @@ class _AccountVisualCard extends StatelessWidget {
               ),
               Icon(
                 Icons.nfc_rounded,
-                color: textColor.withOpacity(0.7),
+                color: textColor.withValues(alpha: 0.7),
                 size: 28,
               ),
             ],

@@ -265,6 +265,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.11"
+  dotlottie_loader:
+    dependency: "direct main"
+    description:
+      name: dotlottie_loader
+      sha256: "12d0171d6db3720f00301dd4889ff8b7f8cae8221ae0cc227b512720f90a2fd5"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.5"
   dynamic_color:
     dependency: "direct main"
     description:

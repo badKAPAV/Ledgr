@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
+import 'package:collection/collection.dart';
+import 'package:wallzy/common/icon_picker/icons.dart';
+import 'package:wallzy/features/categories/provider/category_provider.dart';
 import 'package:wallzy/common/widgets/empty_report_placeholder.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/features/subscription/models/subscription.dart';
@@ -124,6 +127,28 @@ class _SubscriptionListTile extends StatelessWidget {
 
   const _SubscriptionListTile({required this.sub, required this.txProvider});
 
+  String _getCategoryName(BuildContext context, Subscription sub) {
+    if (sub.categoryId != null) {
+      final category = context
+          .read<CategoryProvider>()
+          .categories
+          .firstWhereOrNull((c) => c.id == sub.categoryId);
+      if (category != null) return category.name;
+    }
+    return sub.category;
+  }
+
+  dynamic _getCategoryIcon(BuildContext context, Subscription sub) {
+    if (sub.categoryId != null) {
+      final category = context
+          .read<CategoryProvider>()
+          .categories
+          .firstWhereOrNull((c) => c.id == sub.categoryId);
+      if (category != null) return GoalIconRegistry.getIcon(category.iconKey);
+    }
+    return GoalIconRegistry.getIcon(sub.category.toLowerCase());
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -171,13 +196,14 @@ class _SubscriptionListTile extends StatelessWidget {
                       : theme.colorScheme.primary.withAlpha(25),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  Icons.sync_alt,
+                child: HugeIcon(
+                  icon: _getCategoryIcon(context, sub),
                   color: isArchived
                       ? theme.colorScheme.outline.withAlpha(128)
                       : isPaused
                       ? theme.colorScheme.outline
                       : theme.colorScheme.primary,
+                  size: 24,
                 ),
               ),
               const SizedBox(width: 16),
@@ -194,7 +220,7 @@ class _SubscriptionListTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      sub.category,
+                      _getCategoryName(context, sub),
                       style: TextStyle(
                         color: theme.colorScheme.outline,
                         fontSize: 12,

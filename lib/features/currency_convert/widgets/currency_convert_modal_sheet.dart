@@ -255,7 +255,9 @@ class _CurrencyConverterModalState extends State<CurrencyConverterModal> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.5,
+                  ),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -285,7 +287,9 @@ class _CurrencyConverterModalState extends State<CurrencyConverterModal> {
                   color: theme.colorScheme.surfaceContainer,
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: theme.colorScheme.outlineVariant.withOpacity(0.3),
+                    color: theme.colorScheme.outlineVariant.withValues(
+                      alpha: 0.3,
+                    ),
                   ),
                 ),
                 child: Column(
@@ -340,7 +344,9 @@ class _CurrencyConverterModalState extends State<CurrencyConverterModal> {
                 alignment: Alignment.center,
                 children: [
                   Divider(
-                    color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                    color: theme.colorScheme.outlineVariant.withValues(
+                      alpha: 0.5,
+                    ),
                     indent: 20,
                     endIndent: 20,
                   ),
@@ -388,7 +394,7 @@ class _CurrencyConverterModalState extends State<CurrencyConverterModal> {
                             fontWeight: FontWeight.bold,
                             letterSpacing: 1.2,
                             color: theme.colorScheme.onPrimaryContainer
-                                .withOpacity(0.7),
+                                .withValues(alpha: 0.7),
                           ),
                         ),
                         _CurrencyDropdown(
@@ -484,8 +490,8 @@ class _CurrencyConverterModalState extends State<CurrencyConverterModal> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: theme.colorScheme.onPrimaryContainer.withOpacity(
-                          0.8,
+                        color: theme.colorScheme.onPrimaryContainer.withValues(
+                          alpha: 0.8,
                         ),
                       ),
                     ),
@@ -541,7 +547,7 @@ class _CurrencyDropdown extends StatelessWidget {
     final theme = Theme.of(context);
     final bgColor = isLightMode
         ? theme.colorScheme.surfaceContainerHighest
-        : Colors.black.withOpacity(0.1);
+        : Colors.black.withValues(alpha: 0.1);
 
     final textColor = isLightMode
         ? theme.colorScheme.onSurface

@@ -427,7 +427,7 @@ class _SubscriptionVisualCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.shadow.withOpacity(0.15),
+            color: colorScheme.shadow.withValues(alpha: 0.15),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -445,7 +445,7 @@ class _SubscriptionVisualCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -458,7 +458,7 @@ class _SubscriptionVisualCard extends StatelessWidget {
                   Text(
                     "SUBSCRIPTION",
                     style: theme.textTheme.labelLarge?.copyWith(
-                      color: textColor.withOpacity(0.9),
+                      color: textColor.withValues(alpha: 0.9),
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.5,
                     ),
@@ -472,7 +472,7 @@ class _SubscriptionVisualCard extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.25),
+                    color: Colors.white.withValues(alpha: 0.25),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -519,7 +519,7 @@ class _SubscriptionVisualCard extends StatelessWidget {
               Text(
                 "/${subscription.frequency.name == 'biMonthly' ? '2 MO' : (subscription.frequency.name == 'quarterly' ? '3 MO' : (subscription.frequency.name == 'halfYearly' ? '6 MO' : (subscription.frequency.name == 'yearly' ? 'YR' : 'MO')))}",
                 style: theme.textTheme.labelLarge?.copyWith(
-                  color: textColor.withOpacity(0.8),
+                  color: textColor.withValues(alpha: 0.8),
                   fontWeight: FontWeight.bold,
                 ),
               ),

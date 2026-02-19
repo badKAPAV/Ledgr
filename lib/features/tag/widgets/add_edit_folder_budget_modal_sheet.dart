@@ -69,7 +69,7 @@ class _AddEditFolderBudgetModalSheetState
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: colorScheme.primary.withOpacity(0.1),
+                    color: colorScheme.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: HugeIcon(
@@ -100,16 +100,16 @@ class _AddEditFolderBudgetModalSheetState
                             icon: HugeIcons.strokeRoundedFolder02,
                             size: 12,
                             strokeWidth: 2,
-                            color: colorScheme.onSurfaceVariant.withOpacity(
-                              0.7,
+                            color: colorScheme.onSurfaceVariant.withValues(
+                              alpha: 0.7,
                             ),
                           ),
                           const SizedBox(width: 4),
                           Text(
                             widget.tag.name,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onSurfaceVariant.withOpacity(
-                                0.7,
+                              color: colorScheme.onSurfaceVariant.withValues(
+                                alpha: 0.7,
                               ),
                               fontWeight: FontWeight.w500,
                             ),
@@ -124,7 +124,7 @@ class _AddEditFolderBudgetModalSheetState
                   icon: const Icon(Icons.close_rounded),
                   style: IconButton.styleFrom(
                     backgroundColor: colorScheme.surfaceContainerHighest
-                        .withOpacity(0.5),
+                        .withValues(alpha: 0.5),
                   ),
                 ),
               ],
@@ -262,12 +262,12 @@ class _AddEditFolderBudgetModalSheetState
                       side: BorderSide(
                         color: isSelected
                             ? colorScheme.primary
-                            : colorScheme.outlineVariant.withOpacity(0.5),
+                            : colorScheme.outlineVariant.withValues(alpha: 0.5),
                         width: isSelected ? 1.5 : 1,
                       ),
                     ),
                     showCheckmark: false,
-                    selectedColor: colorScheme.primary.withOpacity(0.12),
+                    selectedColor: colorScheme.primary.withValues(alpha: 0.12),
                     backgroundColor: Colors.transparent,
                     labelStyle: TextStyle(
                       color: isSelected
@@ -325,11 +325,11 @@ class _AddEditFolderBudgetModalSheetState
                 },
                 style: FilledButton.styleFrom(
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(50),
                   ),
                   elevation: 0,
                   backgroundColor: _budgetController.text.isEmpty
-                      ? colorScheme.errorContainer.withOpacity(0.5)
+                      ? colorScheme.errorContainer.withValues(alpha: 0.5)
                       : colorScheme.primary,
                   foregroundColor: _budgetController.text.isEmpty
                       ? colorScheme.error

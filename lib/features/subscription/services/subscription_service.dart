@@ -115,6 +115,7 @@ class SubscriptionService {
           subscriptionName: subscription.name,
           averageAmount: subscription.amount, // Use the defined amount
           lastCategory: subscription.category,
+          lastCategoryId: subscription.categoryId,
           lastPaymentMethod: subscription.paymentMethod,
           dueDate: subscription.nextDueDate,
           frequency: subscription.frequency,

@@ -537,7 +537,7 @@ class _OverlayPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     // 1. Darken Background
-    final paint = Paint()..color = Colors.black.withOpacity(0.65);
+    final paint = Paint()..color = Colors.black.withValues(alpha: 0.65);
     final backgroundPath = Path()
       ..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
     final cutoutPath = Path()..addRect(cropRect);
@@ -561,7 +561,7 @@ class _OverlayPainter extends CustomPainter {
     if (isResizing || true) {
       // Always show grid or only when resizing?
       final gridPaint = Paint()
-        ..color = Colors.white.withOpacity(0.3)
+        ..color = Colors.white.withValues(alpha: 0.3)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.0;
 

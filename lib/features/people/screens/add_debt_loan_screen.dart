@@ -292,7 +292,7 @@ class _DebtLoanFormState extends State<_DebtLoanForm> {
                   elevation: 4,
                   shadowColor: color.withAlpha(100),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(50),
                   ),
                 ),
                 onPressed: _isSaving ? null : _save,

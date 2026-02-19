@@ -5,6 +5,7 @@ import 'package:wallzy/common/tabbar/custom_tab_bar.dart';
 import 'package:wallzy/features/goals/screens/goals_screen.dart';
 import 'package:wallzy/features/planning/widgets/budget_tab_screen.dart';
 import 'package:wallzy/features/subscription/screens/subscriptions_screen.dart';
+import 'package:wallzy/features/categories/screens/category_settings_tab_screen.dart';
 
 class PlanningScreen extends StatefulWidget {
   final int? initialTabIndex;
@@ -22,7 +23,7 @@ class _PlanningScreenState extends State<PlanningScreen>
   void initState() {
     super.initState();
     _tabController = TabController(
-      length: 3,
+      length: 4,
       vsync: this,
       initialIndex: widget.initialTabIndex ?? 0,
     );
@@ -56,6 +57,10 @@ class _PlanningScreenState extends State<PlanningScreen>
               label: 'Budgets',
               icon: HugeIcons.strokeRoundedAnalytics03,
             ),
+            CustomTabItem(
+              label: 'Categories',
+              icon: HugeIcons.strokeRoundedLayout01,
+            ),
           ],
           controller: _tabController,
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
@@ -71,6 +76,7 @@ class _PlanningScreenState extends State<PlanningScreen>
           GoalsScreen(),
           SubscriptionsScreen(),
           BudgetTabScreen(),
+          CategorySettingsTabScreen(),
         ],
       ),
     );

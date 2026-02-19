@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:wallzy/features/accounts/models/account.dart'; // Needed for Account Picker
@@ -123,7 +124,7 @@ class FunkyPickerTile extends StatelessWidget {
   final IconData icon;
   final String label;
   final String? value;
-  final IconData? valueIcon;
+  final dynamic valueIcon;
   final Widget? leadingValueWidget;
   final Color? valueColor;
   final Widget? valueWidget;
@@ -244,7 +245,12 @@ class FunkyPickerTile extends StatelessWidget {
             leadingValueWidget!,
             const SizedBox(width: 6),
           ] else if (valueIcon != null) ...[
-            Icon(valueIcon, size: 16, color: pillColor),
+            HugeIcon(
+              icon: valueIcon,
+              size: 16,
+              color: pillColor,
+              strokeWidth: 2,
+            ),
             const SizedBox(width: 6),
           ],
           if (value != null)
@@ -345,7 +351,7 @@ class PickerItem {
   final String id;
   final String label;
   final String? subtitle;
-  final IconData icon;
+  final dynamic icon;
   final Color? color;
 
   PickerItem({
@@ -426,7 +432,7 @@ Future<String?> showModernPickerSheet({
                           duration: const Duration(milliseconds: 200),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? baseColor.withOpacity(0.15)
+                                ? baseColor.withValues(alpha: 0.15)
                                 : Theme.of(
                                     context,
                                   ).colorScheme.surfaceContainer,
@@ -449,10 +455,11 @@ Future<String?> showModernPickerSheet({
                                       : Theme.of(context).colorScheme.surface,
                                   shape: BoxShape.circle,
                                 ),
-                                child: Icon(
-                                  item.icon,
+                                child: HugeIcon(
+                                  icon: item.icon,
                                   color: isSelected ? Colors.white : baseColor,
                                   size: 24,
+                                  strokeWidth: 2,
                                 ),
                               ),
                               const SizedBox(height: 8),

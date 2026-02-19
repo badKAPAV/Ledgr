@@ -10,6 +10,9 @@ import 'package:wallzy/features/subscription/screens/subscription_details_screen
 
 import 'package:wallzy/features/subscription/models/subscription.dart';
 import 'package:wallzy/features/subscription/provider/subscription_provider.dart';
+import 'package:wallzy/features/categories/provider/category_provider.dart';
+import 'package:wallzy/common/icon_picker/icons.dart';
+import 'package:collection/collection.dart';
 
 import 'package:wallzy/features/subscription/services/subscription_info.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
@@ -17,8 +20,6 @@ import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
 import 'package:wallzy/common/widgets/date_filter_selector.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:wallzy/common/widgets/empty_report_placeholder.dart';
-
-// --- DATA MODELS (UNCHANGED) ---
 
 class _SubscriptionPieSummary {
   final String subscriptionId;
@@ -39,7 +40,6 @@ class SubscriptionsScreen extends StatefulWidget {
 }
 
 class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
-  // --- LOGIC SECTION (UNCHANGED) ---
   int _selectedYear = DateTime.now().year;
   int? _selectedMonth = DateTime.now().month;
   List<int> _availableYears = [];
@@ -185,15 +185,12 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
     return summaries;
   }
 
-  // --- REDESIGNED BUILD ---
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final subProvider = Provider.of<SubscriptionProvider>(context);
     final txProvider = Provider.of<TransactionProvider>(context);
 
-    // Logic Execution
     final range = _getFilterRange();
     final periodTransactions = txProvider.transactions.where((tx) {
       return tx.timestamp.isAfter(
@@ -222,18 +219,10 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
           : Column(
               children: [
                 _buildManagePaymentsTile(context, theme),
-                // Padding(
-                //   padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                //   child: Divider(
-                //     height: 1,
-                //     color: theme.colorScheme.surfaceContainerHighest,
-                //   ),
-                // ),
                 Expanded(
                   child: CustomScrollView(
                     physics: const BouncingScrollPhysics(),
                     slivers: [
-                      // 1. Floating Pill
                       SliverToBoxAdapter(
                         child: Padding(
                           padding: const EdgeInsets.fromLTRB(0, 16, 0, 8),
@@ -253,7 +242,6 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                           ),
                         ),
                       ),
-
                       if (pieSummaries.isEmpty)
                         const SliverFillRemaining(
                           hasScrollBody: false,
@@ -263,16 +251,13 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                             icon: HugeIcons.strokeRoundedCalendar03,
                           ),
                         ),
-
                       if (pieSummaries.isNotEmpty) ...[
-                        // 2. Dashboard Chart
                         SliverToBoxAdapter(
                           child: _SubscriptionDashboardPod(
                             summaries: pieSummaries,
                             totalAmount: totalSpentInPeriod,
                           ),
                         ),
-                        // 3. Breakdown Title
                         SliverToBoxAdapter(
                           child: Padding(
                             padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
@@ -289,7 +274,6 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                             ),
                           ),
                         ),
-                        // 4. List of items in that period
                         SliverPadding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           sliver: SliverList(
@@ -319,70 +303,17 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                                   )
                                   .toList();
 
-                              return Container(
-                                margin: const EdgeInsets.only(bottom: 8),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.surfaceContainer,
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: ListTile(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            SubscriptionDetailsScreen(
-                                              subscription: sub,
-                                              transactions: subTransactions,
-                                            ),
-                                      ),
-                                    );
-                                  },
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 4,
-                                  ),
-                                  leading: Container(
-                                    width: 40,
-                                    height: 40,
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                      color: theme.colorScheme.surface,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Text(
-                                      summary.name.isNotEmpty
-                                          ? summary.name[0].toUpperCase()
-                                          : '?',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: theme.colorScheme.primary,
-                                      ),
-                                    ),
-                                  ),
-                                  title: Text(
-                                    summary.name,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  trailing: Text(
-                                    NumberFormat.compactCurrency(
-                                      symbol: currencySymbol,
-                                      decimalDigits: 0,
-                                    ).format(summary.totalAmount),
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                ),
+                              return _buildBreakdownItem(
+                                context,
+                                summary,
+                                sub,
+                                subTransactions,
+                                currencySymbol,
                               );
                             }, childCount: pieSummaries.length),
                           ),
                         ),
                       ],
-
                       const SliverToBoxAdapter(child: SizedBox(height: 100)),
                     ],
                   ),
@@ -456,6 +387,88 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
     );
   }
 
+  Widget _buildBreakdownItem(
+    BuildContext context,
+    _SubscriptionPieSummary summary,
+    Subscription sub,
+    List<TransactionModel> subTransactions,
+    String currencySymbol,
+  ) {
+    final theme = Theme.of(context);
+    final categoryProvider = context.read<CategoryProvider>();
+
+    String getCategoryName() {
+      if (sub.categoryId != null) {
+        final category = categoryProvider.categories.firstWhereOrNull(
+          (c) => c.id == sub.categoryId,
+        );
+        if (category != null) return category.name;
+      }
+      return sub.category;
+    }
+
+    dynamic getCategoryIcon() {
+      if (sub.categoryId != null) {
+        final category = categoryProvider.categories.firstWhereOrNull(
+          (c) => c.id == sub.categoryId,
+        );
+        if (category != null) return GoalIconRegistry.getIcon(category.iconKey);
+      }
+      return GoalIconRegistry.getIcon(sub.category.toLowerCase());
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: ListTile(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => SubscriptionDetailsScreen(
+                subscription: sub,
+                transactions: subTransactions,
+              ),
+            ),
+          );
+        },
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        leading: Container(
+          width: 40,
+          height: 40,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            shape: BoxShape.circle,
+          ),
+          child: HugeIcon(
+            icon: getCategoryIcon(),
+            color: theme.colorScheme.primary,
+            size: 20,
+          ),
+        ),
+        title: Text(
+          summary.name,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(
+          getCategoryName(),
+          style: TextStyle(color: theme.colorScheme.outline, fontSize: 12),
+        ),
+        trailing: Text(
+          NumberFormat.compactCurrency(
+            symbol: currencySymbol,
+            decimalDigits: 0,
+          ).format(summary.totalAmount),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+        ),
+      ),
+    );
+  }
+
   Widget _buildGlassFab(BuildContext context) {
     return Container(
       height: 56,
@@ -511,10 +524,6 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
   }
 }
 
-// --- REDESIGNED WIDGETS ---
-
-// [Deleted local classes]
-
 class _SubscriptionDashboardPod extends StatelessWidget {
   final List<_SubscriptionPieSummary> summaries;
   final double totalAmount;
@@ -548,7 +557,6 @@ class _SubscriptionDashboardPod extends StatelessWidget {
     final hasData = summaries.isNotEmpty && totalAmount > 0;
     final theme = Theme.of(context);
 
-    // Show top 4 in legend
     final topSummaries = summaries.take(4).toList();
 
     return Container(

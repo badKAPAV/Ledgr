@@ -42,7 +42,9 @@ class TagBudgetHistorySheet extends StatelessWidget {
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 24),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.5,
+                  ),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -98,7 +100,9 @@ class TagBudgetHistorySheet extends StatelessWidget {
                   height: 4,
                   margin: const EdgeInsets.symmetric(vertical: 16),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                    color: theme.colorScheme.outlineVariant.withValues(
+                      alpha: 0.5,
+                    ),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -416,7 +420,7 @@ class _BudgetTrendChart extends StatelessWidget {
                   toY: item.budget, // Background shows the Budget Limit
                   color: isDark
                       ? Colors.white10
-                      : Colors.black.withOpacity(0.05),
+                      : Colors.black.withValues(alpha: 0.05),
                 ),
               ),
             ],
@@ -453,7 +457,7 @@ class _HistoryItemTile extends StatelessWidget {
         color: theme.colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(20),
         border: isOver
-            ? Border.all(color: theme.colorScheme.error.withOpacity(0.3))
+            ? Border.all(color: theme.colorScheme.error.withValues(alpha: 0.3))
             : Border.all(color: Colors.transparent),
       ),
       child: Column(
@@ -466,7 +470,7 @@ class _HistoryItemTile extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: isOver
                       ? theme.colorScheme.errorContainer
-                      : tagColor.withOpacity(0.1),
+                      : tagColor.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: HugeIcon(

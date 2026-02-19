@@ -57,12 +57,12 @@ class ModernAlertDialog extends StatelessWidget {
           color: colorScheme.surfaceContainer, // M3 Dialog Background
           borderRadius: BorderRadius.circular(28), // M3 Standard Radius
           border: Border.all(
-            color: colorScheme.outlineVariant.withOpacity(0.3),
+            color: colorScheme.outlineVariant.withValues(alpha: 0.3),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 16,
               offset: const Offset(0, 8),
             ),
@@ -77,7 +77,7 @@ class ModernAlertDialog extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: activeColor.withOpacity(0.1),
+                  color: activeColor.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: HugeIcon(icon: icon, size: 32, color: activeColor),

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
+import 'package:wallzy/common/icon_picker/icons.dart';
+import 'package:wallzy/features/categories/provider/category_provider.dart';
+import 'package:wallzy/features/categories/models/category.dart';
 
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
 
 // Helper imports
-import 'package:wallzy/core/helpers/transaction_category.dart';
 import 'package:wallzy/features/accounts/models/account.dart';
 import 'package:wallzy/features/accounts/provider/account_provider.dart';
 import 'package:wallzy/features/currency_convert/widgets/currency_convert_modal_sheet.dart';
@@ -16,7 +19,7 @@ import 'package:wallzy/features/subscription/provider/subscription_provider.dart
 import 'package:wallzy/features/subscription/services/subscription_info.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
-import 'package:wallzy/features/transaction/widgets/add_edit_transaction_widgets/transaction_form_widgets.dart';
+import 'package:wallzy/features/transaction/widgets/add_edit_transaction_widgets/transaction_widgets.dart';
 import 'package:wallzy/features/people/widgets/person_picker_sheet.dart';
 
 class AddSubscriptionScreen extends StatefulWidget {
@@ -34,6 +37,7 @@ class _AddSubscriptionScreenState extends State<AddSubscriptionScreen> {
   final _amountController = TextEditingController();
 
   String? _selectedCategory;
+  String? _selectedCategoryId;
   String? _selectedPaymentMethod;
   SubscriptionFrequency _selectedFrequency = SubscriptionFrequency.monthly;
   SubscriptionCreationMode _creationMode = SubscriptionCreationMode.manual;
@@ -64,6 +68,7 @@ class _AddSubscriptionScreenState extends State<AddSubscriptionScreen> {
       _nameController.text = sub.name;
       _amountController.text = sub.amount.toStringAsFixed(0);
       _selectedCategory = sub.category;
+      _selectedCategoryId = sub.categoryId;
       _selectedPaymentMethod = sub.paymentMethod;
       _selectedFrequency = sub.frequency;
 
@@ -320,6 +325,7 @@ class _AddSubscriptionScreenState extends State<AddSubscriptionScreen> {
       name: _nameController.text.trim(),
       amount: amount,
       category: _selectedCategory!,
+      categoryId: _selectedCategoryId,
       paymentMethod: _selectedPaymentMethod!,
       frequency: _selectedFrequency,
       recurrenceDay: _selectedRecurrenceDay,
@@ -350,6 +356,7 @@ class _AddSubscriptionScreenState extends State<AddSubscriptionScreen> {
             description: newSubscription.name,
             paymentMethod: newSubscription.paymentMethod,
             category: newSubscription.category,
+            categoryId: newSubscription.categoryId,
             subscriptionId: newSubscription.id,
             people: newSubscription.people,
             accountId: _selectedAccount?.id,
@@ -395,7 +402,13 @@ class _AddSubscriptionScreenState extends State<AddSubscriptionScreen> {
       context: context,
       title: 'Select Payment Method',
       items: methods
-          .map((m) => PickerItem(id: m, label: m, icon: Icons.credit_card))
+          .map(
+            (m) => PickerItem(
+              id: m,
+              label: m,
+              icon: HugeIcons.strokeRoundedCreditCard,
+            ),
+          )
           .toList(),
       selectedId: _selectedPaymentMethod,
     );
@@ -454,6 +467,29 @@ class _AddSubscriptionScreenState extends State<AddSubscriptionScreen> {
     }
   }
 
+  dynamic _getCategoryIcon(String name, {String? categoryId}) {
+    if (categoryId != null) {
+      final category = context.read<CategoryProvider>().categories.firstWhere(
+        (c) => c.id == categoryId,
+        orElse: () => CategoryModel(
+          id: '',
+          name: '',
+          type: CategoryType.customType,
+          mode: TransactionMode.expense,
+          iconKey: 'target',
+          keywords: [],
+          budget: null,
+          isDeleted: false,
+          isDefault: false,
+        ),
+      );
+      if (category.id.isNotEmpty) {
+        return GoalIconRegistry.getIcon(category.iconKey);
+      }
+    }
+    return GoalIconRegistry.getIcon(name.toLowerCase());
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -483,7 +519,7 @@ class _AddSubscriptionScreenState extends State<AddSubscriptionScreen> {
               ),
 
               _Chip(
-                icon: Icons.currency_exchange,
+                icon: HugeIcons.strokeRoundedExchange01,
                 label: "Convert",
                 onTap: _openCurrencyConverter,
               ),
@@ -499,34 +535,50 @@ class _AddSubscriptionScreenState extends State<AddSubscriptionScreen> {
                       hint: 'Netflix, Bike EMI, etc.',
                       controller: _nameController,
                       label: "Payment title",
-                      icon: Icons.description_rounded,
+                      icon: HugeIcons.strokeRoundedFile02,
                     ),
                     const SizedBox(height: 16),
                     FunkyPickerTile(
-                      icon: Icons.category_rounded,
+                      icon: HugeIcons.strokeRoundedMenu01,
                       label: "Category",
                       value: _selectedCategory,
+                      valueIcon: _selectedCategory != null
+                          ? _getCategoryIcon(
+                              _selectedCategory!,
+                              categoryId: _selectedCategoryId,
+                            )
+                          : null,
                       onTap: () async {
+                        final categoryProvider = context
+                            .read<CategoryProvider>();
+                        final categories = categoryProvider.categories
+                            .where((c) => c.mode == TransactionMode.expense)
+                            .toList();
+
                         final selected = await showModernPickerSheet(
                           context: context,
                           title: 'Select Category',
-                          items: TransactionCategories.expense
+                          items: categories
                               .map(
                                 (c) => PickerItem(
-                                  id: c,
-                                  label: c,
-                                  icon: Icons.category,
+                                  id: c.id,
+                                  label: c.name,
+                                  icon: GoalIconRegistry.getIcon(c.iconKey),
                                 ),
                               )
                               .toList(),
-                          selectedId: _selectedCategory,
+                          selectedId: _selectedCategoryId,
                         );
                         if (selected != null) {
+                          final cat = categories.firstWhere(
+                            (c) => c.id == selected,
+                          );
                           setState(() {
-                            _selectedCategory = selected;
-                            if (selected != 'People') _selectedPerson = null;
+                            _selectedCategoryId = cat.id;
+                            _selectedCategory = cat.name;
+                            if (cat.name != 'People') _selectedPerson = null;
                           });
-                          if (selected == 'People') _showPeopleModal();
+                          if (cat.name == 'People') _showPeopleModal();
                         }
                       },
                       isError: _selectedCategory == null,
@@ -534,7 +586,7 @@ class _AddSubscriptionScreenState extends State<AddSubscriptionScreen> {
                     if (_selectedCategory == 'People') ...[
                       const SizedBox(height: 16),
                       FunkyPickerTile(
-                        icon: Icons.person_rounded,
+                        icon: HugeIcons.strokeRoundedUser,
                         label: "Person",
                         value: _selectedPerson?.fullName,
                         onTap: _showPeopleModal,
@@ -659,7 +711,7 @@ class _AddSubscriptionScreenState extends State<AddSubscriptionScreen> {
 
                     // Frequency Picker
                     FunkyPickerTile(
-                      icon: Icons.repeat_rounded,
+                      icon: HugeIcons.strokeRoundedRepeat,
                       label: "Frequency",
                       value: _selectedFrequency.displayName,
                       onTap: () async {
@@ -671,7 +723,7 @@ class _AddSubscriptionScreenState extends State<AddSubscriptionScreen> {
                                 (e) => PickerItem(
                                   id: e.displayName,
                                   label: e.displayName,
-                                  icon: Icons.repeat,
+                                  icon: HugeIcons.strokeRoundedRepeat,
                                 ),
                               )
                               .toList(),
@@ -705,7 +757,7 @@ class _AddSubscriptionScreenState extends State<AddSubscriptionScreen> {
                     ),
                     const SizedBox(height: 8),
                     FunkyPickerTile(
-                      icon: Icons.auto_awesome_rounded,
+                      icon: HugeIcons.strokeRoundedMagicWand01,
                       label: "Creation Mode",
                       value: _creationMode.displayName,
                       onTap: () async {
@@ -717,7 +769,7 @@ class _AddSubscriptionScreenState extends State<AddSubscriptionScreen> {
                                 (e) => PickerItem(
                                   id: e.displayName,
                                   label: e.displayName,
-                                  icon: Icons.auto_awesome,
+                                  icon: HugeIcons.strokeRoundedMagicWand01,
                                 ),
                               )
                               .toList(),
@@ -735,7 +787,7 @@ class _AddSubscriptionScreenState extends State<AddSubscriptionScreen> {
                     ),
                     const SizedBox(height: 12),
                     FunkyPickerTile(
-                      icon: Icons.notifications_active_rounded,
+                      icon: HugeIcons.strokeRoundedNotification01,
                       label: "Reminder Timing",
                       value: _notificationTiming.displayName,
                       onTap: () async {
@@ -747,7 +799,7 @@ class _AddSubscriptionScreenState extends State<AddSubscriptionScreen> {
                                 (e) => PickerItem(
                                   id: e.displayName,
                                   label: e.displayName,
-                                  icon: Icons.notifications,
+                                  icon: HugeIcons.strokeRoundedNotification01,
                                 ),
                               )
                               .toList(),
@@ -801,7 +853,7 @@ class _AddSubscriptionScreenState extends State<AddSubscriptionScreen> {
             style: FilledButton.styleFrom(
               elevation: 4,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(50),
               ),
             ),
             onPressed: _isLoading ? null : _saveSubscription,
@@ -1014,7 +1066,7 @@ class _AddSubscriptionScreenState extends State<AddSubscriptionScreen> {
 }
 
 class _Chip extends StatelessWidget {
-  final IconData icon;
+  final dynamic icon;
   final String label;
   final VoidCallback onTap;
 
@@ -1025,27 +1077,31 @@ class _Chip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: Theme.of(
             context,
-          ).colorScheme.primaryContainer.withOpacity(0.5),
+          ).colorScheme.primaryContainer.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: Theme.of(context).colorScheme.primary),
+            HugeIcon(
+              icon: icon,
+              size: 14,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
+                fontSize: 12,
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).colorScheme.primary,
-                fontSize: 12,
               ),
             ),
           ],

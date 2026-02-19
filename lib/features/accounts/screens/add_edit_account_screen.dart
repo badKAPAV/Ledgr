@@ -235,7 +235,7 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen>
                 borderRadius: BorderRadius.circular(25),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -421,7 +421,7 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen>
                           elevation: 4,
                           shadowColor: activeColor.withAlpha(100),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(50),
                           ),
                         ),
                         child: _isLoading

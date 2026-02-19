@@ -522,8 +522,8 @@ class _GaugeInfoContent extends StatelessWidget {
                   TextSpan(
                     text: "  / ${formatter.format(limit)}",
                     style: theme.textTheme.displaySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant.withOpacity(
-                        0.7,
+                      color: theme.colorScheme.onSurfaceVariant.withValues(
+                        alpha: 0.7,
                       ),
                       fontWeight: FontWeight.w400,
                       fontSize: 16,
@@ -580,7 +580,7 @@ class _Dot extends StatelessWidget {
       height: 4,
       width: isActive ? 12 : 8,
       decoration: BoxDecoration(
-        color: isActive ? color : color.withOpacity(0.2),
+        color: isActive ? color : color.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(2),
       ),
     );

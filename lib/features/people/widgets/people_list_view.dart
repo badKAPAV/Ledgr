@@ -30,6 +30,9 @@ class PeopleListView extends StatelessWidget {
           initialMode: transactionMode,
           initialAmount: isSettlingUp ? balance.toStringAsFixed(2) : null,
           initialCategory: 'People',
+          initialCategoryId: transactionMode == TransactionMode.income
+              ? 'def_people_inc'
+              : 'def_people_exp',
           initialPerson: person,
           initialIsLoan: true,
           initialLoanSubtype: 'repayment',

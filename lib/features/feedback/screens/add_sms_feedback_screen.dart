@@ -506,7 +506,7 @@ class _AddSmsTemplateScreenState extends State<AddSmsTemplateScreen> {
                     boxShadow: tagColor != null
                         ? [
                             BoxShadow(
-                              color: tagColor.withOpacity(0.3),
+                              color: tagColor.withValues(alpha: 0.3),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -582,7 +582,9 @@ class _AddSmsTemplateScreenState extends State<AddSmsTemplateScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                color: colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.5,
+                ),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: colorScheme.outlineVariant),
               ),
@@ -884,9 +886,9 @@ class _LegendChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -996,7 +998,7 @@ Future<String?> _showModernPickerSheet({
                           duration: const Duration(milliseconds: 200),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? baseColor.withOpacity(0.15)
+                                ? baseColor.withValues(alpha: 0.15)
                                 : Theme.of(
                                     context,
                                   ).colorScheme.surfaceContainer,
@@ -1101,7 +1103,7 @@ class _TagOptionCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         splashColor: isDestructive ? colorScheme.errorContainer : color,
-        highlightColor: color.withOpacity(0.05),
+        highlightColor: color.withValues(alpha: 0.05),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

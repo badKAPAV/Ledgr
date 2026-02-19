@@ -9,6 +9,7 @@ import 'package:wallzy/features/summary/widgets/summary_monthly_graph.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
 
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
 import 'package:wallzy/features/transaction/screens/all_transactions_screen.dart';
 import 'package:wallzy/features/transaction/screens/category_transactions_screen.dart';
 
@@ -41,21 +42,55 @@ class SummaryContentView extends StatelessWidget {
     final Map<String, double> accountSpending = {};
     final List<TransactionModel> expenseTransactions = [];
 
+    final allTransactions = Provider.of<TransactionProvider>(
+      context,
+      listen: false,
+    ).transactions;
+    final processedLinkedIds = <String>{};
+
     for (var tx in transactions) {
-      if (tx.type == 'income') {
-        totalIncome += tx.amount;
-      } else if (tx.type == 'expense') {
-        expenseTransactions.add(tx);
-        totalExpense += tx.amount;
+      if (processedLinkedIds.contains(tx.transactionId)) continue;
+
+      double netAmount = 0;
+      String type = tx.type;
+
+      if (tx.isTransfer == true && tx.linkedTransactionId != null) {
+        final linkedTx = allTransactions
+            .where((lt) => lt.transactionId == tx.linkedTransactionId)
+            .firstOrNull;
+        if (linkedTx != null) {
+          processedLinkedIds.add(tx.transactionId);
+          processedLinkedIds.add(linkedTx.transactionId);
+
+          double amount1 = tx.type == 'income' ? tx.amount : -tx.amount;
+          double amount2 = linkedTx.type == 'income'
+              ? linkedTx.amount
+              : -linkedTx.amount;
+          double net = amount1 + amount2;
+
+          type = net >= 0 ? 'income' : 'expense';
+          netAmount = net.abs();
+        } else {
+          netAmount = tx.amount;
+        }
+      } else {
+        netAmount = tx.amount;
+      }
+
+      if (type == 'income') {
+        totalIncome += netAmount;
+      } else if (type == 'expense') {
+        expenseTransactions.add(tx.copyWith(amount: netAmount));
+        totalExpense += netAmount;
 
         // Categorize
         expenseCategories[tx.category] =
-            (expenseCategories[tx.category] ?? 0) + tx.amount;
+            (expenseCategories[tx.category] ?? 0) + netAmount;
 
         // Account Spending
         if (tx.accountId != null) {
           accountSpending[tx.accountId!] =
-              (accountSpending[tx.accountId!] ?? 0) + tx.amount;
+              (accountSpending[tx.accountId!] ?? 0) + netAmount;
         }
       }
     }
@@ -93,7 +128,7 @@ class SummaryContentView extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -303,12 +338,15 @@ class SummaryContentView extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [color.withOpacity(0.15), color.withOpacity(0.05)],
+          colors: [
+            color.withValues(alpha: 0.15),
+            color.withValues(alpha: 0.05),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -318,7 +356,7 @@ class SummaryContentView extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.2),
+                  color: color.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: HugeIcon(icon: icon, size: 14, color: color),
@@ -415,7 +453,9 @@ class SummaryContentView extends StatelessWidget {
         color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.3),
+          color: Theme.of(
+            context,
+          ).colorScheme.outlineVariant.withValues(alpha: 0.3),
         ),
       ),
       child: Row(
@@ -424,7 +464,7 @@ class SummaryContentView extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
+              color: color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(16),
             ),
             child: HugeIcon(icon: icon, size: 20, color: color),
@@ -474,12 +514,12 @@ class SummaryContentView extends StatelessWidget {
                       width: MediaQuery.of(context).size.width * 0.5 * percent,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [color, color.withOpacity(0.6)],
+                          colors: [color, color.withValues(alpha: 0.6)],
                         ),
                         borderRadius: BorderRadius.circular(4),
                         boxShadow: [
                           BoxShadow(
-                            color: color.withOpacity(0.3),
+                            color: color.withValues(alpha: 0.3),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -508,7 +548,9 @@ class SummaryContentView extends StatelessWidget {
         color: Theme.of(context).colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.3),
+          color: Theme.of(
+            context,
+          ).colorScheme.outlineVariant.withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -558,7 +600,9 @@ class SummaryContentView extends StatelessWidget {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.1),
+          color: Theme.of(
+            context,
+          ).colorScheme.errorContainer.withValues(alpha: 0.1),
           shape: BoxShape.circle,
         ),
         child: HugeIcon(
@@ -599,7 +643,7 @@ class SummaryContentView extends StatelessWidget {
           HugeIcon(
             icon: HugeIcons.strokeRoundedAnalytics01,
             size: 64,
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
           Text(

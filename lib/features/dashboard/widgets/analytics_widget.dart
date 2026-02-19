@@ -212,7 +212,7 @@ class _AnalyticsWidgetState extends State<AnalyticsWidget>
         color: theme.colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(32),
         border: Border.all(
-          color: theme.colorScheme.outlineVariant.withOpacity(0.3),
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
         ),
       ),
       child: Stack(
@@ -338,7 +338,7 @@ class _SplineChartPainter extends CustomPainter {
 
     // 1. Draw Grid/Baseline
     final linePaint = Paint()
-      ..color = theme.colorScheme.outlineVariant.withOpacity(0.2)
+      ..color = theme.colorScheme.outlineVariant.withValues(alpha: 0.2)
       ..strokeWidth = 1;
     canvas.drawLine(Offset(0, chartH), Offset(w, chartH), linePaint);
 
@@ -424,13 +424,19 @@ class _SplineChartPainter extends CustomPainter {
 
     // 3. Draw Fills (Gradients)
     final incomeGradient = LinearGradient(
-      colors: [incomeColor.withOpacity(0.2), incomeColor.withOpacity(0.0)],
+      colors: [
+        incomeColor.withValues(alpha: 0.2),
+        incomeColor.withValues(alpha: 0.0),
+      ],
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
     ).createShader(Rect.fromLTWH(0, 0, w, chartH));
 
     final expenseGradient = LinearGradient(
-      colors: [expenseColor.withOpacity(0.2), expenseColor.withOpacity(0.0)],
+      colors: [
+        expenseColor.withValues(alpha: 0.2),
+        expenseColor.withValues(alpha: 0.0),
+      ],
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
     ).createShader(Rect.fromLTWH(0, 0, w, chartH));
@@ -452,7 +458,7 @@ class _SplineChartPainter extends CustomPainter {
     // Scrubber Line
     final selectedX = selectedIndex * stepX;
     final scrubberPaint = Paint()
-      ..color = theme.colorScheme.onSurface.withOpacity(0.1)
+      ..color = theme.colorScheme.onSurface.withValues(alpha: 0.1)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
 
@@ -499,7 +505,7 @@ class _SplineChartPainter extends CustomPainter {
         style: textStyle.copyWith(
           color: isSelected
               ? theme.colorScheme.onSurface
-              : theme.colorScheme.outline.withOpacity(0.5),
+              : theme.colorScheme.outline.withValues(alpha: 0.5),
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
         ),
       );
@@ -551,7 +557,7 @@ class _StatColumn extends StatelessWidget {
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.colorScheme.outlineVariant.withOpacity(0.2),
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2),
         ),
       ),
       child: Row(
@@ -561,7 +567,7 @@ class _StatColumn extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(5),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -629,7 +635,7 @@ class _TimeframePillState extends State<_TimeframePill> {
       borderRadius: BorderRadius.circular(16),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(_isExpanded ? 0.1 : 0.05),
+          color: Colors.black.withValues(alpha: _isExpanded ? 0.1 : 0.05),
           blurRadius: _isExpanded ? 12 : 4,
           offset: Offset(0, _isExpanded ? 6 : 2),
         ),
@@ -710,7 +716,7 @@ class _TimeframePillState extends State<_TimeframePill> {
                                 color: isSelected
                                     ? theme.colorScheme.primary
                                     : theme.colorScheme.onSecondaryContainer
-                                          .withOpacity(0.7),
+                                          .withValues(alpha: 0.7),
                               ),
                             ),
                           ),

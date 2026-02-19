@@ -19,12 +19,14 @@ class _MonthlySummary {
 
 class CategoryTransactionsScreen extends StatefulWidget {
   final String categoryName;
+  final String? categoryId; // Added categoryId
   final String categoryType;
   final DateTime initialSelectedDate;
 
   const CategoryTransactionsScreen({
     super.key,
     required this.categoryName,
+    this.categoryId, // Added categoryId
     required this.categoryType,
     required this.initialSelectedDate,
   });
@@ -54,13 +56,23 @@ class _CategoryTransactionsScreenState
       context,
       listen: false,
     ).transactions;
-    _allCategoryTransactions = allTransactions
-        .where(
-          (tx) =>
-              tx.category == widget.categoryName &&
-              tx.type == widget.categoryType,
-        )
-        .toList();
+
+    _allCategoryTransactions = allTransactions.where((tx) {
+      final isTypeMatch = tx.type == widget.categoryType;
+      if (!isTypeMatch) return false;
+
+      if (widget.categoryId != null) {
+        // If we have an ID, prioritize matching by ID
+        if (tx.categoryId == widget.categoryId) return true;
+        // Fallback: If transaction has no ID but name matches (legacy)
+        if (tx.categoryId == null && tx.category == widget.categoryName)
+          return true;
+        return false;
+      } else {
+        // Legacy behavior: match by name
+        return tx.category == widget.categoryName;
+      }
+    }).toList();
 
     if (_allCategoryTransactions.isNotEmpty) {
       _processTransactions();

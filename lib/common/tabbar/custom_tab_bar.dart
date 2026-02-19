@@ -39,6 +39,14 @@ class CustomTabBar extends StatefulWidget implements PreferredSizeWidget {
 
 class _CustomTabBarState extends State<CustomTabBar> {
   TabController? _controller;
+  late List<GlobalKey> _tabKeys;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize a key for every tab to track their positions
+    _tabKeys = List.generate(widget.tabs.length, (index) => GlobalKey());
+  }
 
   @override
   void didChangeDependencies() {
@@ -49,6 +57,10 @@ class _CustomTabBarState extends State<CustomTabBar> {
   @override
   void didUpdateWidget(CustomTabBar oldWidget) {
     super.didUpdateWidget(oldWidget);
+    // Rebuild keys if the number of tabs changes dynamically
+    if (widget.tabs.length != oldWidget.tabs.length) {
+      _tabKeys = List.generate(widget.tabs.length, (index) => GlobalKey());
+    }
     if (widget.controller != oldWidget.controller) {
       _updateController();
     }
@@ -70,10 +82,32 @@ class _CustomTabBarState extends State<CustomTabBar> {
   }
 
   void _handleTabSelection() {
-    // Only rebuild if the index actually changed (avoid redundant builds during swipe animation)
+    // Only rebuild if the index actually changed
     if (_controller!.indexIsChanging ||
         _controller!.animation!.value == _controller!.index.toDouble()) {
       setState(() {});
+
+      // Auto-scroll to the selected tab after the frame renders the expanded size
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToCurrentTab();
+      });
+    }
+  }
+
+  void _scrollToCurrentTab() {
+    if (_controller == null || _tabKeys.isEmpty) return;
+    final index = _controller!.index;
+    if (index < 0 || index >= _tabKeys.length) return;
+
+    final keyContext = _tabKeys[index].currentContext;
+    if (keyContext != null) {
+      // ensureVisible finds the nearest Scrollable and scrolls to this context
+      Scrollable.ensureVisible(
+        keyContext,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+        alignment: 0.5, // 0.5 means it will attempt to center the tab
+      );
     }
   }
 
@@ -89,28 +123,18 @@ class _CustomTabBarState extends State<CustomTabBar> {
     final colorScheme = theme.colorScheme;
 
     // --- COLORS ---
-    // Outer Shell Background (Darker/Subtle)
     final bgColor =
         widget.backgroundColor ?? colorScheme.surfaceContainerHighest;
-    // Selected Pill Color (High Contrast)
     final activeColor = widget.indicatorColor ?? colorScheme.surfaceContainer;
-    // Selected Text Color
     final activeText = widget.labelColor ?? colorScheme.onSurface;
-    // Unselected Text Color
     final inactiveText =
         widget.unselectedLabelColor ?? colorScheme.onSurfaceVariant;
 
     return Container(
-      // width: double.infinity, // Takes full width as requested
-      decoration: ShapeDecoration(
-        color: bgColor,
-        shape: const StadiumBorder(), // The "Pill" Shape
-      ),
+      decoration: ShapeDecoration(color: bgColor, shape: const StadiumBorder()),
       padding: widget.padding,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(
-          100,
-        ), // Clips scrolling content to pill
+        borderRadius: BorderRadius.circular(100),
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           physics: const BouncingScrollPhysics(),
@@ -121,6 +145,8 @@ class _CustomTabBarState extends State<CustomTabBar> {
               final item = widget.tabs[index];
 
               return GestureDetector(
+                // Attach the unique GlobalKey to each tab item
+                key: _tabKeys[index],
                 onTap: () {
                   HapticFeedback.lightImpact();
                   _controller?.animateTo(index);
@@ -146,9 +172,7 @@ class _CustomTabBarState extends State<CustomTabBar> {
                         curve: Curves.fastOutSlowIn,
                         alignment: Alignment.centerLeft,
                         child: SizedBox(
-                          width: isSelected
-                              ? null
-                              : 0, // Collapses width when unselected
+                          width: isSelected ? null : 0,
                           child: Padding(
                             padding: const EdgeInsets.only(right: 8),
                             child: HugeIcon(

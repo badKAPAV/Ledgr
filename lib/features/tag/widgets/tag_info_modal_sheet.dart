@@ -85,7 +85,7 @@ class _TagInfoModalSheetState extends State<TagInfoModalSheet> {
                         boxShadow: [
                           if (isSelected)
                             BoxShadow(
-                              color: color.withOpacity(0.4),
+                              color: color.withValues(alpha: 0.4),
                               blurRadius: 10,
                               spreadRadius: 2,
                             ),
@@ -162,7 +162,7 @@ class _TagInfoModalSheetState extends State<TagInfoModalSheet> {
                           backgroundColor: theme
                               .colorScheme
                               .surfaceContainerHighest
-                              .withOpacity(0.5),
+                              .withValues(alpha: 0.5),
                         ),
                       ),
                     ],
@@ -182,7 +182,7 @@ class _TagInfoModalSheetState extends State<TagInfoModalSheet> {
                       hintText: "e.g. Groceries",
                       filled: true,
                       fillColor: theme.colorScheme.surfaceContainerHighest
-                          .withOpacity(0.4),
+                          .withValues(alpha: 0.4),
                       prefixIcon: Icon(
                         Icons.label_outline_rounded,
                         color: theme.colorScheme.primary,
@@ -255,11 +255,11 @@ class _TagInfoModalSheetState extends State<TagInfoModalSheet> {
                           height: 50,
                           decoration: BoxDecoration(
                             color: theme.colorScheme.surfaceContainerHighest
-                                .withOpacity(0.4),
+                                .withValues(alpha: 0.4),
                             shape: BoxShape.circle,
                             border: Border.all(
                               color: theme.colorScheme.outlineVariant
-                                  .withOpacity(0.5),
+                                  .withValues(alpha: 0.5),
                               width: 1,
                             ),
                           ),
@@ -288,7 +288,7 @@ class _TagInfoModalSheetState extends State<TagInfoModalSheet> {
                     child: FilledButton(
                       style: FilledButton.styleFrom(
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(50),
                         ),
                         elevation: 0,
                       ),
@@ -569,7 +569,7 @@ class _TagVisualCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: tagColor.withOpacity(0.3),
+            color: tagColor.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -582,7 +582,7 @@ class _TagVisualCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.3),
+              color: Colors.white.withValues(alpha: 0.3),
               shape: BoxShape.circle,
             ),
             child: HugeIcon(

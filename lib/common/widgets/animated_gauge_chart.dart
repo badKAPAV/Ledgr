@@ -159,7 +159,7 @@ class GaugeChartPainter extends CustomPainter {
 
     // Background Track (Always Butt Cap)
     final bgPaint = Paint()
-      ..color = Colors.grey.withOpacity(0.1)
+      ..color = Colors.grey.withValues(alpha: 0.1)
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.butt; // FORCED FLAT

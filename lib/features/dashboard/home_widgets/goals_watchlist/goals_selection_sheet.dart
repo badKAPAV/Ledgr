@@ -191,8 +191,9 @@ class _GoalsSelectionSheetState extends State<GoalsSelectionSheet> {
                           ),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? theme.colorScheme.primaryContainer
-                                      .withOpacity(0.4)
+                                ? theme.colorScheme.primaryContainer.withValues(
+                                    alpha: 0.4,
+                                  )
                                 : theme.colorScheme.surfaceContainerLow,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(

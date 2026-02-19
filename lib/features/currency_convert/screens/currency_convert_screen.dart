@@ -253,7 +253,9 @@ class _CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
                 color: theme.colorScheme.surfaceContainer,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: theme.colorScheme.outlineVariant.withOpacity(0.3),
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.3,
+                  ),
                 ),
               ),
               child: Column(
@@ -311,7 +313,9 @@ class _CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
               alignment: Alignment.center,
               children: [
                 Divider(
-                  color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.5,
+                  ),
                   indent: 20,
                   endIndent: 20,
                 ),
@@ -328,7 +332,7 @@ class _CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 8,
                           offset: const Offset(0, 4),
                         ),
@@ -366,7 +370,7 @@ class _CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1.2,
                           color: theme.colorScheme.onPrimaryContainer
-                              .withOpacity(0.7),
+                              .withValues(alpha: 0.7),
                         ),
                       ),
                       _CurrencyDropdown(
@@ -432,8 +436,8 @@ class _CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: theme.colorScheme.onPrimaryContainer.withOpacity(
-                        0.8,
+                      color: theme.colorScheme.onPrimaryContainer.withValues(
+                        alpha: 0.8,
                       ),
                     ),
                   ),
@@ -488,7 +492,7 @@ class _CurrencyDropdown extends StatelessWidget {
     final theme = Theme.of(context);
     final bgColor = isLightMode
         ? theme.colorScheme.surfaceContainerHighest
-        : Colors.black.withOpacity(0.1);
+        : Colors.black.withValues(alpha: 0.1);
 
     final textColor = isLightMode
         ? theme.colorScheme.onSurface

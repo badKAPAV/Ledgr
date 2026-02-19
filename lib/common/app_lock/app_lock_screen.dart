@@ -43,7 +43,7 @@ class _LockScreenState extends State<LockScreen> {
                   width: 300,
                   height: 300,
                   decoration: BoxDecoration(
-                    color: colorScheme.primary.withOpacity(0.15),
+                    color: colorScheme.primary.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -58,10 +58,12 @@ class _LockScreenState extends State<LockScreen> {
                 Container(
                   padding: const EdgeInsets.all(32),
                   decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                    color: colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.3,
+                    ),
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: colorScheme.outlineVariant.withOpacity(0.2),
+                      color: colorScheme.outlineVariant.withValues(alpha: 0.2),
                     ),
                   ),
                   child: HugeIcon(

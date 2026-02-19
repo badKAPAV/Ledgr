@@ -155,7 +155,7 @@ class _DateNavigationControlState extends State<DateNavigationControl> {
                   borderRadius: BorderRadius.circular(100),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -231,10 +231,10 @@ class _DateNavigationControlState extends State<DateNavigationControl> {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: theme.surface.withOpacity(0.5),
+                      color: theme.surface.withValues(alpha: 0.5),
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: theme.outlineVariant.withOpacity(0.3),
+                        color: theme.outlineVariant.withValues(alpha: 0.3),
                       ),
                     ),
                     child: Padding(
@@ -418,7 +418,7 @@ class _DateText extends StatelessWidget {
                       Text(
                         "$year",
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: theme.onSurface.withOpacity(0.9),
+                          color: theme.onSurface.withValues(alpha: 0.9),
                           height: 1.0,
                           fontWeight: isYearMode
                               ? FontWeight.w900

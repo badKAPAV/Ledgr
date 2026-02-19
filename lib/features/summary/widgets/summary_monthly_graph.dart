@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
+import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
 
 class DailyExpenseGraph extends StatefulWidget {
   final List<TransactionModel> transactions;
@@ -41,10 +42,48 @@ class _DailyExpenseGraphState extends State<DailyExpenseGraph> {
       dailyTotals[i] = 0.0;
     }
 
+    final allTransactions = Provider.of<TransactionProvider>(
+      context,
+      listen: false,
+    ).transactions;
+    final processedLinkedIds = <String>{};
+
     for (var tx in widget.transactions) {
-      if (tx.type == 'expense') {
+      if (processedLinkedIds.contains(tx.transactionId)) continue;
+
+      double netAmount = 0;
+      bool isExpense = tx.type == 'expense';
+
+      if (tx.isTransfer == true && tx.linkedTransactionId != null) {
+        final linkedTx = allTransactions
+            .where((lt) => lt.transactionId == tx.linkedTransactionId)
+            .firstOrNull;
+        if (linkedTx != null) {
+          processedLinkedIds.add(tx.transactionId);
+          processedLinkedIds.add(linkedTx.transactionId);
+
+          double amount1 = tx.type == 'income' ? tx.amount : -tx.amount;
+          double amount2 = linkedTx.type == 'income'
+              ? linkedTx.amount
+              : -linkedTx.amount;
+          double net = amount1 + amount2;
+
+          if (net < 0) {
+            isExpense = true;
+            netAmount = net.abs();
+          } else {
+            isExpense = false;
+          }
+        } else {
+          netAmount = tx.amount;
+        }
+      } else {
+        netAmount = tx.amount;
+      }
+
+      if (isExpense) {
         final day = tx.timestamp.day;
-        dailyTotals[day] = (dailyTotals[day] ?? 0) + tx.amount;
+        dailyTotals[day] = (dailyTotals[day] ?? 0) + netAmount;
       }
     }
 
@@ -65,11 +104,11 @@ class _DailyExpenseGraphState extends State<DailyExpenseGraph> {
             color: theme.colorScheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(28),
             border: Border.all(
-              color: theme.colorScheme.outlineVariant.withOpacity(0.3),
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.03),
+                color: Colors.black.withValues(alpha: 0.03),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -95,7 +134,7 @@ class _DailyExpenseGraphState extends State<DailyExpenseGraph> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
+                      color: color.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
@@ -120,8 +159,8 @@ class _DailyExpenseGraphState extends State<DailyExpenseGraph> {
                       horizontalInterval: maxAmount > 0 ? maxAmount / 2 : 1,
                       getDrawingHorizontalLine: (value) {
                         return FlLine(
-                          color: theme.colorScheme.outlineVariant.withOpacity(
-                            0.2,
+                          color: theme.colorScheme.outlineVariant.withValues(
+                            alpha: 0.2,
                           ),
                           strokeWidth: 0.5,
                           dashArray: [5, 5],
@@ -209,7 +248,7 @@ class _DailyExpenseGraphState extends State<DailyExpenseGraph> {
                           vertical: 8,
                         ),
                         tooltipBorder: BorderSide(
-                          color: color.withOpacity(0.2),
+                          color: color.withValues(alpha: 0.2),
                           width: 1,
                         ),
                         getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
@@ -246,7 +285,7 @@ class _DailyExpenseGraphState extends State<DailyExpenseGraph> {
                             return spotIndexes.map((index) {
                               return TouchedSpotIndicatorData(
                                 FlLine(
-                                  color: color.withOpacity(0.3),
+                                  color: color.withValues(alpha: 0.3),
                                   strokeWidth: 2,
                                   dashArray: [5, 5],
                                 ),
@@ -273,7 +312,7 @@ class _DailyExpenseGraphState extends State<DailyExpenseGraph> {
                         curveSmoothness: 0.35,
                         preventCurveOverShooting: true,
                         gradient: LinearGradient(
-                          colors: [color, color.withOpacity(0.7)],
+                          colors: [color, color.withValues(alpha: 0.7)],
                         ),
                         barWidth: 4,
                         isStrokeCapRound: true,
@@ -282,8 +321,8 @@ class _DailyExpenseGraphState extends State<DailyExpenseGraph> {
                           show: true,
                           gradient: LinearGradient(
                             colors: [
-                              color.withOpacity(0.2),
-                              color.withOpacity(0.0),
+                              color.withValues(alpha: 0.2),
+                              color.withValues(alpha: 0.0),
                             ],
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,

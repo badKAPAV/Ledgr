@@ -368,10 +368,10 @@ class _FeedbackListTile extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: isSms
-                        ? Colors.orange.withOpacity(0.1)
+                        ? Colors.orange.withValues(alpha: 0.1)
                         : (topic == 'Bug'
-                              ? Colors.red.withOpacity(0.1)
-                              : Colors.blue.withOpacity(0.1)),
+                              ? Colors.red.withValues(alpha: 0.1)
+                              : Colors.blue.withValues(alpha: 0.1)),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(

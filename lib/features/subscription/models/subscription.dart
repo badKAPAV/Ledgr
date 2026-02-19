@@ -8,6 +8,7 @@ class Subscription {
   final String name;
   final double amount;
   final String category;
+  final String? categoryId;
   final String paymentMethod;
   final SubscriptionFrequency frequency;
   final DateTime nextDueDate;
@@ -26,6 +27,7 @@ class Subscription {
     required this.name,
     required this.amount,
     required this.category,
+    this.categoryId,
     required this.paymentMethod,
     required this.frequency,
     required this.nextDueDate,
@@ -45,6 +47,7 @@ class Subscription {
     String? name,
     double? amount,
     String? category,
+    String? categoryId,
     String? paymentMethod,
     SubscriptionFrequency? frequency,
     DateTime? nextDueDate,
@@ -62,6 +65,7 @@ class Subscription {
       name: name ?? this.name,
       amount: amount ?? this.amount,
       category: category ?? this.category,
+      categoryId: categoryId ?? this.categoryId,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       frequency: frequency ?? this.frequency,
       nextDueDate: nextDueDate ?? this.nextDueDate,
@@ -82,6 +86,7 @@ class Subscription {
       'name': name,
       'amount': amount,
       'category': category,
+      'categoryId': categoryId,
       'paymentMethod': paymentMethod,
       'frequency': frequency.name,
       'nextDueDate': nextDueDate.toIso8601String(),
@@ -103,6 +108,7 @@ class Subscription {
       name: map['name'] ?? '',
       amount: (map['amount'] ?? 0.0).toDouble(),
       category: map['category'] ?? 'Others',
+      categoryId: map['categoryId'],
       paymentMethod: map['paymentMethod'] ?? 'Other',
       frequency: SubscriptionFrequency.values.firstWhere(
         (e) => e.name == map['frequency'],

@@ -6,6 +6,7 @@ class DueSubscription {
   final String subscriptionName;
   final double averageAmount;
   final String lastCategory;
+  final String? lastCategoryId;
   final String lastPaymentMethod;
   final DateTime dueDate;
   final SubscriptionFrequency frequency;
@@ -15,6 +16,7 @@ class DueSubscription {
     required this.subscriptionName,
     required this.averageAmount,
     required this.lastCategory,
+    this.lastCategoryId,
     required this.lastPaymentMethod,
     required this.dueDate,
     required this.frequency,
@@ -26,6 +28,7 @@ class DueSubscription {
       'subscriptionName': subscriptionName,
       'averageAmount': averageAmount,
       'lastCategory': lastCategory,
+      'lastCategoryId': lastCategoryId,
       'lastPaymentMethod': lastPaymentMethod,
       'dueDate': dueDate.toIso8601String(),
       'frequency': frequency.name,
@@ -38,6 +41,7 @@ class DueSubscription {
       subscriptionName: map['subscriptionName'] ?? '',
       averageAmount: (map['averageAmount'] ?? 0.0).toDouble(),
       lastCategory: map['lastCategory'] ?? 'Others',
+      lastCategoryId: map['lastCategoryId'],
       lastPaymentMethod: map['lastPaymentMethod'] ?? 'Other',
       dueDate: DateTime.parse(map['dueDate']),
       frequency: SubscriptionFrequency.values.firstWhere(

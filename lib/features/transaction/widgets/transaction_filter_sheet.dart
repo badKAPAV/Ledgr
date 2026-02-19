@@ -451,11 +451,11 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
                                       ? theme
                                             .extension<AppColors>()!
                                             .income
-                                            .withOpacity(0.1)
+                                            .withValues(alpha: 0.1)
                                       : theme
                                             .extension<AppColors>()!
                                             .expense
-                                            .withOpacity(0.1),
+                                            .withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
@@ -507,7 +507,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
                                           : theme
                                                 .extension<AppColors>()!
                                                 .expense)
-                                      .withOpacity(0.2),
+                                      .withValues(alpha: 0.2),
                               trackHeight: 6,
                               thumbShape: const RoundSliderThumbShape(
                                 enabledThumbRadius: 12,
@@ -627,8 +627,8 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
         child: Ink(
           decoration: BoxDecoration(
             color: hasSelection
-                ? colorScheme.primaryContainer.withOpacity(0.3)
-                : colorScheme.surfaceContainerHigh.withOpacity(0.5),
+                ? colorScheme.primaryContainer.withValues(alpha: 0.3)
+                : colorScheme.surfaceContainerHigh.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(16),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -638,8 +638,8 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: hasSelection
-                      ? colorScheme.primary.withOpacity(0.2)
-                      : colorScheme.surface.withOpacity(0.5),
+                      ? colorScheme.primary.withValues(alpha: 0.2)
+                      : colorScheme.surface.withValues(alpha: 0.5),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -697,7 +697,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
               else
                 Icon(
                   Icons.chevron_right_rounded,
-                  color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                   size: 20,
                 ),
             ],
@@ -719,7 +719,9 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
       decoration: BoxDecoration(
         color: colorScheme.surface,
         border: Border(
-          top: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.2)),
+          top: BorderSide(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.2),
+          ),
         ),
       ),
       child: SafeArea(
@@ -995,7 +997,7 @@ class ModernSlidingToggle extends StatelessWidget {
     return Container(
       height: 48,
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(24),
       ),
       padding: const EdgeInsets.all(4),
@@ -1015,7 +1017,7 @@ class ModernSlidingToggle extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 4,
                       offset: const Offset(0, 1),
                     ),
@@ -1074,7 +1076,7 @@ class ModernPriceInput extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHigh.withOpacity(0.3),
+        color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -1084,7 +1086,7 @@ class ModernPriceInput extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: 10,
-              color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5,
             ),
@@ -1235,7 +1237,7 @@ class _ModernDistributionPainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [color.withOpacity(0.15), color.withOpacity(0.05)],
+        colors: [color.withValues(alpha: 0.15), color.withValues(alpha: 0.05)],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
       ..style = PaintingStyle.fill;
 
@@ -1283,7 +1285,7 @@ class _ModernDistributionPainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [color.withOpacity(0.4), color.withOpacity(0.2)],
+        colors: [color.withValues(alpha: 0.4), color.withValues(alpha: 0.2)],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
       ..style = PaintingStyle.fill;
 
@@ -1303,7 +1305,7 @@ class _ModernDistributionPainter extends CustomPainter {
 
   void _drawGridLines(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.grey.withOpacity(0.1)
+      ..color = Colors.grey.withValues(alpha: 0.1)
       ..strokeWidth = 1;
 
     for (int i = 1; i <= 3; i++) {
@@ -1314,7 +1316,7 @@ class _ModernDistributionPainter extends CustomPainter {
 
   void _drawEmptyState(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = color.withOpacity(0.1)
+      ..color = color.withValues(alpha: 0.1)
       ..style = PaintingStyle.fill;
 
     final path = Path()
@@ -1556,7 +1558,9 @@ class _MultiSelectionSheetState extends State<MultiSelectionSheet> {
                                 : Icons.radio_button_unchecked_rounded,
                             color: isSelected
                                 ? colorScheme.primary
-                                : colorScheme.onSurfaceVariant.withOpacity(0.5),
+                                : colorScheme.onSurfaceVariant.withValues(
+                                    alpha: 0.5,
+                                  ),
                             size: 24,
                           ),
                           const SizedBox(width: 16),
@@ -1589,7 +1593,7 @@ class _MultiSelectionSheetState extends State<MultiSelectionSheet> {
             decoration: BoxDecoration(
               border: Border(
                 top: BorderSide(
-                  color: colorScheme.outlineVariant.withOpacity(0.2),
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.2),
                 ),
               ),
             ),

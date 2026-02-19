@@ -14,19 +14,26 @@ import 'package:wallzy/common/widgets/date_filter_selector.dart';
 import 'package:wallzy/common/widgets/empty_report_placeholder.dart';
 import 'package:wallzy/common/widgets/animated_gauge_chart.dart';
 import 'package:wallzy/common/progress_bar/segmented_progress_bar.dart';
+import 'package:wallzy/features/categories/provider/category_provider.dart';
+import 'package:wallzy/common/icon_picker/icons.dart';
+import 'package:collection/collection.dart';
 
 // --- DATA MODEL ---
 class CategorySummary {
+  final String? categoryId; // Added
   final String name;
   final double totalAmount;
   final int transactionCount;
   final String type;
+  final String? iconKey; // Added
 
   CategorySummary({
+    this.categoryId,
     required this.name,
     required this.totalAmount,
     required this.transactionCount,
     required this.type,
+    this.iconKey,
   });
 }
 
@@ -116,9 +123,22 @@ class _CategoriesTabScreenState extends State<CategoriesTabScreen> {
   Map<String, CategorySummary> _calculateCategorySummaries(
     List<TransactionModel> transactions,
   ) {
+    final categoryProvider = Provider.of<CategoryProvider>(
+      context,
+      listen: false,
+    );
     final Map<String, List<TransactionModel>> groupedByCategoryAndType = {};
+
     for (var tx in transactions) {
-      final key = '${tx.category}_${tx.type}';
+      // Grouping Key:
+      // If categoryId exists: "ID_<categoryId>_<type>"
+      // If no categoryId: "NAME_<categoryName>_<type>"
+      final String key;
+      if (tx.categoryId != null) {
+        key = 'ID_${tx.categoryId}_${tx.type}';
+      } else {
+        key = 'NAME_${tx.category}_${tx.type}';
+      }
       (groupedByCategoryAndType[key] ??= []).add(tx);
     }
 
@@ -126,11 +146,28 @@ class _CategoriesTabScreenState extends State<CategoriesTabScreen> {
     groupedByCategoryAndType.forEach((key, txList) {
       final total = txList.fold<double>(0.0, (sum, tx) => sum + tx.amount);
       final firstTx = txList.first;
+
+      String name = firstTx.category;
+      String? categoryId = firstTx.categoryId;
+      String? iconKey;
+
+      if (categoryId != null) {
+        final categoryModel = categoryProvider.categories.firstWhereOrNull(
+          (c) => c.id == categoryId,
+        );
+        if (categoryModel != null) {
+          name = categoryModel.name;
+          iconKey = categoryModel.iconKey;
+        }
+      }
+
       summaries[key] = CategorySummary(
-        name: firstTx.category,
+        categoryId: categoryId,
+        name: name,
         totalAmount: total,
         transactionCount: txList.length,
         type: firstTx.type,
+        iconKey: iconKey,
       );
     });
     return summaries;
@@ -340,6 +377,7 @@ class _CategoriesTabScreenState extends State<CategoriesTabScreen> {
                     MaterialPageRoute(
                       builder: (_) => CategoryTransactionsScreen(
                         categoryName: summary.name,
+                        categoryId: summary.categoryId, // Added
                         categoryType: summary.type,
                         initialSelectedDate: DateTime(
                           _selectedYear,
@@ -556,7 +594,7 @@ class _SegmentedTypeSelector extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
+                      color: Colors.black.withValues(alpha: 0.08),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
@@ -691,14 +729,18 @@ class _FunkyCategoryTile extends StatelessWidget {
     required this.onTap,
   });
 
-  IconData _getIcon(String cat) {
-    final c = cat.toLowerCase();
-    if (c.contains('food')) return Icons.lunch_dining_rounded;
-    if (c.contains('shop')) return Icons.shopping_bag_rounded;
-    if (c.contains('transport')) return Icons.directions_car_rounded;
-    if (c.contains('bill')) return Icons.receipt_long_rounded;
-    if (c.contains('entertainment')) return Icons.movie_filter_rounded;
-    return Icons.category_rounded;
+  dynamic _getIcon() {
+    if (summary.iconKey != null) {
+      return GoalIconRegistry.getIcon(summary.iconKey!);
+    }
+    // Fallback
+    final c = summary.name.toLowerCase();
+    if (c.contains('food')) return HugeIcons.strokeRoundedRiceBowl01;
+    if (c.contains('shop')) return HugeIcons.strokeRoundedShoppingBag02;
+    if (c.contains('transport')) return HugeIcons.strokeRoundedCar02;
+    if (c.contains('bill')) return HugeIcons.strokeRoundedInvoice01;
+    if (c.contains('entertainment')) return HugeIcons.strokeRoundedTicket01;
+    return HugeIcons.strokeRoundedMenu01;
   }
 
   @override
@@ -728,9 +770,10 @@ class _FunkyCategoryTile extends StatelessWidget {
                   color: theme.colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: Icon(
-                  _getIcon(summary.name),
+                child: HugeIcon(
+                  icon: _getIcon(),
                   color: theme.colorScheme.primary,
+                  size: 24,
                 ),
               ),
               const SizedBox(width: 16),

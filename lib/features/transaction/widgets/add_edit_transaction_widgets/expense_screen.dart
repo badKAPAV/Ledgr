@@ -14,6 +14,7 @@ class ExpenseScreen extends StatefulWidget {
   final String? initialAccountNumber;
   final String? initialPayee;
   final String? initialCategory;
+  final String? initialCategoryId;
   final Person? initialPerson;
   final bool initialIsLoan;
   final String initialLoanSubtype;
@@ -29,6 +30,7 @@ class ExpenseScreen extends StatefulWidget {
     this.initialAccountNumber,
     this.initialPayee,
     this.initialCategory,
+    this.initialCategoryId,
     this.initialPerson,
     this.initialIsLoan = false,
     this.initialLoanSubtype = 'new',
@@ -59,6 +61,7 @@ class ExpenseScreenState extends State<ExpenseScreen> {
       initialAccountNumber: widget.initialAccountNumber,
       initialPayee: widget.initialPayee,
       initialCategory: widget.initialCategory,
+      initialCategoryId: widget.initialCategoryId,
       initialPerson: widget.initialPerson,
       initialIsLoan: widget.initialIsLoan,
       initialLoanSubtype: widget.initialLoanSubtype,

@@ -518,7 +518,7 @@ class _UserProfileScreenState extends State<UserProfileScreen>
                             onPressed: _isSaving ? null : _saveProfile,
                             style: FilledButton.styleFrom(
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius: BorderRadius.circular(50),
                               ),
                               elevation: 2,
                             ),

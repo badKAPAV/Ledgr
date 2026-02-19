@@ -42,7 +42,7 @@ class DataTile extends StatelessWidget {
         color: colorScheme.surfaceContainer, // M3 Container color
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: color ?? colorScheme.outlineVariant.withOpacity(0.3),
+          color: color ?? colorScheme.outlineVariant.withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -122,7 +122,7 @@ class ActionBox extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final bgColor = isDestructive
-        ? color.withOpacity(0.1)
+        ? color.withValues(alpha: 0.1)
         : theme.colorScheme.surfaceContainerHighest;
 
     Widget iconWidget;

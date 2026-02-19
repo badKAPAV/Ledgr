@@ -21,7 +21,9 @@ class HomeEmptyState extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer.withOpacity(0.4),
+                color: theme.colorScheme.primaryContainer.withValues(
+                  alpha: 0.4,
+                ),
                 shape: BoxShape.circle,
               ),
               child: HugeIcon(
@@ -155,16 +157,16 @@ class _GuideCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         border: isHero
             ? Border.all(
-                color: theme.colorScheme.primary.withOpacity(0.5),
+                color: theme.colorScheme.primary.withValues(alpha: 0.5),
                 width: 1.5,
               )
             : Border.all(
-                color: theme.colorScheme.outlineVariant.withOpacity(0.3),
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
               ),
         boxShadow: isHero
             ? [
                 BoxShadow(
-                  color: theme.colorScheme.primary.withOpacity(0.15),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.15),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
@@ -185,7 +187,7 @@ class _GuideCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: isHero
                         ? theme.colorScheme.surface
-                        : color.withOpacity(0.1),
+                        : color.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: HugeIcon(
@@ -215,8 +217,9 @@ class _GuideCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 13,
                           color: isHero
-                              ? theme.colorScheme.onPrimaryContainer
-                                    .withOpacity(0.8)
+                              ? theme.colorScheme.onPrimaryContainer.withValues(
+                                  alpha: 0.8,
+                                )
                               : theme.colorScheme.onSurfaceVariant,
                           height: 1.3,
                         ),

@@ -60,7 +60,7 @@ class _NetWorthWidgetState extends State<NetWorthWidget> {
         color: theme.colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(32),
         border: Border.all(
-          color: theme.colorScheme.outlineVariant.withOpacity(0.2),
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2),
         ),
       ),
       child: Stack(
@@ -92,7 +92,7 @@ class _NetWorthWidgetState extends State<NetWorthWidget> {
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surface.withOpacity(0.5),
+                  color: theme.colorScheme.surface.withValues(alpha: 0.5),
                   shape: BoxShape.circle,
                 ),
                 child: HugeIcon(
@@ -164,13 +164,13 @@ class _NetWorthWidgetState extends State<NetWorthWidget> {
                         ),
                         decoration: BoxDecoration(
                           color: isAhead
-                              ? Colors.green.withOpacity(0.2)
-                              : Colors.orange.withOpacity(0.2),
+                              ? Colors.green.withValues(alpha: 0.2)
+                              : Colors.orange.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: isAhead
-                                ? Colors.green.withOpacity(0.3)
-                                : Colors.orange.withOpacity(0.3),
+                                ? Colors.green.withValues(alpha: 0.3)
+                                : Colors.orange.withValues(alpha: 0.3),
                           ),
                         ),
                         child: Row(

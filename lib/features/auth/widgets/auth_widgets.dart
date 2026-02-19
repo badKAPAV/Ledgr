@@ -26,7 +26,7 @@ class AuthBackground extends StatelessWidget {
                     height: 300,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: theme.colorScheme.primary.withOpacity(0.15),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.15),
                     ),
                   )
                   .animate(onPlay: (c) => c.repeat(reverse: true))

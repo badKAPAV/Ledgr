@@ -7,6 +7,9 @@ import 'package:wallzy/core/themes/theme.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:collection/collection.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
+import 'package:wallzy/common/icon_picker/icons.dart';
+import 'package:wallzy/features/categories/provider/category_provider.dart';
+import 'package:wallzy/features/accounts/provider/account_provider.dart';
 import '../models/transaction.dart';
 
 class TransactionListItem extends StatelessWidget {
@@ -23,79 +26,48 @@ class TransactionListItem extends StatelessWidget {
     this.isLast = false,
   });
 
-  IconData _getIconForCategory(String category) {
-    switch (category.toLowerCase()) {
-      case 'food':
-        return Icons.fastfood_rounded;
-      case 'shopping':
-        return Icons.shopping_bag_rounded;
-      case 'transport':
-        return Icons.directions_car_rounded;
-      case 'entertainment':
-        return Icons.movie_rounded;
-      case 'salary':
-        return Icons.work_rounded;
-      case 'people':
-        return Icons.people_rounded;
-      case 'bills':
-      case 'utilities':
-        return Icons.receipt_long_rounded;
-      case 'health':
-        return Icons.medical_services_rounded;
-      case 'education':
-        return Icons.school_rounded;
-      case 'groceries':
-        return Icons.local_grocery_store_rounded;
-      default:
-        return Icons.category_rounded;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final appColors = theme.extension<AppColors>()!;
+    final categoryProvider = Provider.of<CategoryProvider>(context);
+    final accountProvider = Provider.of<AccountProvider>(context);
     final settingsProvider = Provider.of<SettingsProvider>(context);
-    final currencySymbol = settingsProvider.currencySymbol;
-    final appColors =
-        Theme.of(context).extension<AppColors>() ??
-        const AppColors(income: Colors.green, expense: Colors.red);
-    final isExpense = transaction.type == 'expense';
     final currencyFormat = NumberFormat.currency(
-      symbol: currencySymbol,
-      decimalDigits: 0,
+      symbol: settingsProvider.currencySymbol,
+      decimalDigits: 2,
     );
 
-    final amountColor = isExpense
-        ? Theme.of(context).colorScheme.onSurface
-        : appColors.income;
-    final amountString =
-        '${isExpense ? '-' : '+'}${currencyFormat.format(transaction.amount)}';
+    // Resolve Category
+    final category = categoryProvider.categories.firstWhereOrNull(
+      (c) => c.id == transaction.categoryId,
+    );
 
-    // Logic for Credit Tag
-    final bool showCreditTag =
-        (transaction.isCredit == true || transaction.purchaseType == 'credit');
+    // Resolve Icon
+    final iconKey = category?.iconKey ?? 'category_rounded';
+    final icon = GoalIconRegistry.getIcon(iconKey);
 
-    // Logic for Title
-    final String title =
-        (transaction.category.toLowerCase() == 'people' &&
-            transaction.people?.isNotEmpty == true)
-        ? transaction.people!.first.fullName
-        : (transaction.description.isNotEmpty
-              ? transaction.description
-              : transaction.category);
-
-    IconData icon = isExpense
-        ? Icons.arrow_outward_rounded
-        : Icons.arrow_downward_rounded;
-    if (transaction.category.toLowerCase().contains('food')) {
-      icon = Icons.fastfood_rounded;
-    } else if (transaction.category.toLowerCase().contains('shop')) {
-      icon = Icons.shopping_bag_rounded;
-    } else {
-      icon = _getIconForCategory(transaction.category);
+    // Resolve Title
+    String title = category?.name ?? transaction.category;
+    if (title.toLowerCase() == 'people' &&
+        (transaction.people?.isNotEmpty ?? false)) {
+      title = transaction.people!.first.fullName;
     }
 
-    // Logic for Subtitle (Payment Method only now)
-    String subtitle = transaction.paymentMethod;
+    // Resolve Account & Subtitle
+    final account = accountProvider.accounts.firstWhereOrNull(
+      (a) => a.id == transaction.accountId,
+    );
+    final subtitle = account?.bankName ?? transaction.paymentMethod;
+    final showCreditTag = account?.accountType == 'Credit Card';
+
+    // Amount Logic
+    final isExpense = transaction.type == 'expense';
+    final amountColor = isExpense
+        ? theme.colorScheme.onSurface
+        : appColors.income;
+    final amountString =
+        "${isExpense ? '' : '+'}${currencyFormat.format(transaction.amount)}";
 
     // Linked Transaction Logic
     final txProvider = Provider.of<TransactionProvider>(context);
@@ -131,7 +103,7 @@ class TransactionListItem extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       child: Material(
-        color: Theme.of(context).colorScheme.surfaceContainerLow,
+        color: theme.colorScheme.surfaceContainerLow,
         borderRadius: borderRadius,
         child: InkWell(
           borderRadius: borderRadius,
@@ -155,13 +127,14 @@ class TransactionListItem extends StatelessWidget {
                       decoration: BoxDecoration(
                         color:
                             (isExpense ? appColors.expense : appColors.income)
-                                .withAlpha(25),
+                                .withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(
-                        icon,
+                      child: HugeIcon(
+                        icon: icon,
                         color: isExpense ? appColors.expense : appColors.income,
                         size: 20,
+                        strokeWidth: 2,
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -187,7 +160,7 @@ class TransactionListItem extends StatelessWidget {
                                 DateFormat(
                                   'MMM d, y • h:mm a',
                                 ).format(transaction.timestamp),
-                                style: Theme.of(context).textTheme.bodySmall,
+                                style: theme.textTheme.bodySmall,
                               ),
                               if (showCreditTag) ...[
                                 const SizedBox(width: 8),
@@ -197,9 +170,7 @@ class TransactionListItem extends StatelessWidget {
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.tertiaryContainer,
+                                    color: theme.colorScheme.tertiaryContainer,
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
@@ -207,9 +178,8 @@ class TransactionListItem extends StatelessWidget {
                                     style: TextStyle(
                                       fontSize: 8,
                                       fontWeight: FontWeight.bold,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onTertiaryContainer,
+                                      color:
+                                          theme.colorScheme.onTertiaryContainer,
                                     ),
                                   ),
                                 ),
@@ -237,11 +207,10 @@ class TransactionListItem extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             subtitle,
-                            style: Theme.of(context).textTheme.labelSmall
-                                ?.copyWith(
-                                  color: Theme.of(context).colorScheme.outline,
-                                  fontSize: 10,
-                                ),
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.outline,
+                              fontSize: 10,
+                            ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ],
@@ -262,14 +231,12 @@ class TransactionListItem extends StatelessWidget {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerLowest,
+                      color: theme.colorScheme.surfaceContainerLowest,
                       borderRadius: netBorderRadius,
                       border: Border.all(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.outlineVariant.withOpacity(0.3),
+                        color: theme.colorScheme.outlineVariant.withValues(
+                          alpha: 0.3,
+                        ),
                         width: 1,
                       ),
                     ),
@@ -279,16 +246,16 @@ class TransactionListItem extends StatelessWidget {
                         HugeIcon(
                           icon: HugeIcons.strokeRoundedLink01,
                           size: 16,
-                          color: Theme.of(context).colorScheme.primary,
+                          color: theme.colorScheme.primary,
                         ),
 
                         SizedBox(
                           height: 16,
                           child: VerticalDivider(
                             thickness: 1,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.outline.withValues(alpha: 0.5),
+                            color: theme.colorScheme.outline.withValues(
+                              alpha: 0.5,
+                            ),
                           ),
                         ),
 
@@ -301,22 +268,21 @@ class TransactionListItem extends StatelessWidget {
                             children: [
                               Text(
                                 "Linked with",
-                                style: Theme.of(context).textTheme.labelSmall
-                                    ?.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .outline
-                                          .withValues(alpha: 0.5),
-                                      fontSize: 10,
-                                      height: 1.0,
-                                    ),
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.outline.withValues(
+                                    alpha: 0.5,
+                                  ),
+                                  fontSize: 10,
+                                  height: 1.0,
+                                ),
                               ),
                               Text(
                                 linkedTx.description.isNotEmpty
                                     ? linkedTx.description
                                     : linkedTx.category,
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(fontWeight: FontWeight.w600),
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -335,7 +301,7 @@ class TransactionListItem extends StatelessWidget {
                                 (netAmount >= 0
                                         ? appColors.income
                                         : appColors.expense)
-                                    .withOpacity(0.1),
+                                    .withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(30),
                           ),
                           child: Row(
@@ -345,9 +311,7 @@ class TransactionListItem extends StatelessWidget {
                                 "Net: ",
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
+                                  color: theme.colorScheme.onSurfaceVariant,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),

@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +9,7 @@ import 'package:wallzy/core/themes/theme.dart';
 import 'package:wallzy/features/accounts/models/account.dart';
 import 'package:wallzy/features/accounts/provider/account_provider.dart';
 import 'package:wallzy/features/auth/provider/auth_provider.dart';
+import 'package:wallzy/features/categories/models/category.dart';
 import 'package:wallzy/features/currency_convert/widgets/currency_convert_modal_sheet.dart';
 import 'package:wallzy/features/people/models/person.dart';
 import 'package:wallzy/features/people/provider/people_provider.dart';
@@ -24,6 +23,8 @@ import 'package:wallzy/features/transaction/models/transaction.dart';
 import 'package:wallzy/features/transaction/provider/meta_provider.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
 import 'package:wallzy/features/transaction/services/receipt_service.dart';
+import 'package:wallzy/features/categories/provider/category_provider.dart';
+import 'package:wallzy/common/icon_picker/icons.dart';
 import 'package:wallzy/features/transaction/widgets/add_edit_transaction_widgets/transaction_widgets.dart';
 import 'package:wallzy/features/transaction/widgets/add_receipt_modal_sheet.dart';
 import 'package:wallzy/features/transaction/widgets/link_transaction_modal_sheet.dart';
@@ -40,6 +41,7 @@ class TransactionForm extends StatefulWidget {
   final String? initialAccountNumber;
   final String? initialPayee;
   final String? initialCategory;
+  final String? initialCategoryId;
   final Person? initialPerson;
   final bool initialIsLoan;
   final String initialLoanSubtype;
@@ -56,6 +58,7 @@ class TransactionForm extends StatefulWidget {
     this.initialAccountNumber,
     this.initialPayee,
     this.initialCategory,
+    this.initialCategoryId,
     this.initialPerson,
     this.initialIsLoan = false,
     this.initialLoanSubtype = 'new',
@@ -74,6 +77,7 @@ class TransactionFormState extends State<TransactionForm> {
 
   // Core Fields
   String? _selectedCategory;
+  String? _selectedCategoryId;
   String? _selectedPaymentMethod;
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay.now();
@@ -106,26 +110,39 @@ class TransactionFormState extends State<TransactionForm> {
   final _nonCashPaymentMethods = ["Card", "UPI", "Net banking", "Other"];
   final _cashPaymentMethods = ["Cash", "Other"];
 
-  // --- Icon Mappings ---
-  static final Map<String, IconData> _categoryIcons = {
-    'Food': Icons.fastfood_rounded,
-    'Travel': Icons.flight_rounded,
-    'Shopping': Icons.shopping_bag_rounded,
-    'People': Icons.person_rounded,
-    'Bills': Icons.receipt_long_rounded,
-    'Entertainment': Icons.movie_rounded,
-    'Grocery': Icons.local_grocery_store_rounded,
-    'Transport': Icons.directions_car_rounded,
-    'Health': Icons.medical_services_rounded,
-    'Education': Icons.school_rounded,
-    'Investment': Icons.trending_up_rounded,
-    'Salary': Icons.attach_money_rounded,
-    'Rent': Icons.home_rounded,
-    'Utilities': Icons.lightbulb_rounded,
-    'Insurance': Icons.security_rounded,
-    'Tax': Icons.account_balance_rounded,
-    'Others': Icons.category_rounded,
-  };
+  dynamic _getCategoryIcon(String name, {String? categoryId}) {
+    if (categoryId != null) {
+      final categoryProvider = context.read<CategoryProvider>();
+      final category = categoryProvider.categories.firstWhereOrNull(
+        (c) => c.id == categoryId,
+      );
+      if (category != null) {
+        return GoalIconRegistry.getIcon(category.iconKey);
+      }
+    }
+
+    // Legacy Fallback
+    switch (name.toLowerCase()) {
+      case 'food':
+        return HugeIcons.strokeRoundedRiceBowl01;
+      case 'shopping':
+        return HugeIcons.strokeRoundedShoppingBag02;
+      case 'transport':
+        return HugeIcons.strokeRoundedCar02;
+      case 'entertainment':
+        return HugeIcons.strokeRoundedTicket01;
+      case 'salary':
+        return HugeIcons.strokeRoundedMoney03;
+      case 'people':
+        return HugeIcons.strokeRoundedUser;
+      case 'health':
+        return HugeIcons.strokeRoundedAmbulance;
+      case 'bills':
+        return HugeIcons.strokeRoundedInvoice01;
+      default:
+        return HugeIcons.strokeRoundedMenu01;
+    }
+  }
 
   static final Map<String, IconData> _paymentMethodIcons = {
     'Cash': Icons.money_rounded,
@@ -134,10 +151,6 @@ class TransactionFormState extends State<TransactionForm> {
     'Net banking': Icons.account_balance_rounded,
     'Other': Icons.payment_rounded,
   };
-
-  IconData _getCategoryIcon(String name) {
-    return _categoryIcons[name] ?? Icons.category_outlined;
-  }
 
   IconData _getMethodIcon(String name) {
     return _paymentMethodIcons[name] ?? Icons.payment_outlined;
@@ -161,6 +174,20 @@ class TransactionFormState extends State<TransactionForm> {
       _amountController.text = tx.amount.toStringAsFixed(0);
       _descController.text = tx.description;
       _selectedCategory = tx.category;
+      _selectedCategoryId = tx.categoryId;
+
+      // Handle legacy migration if id is null
+      if (_selectedCategoryId == null && _selectedCategory != null) {
+        final categoryProvider = context.read<CategoryProvider>();
+        final match = categoryProvider.categories.firstWhereOrNull(
+          (c) =>
+              c.mode == widget.mode &&
+              c.name.toLowerCase() == _selectedCategory?.toLowerCase(),
+        );
+        if (match != null) {
+          _selectedCategoryId = match.id;
+        }
+      }
       _selectedPaymentMethod = tx.paymentMethod;
       _selectedDate = tx.timestamp;
       _selectedTime = TimeOfDay.fromDateTime(tx.timestamp);
@@ -195,9 +222,6 @@ class TransactionFormState extends State<TransactionForm> {
 
       // Load Linked Transaction
       if (tx.linkedTransactionId != null) {
-        // Will need to fetch the full object if we want to display details nicely
-        // For now, trigger a load or just set the ID and let UI handle it?
-        // Better to try finding it in provider
         final provider = Provider.of<TransactionProvider>(
           context,
           listen: false,
@@ -221,18 +245,55 @@ class TransactionFormState extends State<TransactionForm> {
       _selectedPaymentMethod = widget.initialPaymentMethod;
 
       if (widget.initialCategory != null) {
-        final validCategories = widget.mode == TransactionMode.expense
-            ? TransactionCategories.expense
-            : TransactionCategories.income;
-        if (validCategories.contains(widget.initialCategory)) {
-          _selectedCategory = widget.initialCategory;
-        }
+        _selectedCategory = widget.initialCategory;
+        _selectedCategoryId = widget.initialCategoryId;
       }
-      _selectedCategory ??= 'Others';
+
+      // if (widget.initialCategory != null) {
+      //   final validCategories = widget.mode == TransactionMode.expense
+      //       ? TransactionCategories.expense
+      //       : TransactionCategories.income;
+      //   if (validCategories.contains(widget.initialCategory)) {
+      //     _selectedCategory = widget.initialCategory;
+
+      //     // Try to find the matching ID for the initial category
+      //     final categoryProvider = context.read<CategoryProvider>();
+      //     final match = categoryProvider.categories.firstWhereOrNull(
+      //       (c) =>
+      //           c.mode == widget.mode &&
+      //           c.name.toLowerCase() == _selectedCategory?.toLowerCase(),
+      //     );
+      //     if (match != null) {
+      //       _selectedCategoryId = match.id;
+      //     }
+      //   }
+      // }
+
+      // if (_selectedCategory == null || _selectedCategoryId == null) {
+      //   final categoryProvider = context.read<CategoryProvider>();
+      //   final defaultCat = categoryProvider.categories.firstWhereOrNull(
+      //     (c) => c.mode == widget.mode && c.isDefault,
+      //   );
+
+      //   if (defaultCat != null) {
+      //     _selectedCategory = defaultCat.name;
+      //     _selectedCategoryId = defaultCat.id;
+      //   } else {
+      //     _selectedCategory = 'Others';
+      //     // Start of legacy others fallback
+      //     final match = categoryProvider.categories.firstWhereOrNull(
+      //       (c) => c.mode == widget.mode && c.name == 'Others',
+      //     );
+      //     if (match != null) _selectedCategoryId = match.id;
+      //   }
+      // }
 
       if (widget.initialPayee != null && widget.initialPayee!.isNotEmpty) {
         _descController.text = widget.initialPayee!;
       }
+      _selectedCategory = widget.initialCategory;
+      _selectedCategoryId = widget.initialCategoryId;
+      _selectedPaymentMethod = widget.initialPaymentMethod;
       if (widget.initialPerson != null) {
         _selectedPerson = widget.initialPerson;
       }
@@ -241,6 +302,87 @@ class TransactionFormState extends State<TransactionForm> {
 
       _existingReceiptUrl = null;
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // Only attempt to resolve if we are creating a NEW transaction and missing an ID
+    if (!_isEditing && _selectedCategoryId == null) {
+      final categoryProvider = Provider.of<CategoryProvider>(context);
+
+      if (!categoryProvider.isLoading &&
+          categoryProvider.categories.isNotEmpty) {
+        // --- SCENARIO 1: We have a category name (from legacy Kotlin), but no ID. ---
+        if (_selectedCategory != null && _selectedCategory!.isNotEmpty) {
+          final matchedCat = categoryProvider.categories.firstWhereOrNull(
+            (c) =>
+                c.mode == widget.mode &&
+                c.name.toLowerCase() == _selectedCategory!.toLowerCase() &&
+                !c.isDeleted,
+          );
+
+          if (matchedCat != null) {
+            _applyCategory(matchedCat);
+            return; // Stop here!
+          }
+        }
+
+        // --- SCENARIO 2: THE QUICK-SAVE FALLBACK (Match by Payee/Keywords) ---
+        // If Kotlin sent null, let's scan the description (payee) text against our keywords.
+        final String textToMatch = _descController.text.trim().toLowerCase();
+
+        if (textToMatch.isNotEmpty) {
+          CategoryModel? bestMatch;
+          int bestMatchLength = 0;
+
+          // Search all active categories for this mode
+          final modeCategories = categoryProvider.categories.where(
+            (c) => c.mode == widget.mode && !c.isDeleted,
+          );
+
+          for (var cat in modeCategories) {
+            for (var keyword in cat.keywords) {
+              final kw = keyword.toLowerCase().trim();
+              if (kw.isNotEmpty && textToMatch.contains(kw)) {
+                // Rule: Longest keyword match wins (e.g. "uber eats" > "uber")
+                if (kw.length > bestMatchLength) {
+                  bestMatchLength = kw.length;
+                  bestMatch = cat;
+                }
+              }
+            }
+          }
+
+          if (bestMatch != null) {
+            _applyCategory(bestMatch);
+            return; // Stop here, we found a match!
+          }
+        }
+
+        // --- SCENARIO 3: Ultimate Fallback (System Default) ---
+        final defaultCat = categoryProvider.categories.firstWhereOrNull(
+          (c) => c.mode == widget.mode && c.isDefault && !c.isDeleted,
+        );
+
+        if (defaultCat != null) {
+          _applyCategory(defaultCat);
+        }
+      }
+    }
+  }
+
+  // Helper method to keep code clean and ensure safe state updates
+  void _applyCategory(CategoryModel cat) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _selectedCategoryId == null) {
+        setState(() {
+          _selectedCategory = cat.name;
+          _selectedCategoryId = cat.id;
+        });
+      }
+    });
   }
 
   void reset() {
@@ -253,12 +395,29 @@ class TransactionFormState extends State<TransactionForm> {
       _selectedTime = TimeOfDay.fromDateTime(_selectedDate);
 
       // Re-initialize category based on mode
-      final validCategories = widget.mode == TransactionMode.expense
-          ? TransactionCategories.expense
-          : TransactionCategories.income;
-      _selectedCategory = 'Others';
-      if (!validCategories.contains(_selectedCategory)) {
-        _selectedCategory = validCategories.first;
+      // Re-initialize category based on mode
+      final categoryProvider = context.read<CategoryProvider>();
+      final defaultCat = categoryProvider.categories.firstWhereOrNull(
+        (c) => c.mode == widget.mode && c.isDefault,
+      );
+
+      if (defaultCat != null) {
+        _selectedCategory = defaultCat.name;
+        _selectedCategoryId = defaultCat.id;
+      } else {
+        _selectedCategory = 'Others';
+        // Fallback logic
+        final validCategories = widget.mode == TransactionMode.expense
+            ? TransactionCategories.expense
+            : TransactionCategories.income;
+        if (!validCategories.contains(_selectedCategory)) {
+          _selectedCategory = validCategories.first;
+        }
+        // Try to find ID for fallback
+        final match = categoryProvider.categories.firstWhereOrNull(
+          (c) => c.mode == widget.mode && c.name == _selectedCategory,
+        );
+        if (match != null) _selectedCategoryId = match.id;
       }
 
       // Reset Power Fields
@@ -445,6 +604,7 @@ class TransactionFormState extends State<TransactionForm> {
         description: _descController.text.trim(),
         paymentMethod: _selectedPaymentMethod!,
         category: _selectedCategory!,
+        categoryId: _selectedCategoryId,
         tags: _selectedFolders.isNotEmpty ? _selectedFolders : [],
         people: _selectedPerson != null ? [_selectedPerson!] : [],
         isCredit: isCreditForModel,
@@ -483,6 +643,7 @@ class TransactionFormState extends State<TransactionForm> {
         description: _descController.text.trim(),
         paymentMethod: _selectedPaymentMethod!,
         category: _selectedCategory!,
+        categoryId: _selectedCategoryId,
         tags: _selectedFolders.isNotEmpty ? _selectedFolders : null,
         people: _selectedPerson != null ? [_selectedPerson!] : null,
         isCredit: isCreditForModel,
@@ -642,11 +803,14 @@ class TransactionFormState extends State<TransactionForm> {
                 children: [
                   // --- ESSENTIALS ---
                   FunkyPickerTile(
-                    icon: Icons.category_rounded,
+                    icon: HugeIcons.strokeRoundedMenu01,
                     label: "Category",
                     value: _selectedCategory,
                     valueIcon: _selectedCategory != null
-                        ? _getCategoryIcon(_selectedCategory!)
+                        ? _getCategoryIcon(
+                            _selectedCategory!,
+                            categoryId: _selectedCategoryId,
+                          )
                         : null,
                     valueColor: _selectedCategory != null
                         ? Theme.of(context).colorScheme.primary
@@ -667,7 +831,7 @@ class TransactionFormState extends State<TransactionForm> {
                     label: widget.mode == TransactionMode.expense
                         ? "Sent to or payee"
                         : "Received from or payer",
-                    icon: Icons.edit_note_rounded,
+                    icon: HugeIcons.strokeRoundedNote01,
                   ),
 
                   const SizedBox(height: 24),
@@ -680,7 +844,7 @@ class TransactionFormState extends State<TransactionForm> {
                         ? Padding(
                             padding: const EdgeInsets.only(bottom: 12),
                             child: FunkyPickerTile(
-                              icon: Icons.folder_open_rounded,
+                              icon: HugeIcons.strokeRoundedCalendar03,
                               label: "Add to Folders",
                               value: _selectedFolders.isEmpty ? "Select" : null,
                               valueWidget: _selectedFolders.isEmpty
@@ -819,7 +983,7 @@ class TransactionFormState extends State<TransactionForm> {
                                     )
                                     .firstOrNull;
                                 return FunkyPickerTile(
-                                  icon: Icons.autorenew_rounded,
+                                  icon: HugeIcons.strokeRoundedRotate02,
                                   label: "Recurring",
                                   value: sub?.name ?? "Select",
                                   leadingValueWidget: sub != null
@@ -897,17 +1061,16 @@ class TransactionFormState extends State<TransactionForm> {
                 color: Theme.of(context).scaffoldBackgroundColor,
                 border: Border(
                   top: BorderSide(
-                    color: Theme.of(context).dividerColor.withOpacity(0.1),
+                    color: Theme.of(
+                      context,
+                    ).dividerColor.withValues(alpha: 0.1),
                   ),
                 ),
               ),
               child: SingleChildScrollView(
                 physics: BouncingScrollPhysics(),
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 8),
                 child: Row(
                   children: [
                     if (!_showFolders)
@@ -976,7 +1139,7 @@ class TransactionFormState extends State<TransactionForm> {
       child: Column(
         children: [
           FunkyPickerTile(
-            icon: Icons.person_rounded,
+            icon: HugeIcons.strokeRoundedUser,
             label: "Person",
             value: _selectedPerson?.fullName,
             leadingValueWidget: _selectedPerson != null
@@ -1004,10 +1167,14 @@ class TransactionFormState extends State<TransactionForm> {
             margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface.withOpacity(0.5),
+              color: Theme.of(
+                context,
+              ).colorScheme.surface.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+                color: Theme.of(
+                  context,
+                ).colorScheme.outline.withValues(alpha: 0.1),
               ),
             ),
             child: Column(
@@ -1148,17 +1315,17 @@ class TransactionFormState extends State<TransactionForm> {
 
   Widget _buildLinkedTransactionCard() {
     return FunkyPickerTile(
-      icon: Icons.link_rounded,
+      icon: HugeIcons.strokeRoundedArrowRight01,
       label: "Linked Transaction",
       value: _selectedLinkedTransaction?.description ?? "Select Transaction",
       leadingValueWidget: _selectedLinkedTransaction != null
           ? CircleAvatar(
               radius: 8,
               backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-              child: Icon(
-                _selectedLinkedTransaction!.type == 'income'
-                    ? Icons.arrow_downward_rounded
-                    : Icons.arrow_upward_rounded,
+              child: HugeIcon(
+                icon: _selectedLinkedTransaction!.type == 'income'
+                    ? HugeIcons.strokeRoundedMoney03
+                    : HugeIcons.strokeRoundedBank,
                 size: 10,
                 color: Theme.of(context).colorScheme.primary,
               ),
@@ -1198,24 +1365,34 @@ class TransactionFormState extends State<TransactionForm> {
   }
 
   void _showCategoryPicker() async {
-    final categories = widget.mode == TransactionMode.expense
-        ? TransactionCategories.expense
-        : TransactionCategories.income;
+    final categoryProvider = context.read<CategoryProvider>();
+    final categories = categoryProvider.categories
+        .where((c) => c.mode == widget.mode && !c.isDeleted)
+        .toList();
+
     final selected = await showModernPickerSheet(
       context: context,
       title: 'Select Category',
       items: categories
-          .map((c) => PickerItem(id: c, label: c, icon: _getCategoryIcon(c)))
+          .map(
+            (c) => PickerItem(
+              id: c.id,
+              label: c.name,
+              icon: GoalIconRegistry.getIcon(c.iconKey),
+            ),
+          )
           .toList(),
-      selectedId: _selectedCategory,
+      selectedId: _selectedCategoryId,
     );
     if (selected != null) {
+      final selectedCat = categories.firstWhere((c) => c.id == selected);
       setState(() {
-        _selectedCategory = selected;
-        if (selected != 'People') _selectedPerson = null;
+        _selectedCategoryId = selected;
+        _selectedCategory = selectedCat.name;
+        if (selectedCat.name != 'People') _selectedPerson = null;
         _markAsDirty();
       });
-      if (selected == 'People') _showPeopleModal();
+      if (selectedCat.name == 'People') _showPeopleModal();
     }
   }
 

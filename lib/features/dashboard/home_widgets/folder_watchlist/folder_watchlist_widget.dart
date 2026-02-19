@@ -83,7 +83,7 @@ class FolderWatchlistWidget extends StatelessWidget {
                   child: DashedBorder(
                     color: Theme.of(
                       context,
-                    ).colorScheme.primary.withOpacity(0.3),
+                    ).colorScheme.primary.withValues(alpha: 0.3),
                     strokeWidth: 1.5,
                     gap: 4.0,
                     borderRadius: BorderRadius.circular(12),
@@ -142,7 +142,7 @@ class FolderWatchlistWidget extends StatelessWidget {
                           width: 28,
                           height: 28,
                           decoration: BoxDecoration(
-                            color: folder.color.withOpacity(0.15),
+                            color: folder.color.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Padding(

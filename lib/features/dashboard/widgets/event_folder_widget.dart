@@ -86,7 +86,7 @@ class _EventFolderWidgetState extends State<EventFolderWidget> {
         color: theme.colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
-          color: theme.colorScheme.outlineVariant.withOpacity(0.2),
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -231,8 +231,8 @@ class _EventFolderItem extends StatelessWidget {
       sections.add(
         PieData(
           value: remaining > 0 ? remaining : 0,
-          color: colorToUse.withOpacity(
-            0.3,
+          color: colorToUse.withValues(
+            alpha: 0.3,
           ), // Faded color for remaining match TagBudgetCard
         ),
       );
@@ -249,8 +249,8 @@ class _EventFolderItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(32),
         border: Border.all(
           color: isOverspent
-              ? theme.colorScheme.error.withOpacity(0.3)
-              : theme.colorScheme.outlineVariant.withOpacity(0.2),
+              ? theme.colorScheme.error.withValues(alpha: 0.3)
+              : theme.colorScheme.outlineVariant.withValues(alpha: 0.2),
         ),
       ),
       child: Stack(
@@ -313,7 +313,7 @@ class _EventFolderItem extends StatelessWidget {
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: tagColor.withOpacity(0.4),
+                                  color: tagColor.withValues(alpha: 0.4),
                                   blurRadius: 4,
                                 ),
                               ],
@@ -327,7 +327,7 @@ class _EventFolderItem extends StatelessWidget {
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: 1.0,
                                 color: theme.colorScheme.onSurfaceVariant
-                                    .withOpacity(0.9),
+                                    .withValues(alpha: 0.9),
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -478,7 +478,7 @@ class _PageIndicator extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isSelected
                     ? theme.colorScheme.primary
-                    : theme.colorScheme.outline.withOpacity(0.2),
+                    : theme.colorScheme.outline.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(2),
               ),
             );

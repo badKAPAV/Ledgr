@@ -1018,4 +1018,53 @@ class TransactionProvider with ChangeNotifier, WidgetsBindingObserver {
     }
     return recentTags;
   }
+
+  int getTransactionCountForCategory(String categoryId) {
+    return _transactions.where((tx) => tx.categoryId == categoryId).length;
+  }
+
+  Future<void> batchUpdateTransactionsCategory(
+    String oldCategoryId,
+    String newCategoryId,
+  ) async {
+    final user = authProvider.user;
+    if (user == null) return;
+    _isSaving = true;
+    notifyListeners();
+
+    try {
+      final batch = _firestore.batch();
+      final affectedTransactions = _transactions
+          .where((tx) => tx.categoryId == oldCategoryId)
+          .toList();
+
+      for (final tx in affectedTransactions) {
+        final docRef = _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('transactions')
+            .doc(tx.transactionId);
+
+        batch.update(docRef, {'categoryId': newCategoryId});
+      }
+
+      await batch.commit();
+
+      // Optimistic Update
+      for (final tx in affectedTransactions) {
+        final index = _transactions.indexWhere(
+          (t) => t.transactionId == tx.transactionId,
+        );
+        if (index != -1) {
+          _transactions[index] = tx.copyWith(categoryId: newCategoryId);
+        }
+      }
+    } catch (e) {
+      debugPrint("Failed to batch update categories: $e");
+      rethrow;
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+  }
 }

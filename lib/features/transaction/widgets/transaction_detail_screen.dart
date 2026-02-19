@@ -24,6 +24,9 @@ import 'package:wallzy/features/subscription/models/subscription.dart';
 import 'package:wallzy/features/subscription/screens/subscription_details_screen.dart';
 import 'package:wallzy/features/transaction/widgets/link_transaction_modal_sheet.dart';
 
+import 'package:wallzy/common/icon_picker/icons.dart';
+import 'package:wallzy/features/categories/provider/category_provider.dart';
+
 class TransactionDetailScreen extends StatelessWidget {
   final TransactionModel transaction;
   final List<String> parentTagIds;
@@ -36,27 +39,55 @@ class TransactionDetailScreen extends StatelessWidget {
 
   // --- Logic Helper Methods (Unchanged) ---
 
-  IconData _getIconForCategory(String category) {
-    switch (category.toLowerCase()) {
-      case 'food':
-        return Icons.restaurant_menu_rounded;
-      case 'shopping':
-        return Icons.shopping_bag_rounded;
-      case 'transport':
-        return Icons.directions_car_filled_rounded;
-      case 'entertainment':
-        return Icons.movie_rounded;
-      case 'salary':
-        return Icons.work_rounded;
-      case 'people':
-        return Icons.people_rounded;
-      case 'health':
-        return Icons.medical_services_rounded;
-      case 'bills':
-        return Icons.receipt_long_rounded;
-      default:
-        return Icons.category_rounded;
+  dynamic _getIconForCategory(BuildContext context, TransactionModel tx) {
+    if (tx.categoryId != null) {
+      final categoryProvider = Provider.of<CategoryProvider>(
+        context,
+        listen: false,
+      );
+      final category = categoryProvider.categories.firstWhereOrNull(
+        (c) => c.id == tx.categoryId,
+      );
+      if (category != null) {
+        return GoalIconRegistry.getIcon(category.iconKey);
+      }
     }
+
+    // Fallback for legacy
+    switch (tx.category.toLowerCase()) {
+      case 'food':
+        return HugeIcons.strokeRoundedRiceBowl01;
+      case 'shopping':
+        return HugeIcons.strokeRoundedShoppingBag02;
+      case 'transport':
+        return HugeIcons.strokeRoundedCar02;
+      case 'entertainment':
+        return HugeIcons.strokeRoundedTicket01;
+      case 'salary':
+        return HugeIcons.strokeRoundedMoney03;
+      case 'people':
+        return HugeIcons.strokeRoundedUser;
+      case 'health':
+        return HugeIcons.strokeRoundedAmbulance;
+      case 'bills':
+        return HugeIcons.strokeRoundedInvoice01;
+      default:
+        return HugeIcons.strokeRoundedMenu01;
+    }
+  }
+
+  String _getCategoryName(BuildContext context, TransactionModel tx) {
+    if (tx.categoryId != null) {
+      final categoryProvider = Provider.of<CategoryProvider>(
+        context,
+        listen: false,
+      );
+      final category = categoryProvider.categories.firstWhereOrNull(
+        (c) => c.id == tx.categoryId,
+      );
+      if (category != null) return category.name;
+    }
+    return tx.category;
   }
 
   void _deleteTransaction(BuildContext context) {
@@ -266,16 +297,14 @@ class TransactionDetailScreen extends StatelessWidget {
                 }
 
                 // Category/Person Logic
-                String mainTitleLabel = tx.description.isNotEmpty
-                    ? tx.description
-                    : tx.category;
-                IconData mainIcon = _getIconForCategory(tx.category);
+                String mainTitleLabel = _getCategoryName(context, tx);
+                dynamic mainIcon = _getIconForCategory(context, tx);
 
-                if (tx.category.toLowerCase() == 'people' &&
+                if (mainTitleLabel.toLowerCase() == 'people' &&
                     tx.people != null &&
                     tx.people!.isNotEmpty) {
                   mainTitleLabel = tx.people!.map((p) => p.fullName).join(", ");
-                  mainIcon = Icons.person_rounded;
+                  mainIcon = HugeIcons.strokeRoundedUser;
                 }
 
                 // Date Formatting
@@ -293,7 +322,9 @@ class TransactionDetailScreen extends StatelessWidget {
                         height: 5,
                         margin: const EdgeInsets.only(top: 12, bottom: 8),
                         decoration: BoxDecoration(
-                          color: colorScheme.outlineVariant.withOpacity(0.5),
+                          color: colorScheme.outlineVariant.withValues(
+                            alpha: 0.5,
+                          ),
                           borderRadius: BorderRadius.circular(2.5),
                         ),
                       ),
@@ -311,7 +342,15 @@ class TransactionDetailScreen extends StatelessWidget {
                               color: typeColor.withValues(alpha: 0.3),
                               shape: BoxShape.circle,
                             ),
-                            child: Icon(mainIcon, size: 32, color: typeColor),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: HugeIcon(
+                                icon: mainIcon,
+                                strokeWidth: 2,
+                                size: 12,
+                                color: typeColor,
+                              ),
+                            ),
                           ),
                           const SizedBox(height: 24),
 
@@ -559,7 +598,7 @@ class TransactionDetailScreen extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(20),
                                     border: Border.all(
                                       color: colorScheme.outlineVariant
-                                          .withOpacity(0.2),
+                                          .withValues(alpha: 0.2),
                                     ),
                                   ),
                                   child: Column(
@@ -603,8 +642,9 @@ class TransactionDetailScreen extends StatelessWidget {
                                                             backgroundColor:
                                                                 colorScheme
                                                                     .outline
-                                                                    .withOpacity(
-                                                                      0.2,
+                                                                    .withValues(
+                                                                      alpha:
+                                                                          0.2,
                                                                     ),
                                                           ),
                                                       child: const Text(
@@ -908,7 +948,9 @@ class _SlimInfoRow extends StatelessWidget {
               )
             : BorderRadius.circular(16),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.2),
+          color: Theme.of(
+            context,
+          ).colorScheme.outlineVariant.withValues(alpha: 0.2),
         ),
       ),
       child: Row(
@@ -916,7 +958,7 @@ class _SlimInfoRow extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: icon is IconData
@@ -973,13 +1015,13 @@ class _ActionTile extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: isDashed
-            ? color.withOpacity(0.05)
+            ? color.withValues(alpha: 0.05)
             : theme.colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(16),
         border: isDashed
             ? null
             : Border.all(
-                color: theme.colorScheme.outlineVariant.withOpacity(0.2),
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2),
               ),
       ),
       child: Row(
@@ -1006,7 +1048,7 @@ class _ActionTile extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       child: isDashed
           ? DashedBorder(
-              color: color.withOpacity(0.4),
+              color: color.withValues(alpha: 0.4),
               borderRadius: BorderRadius.circular(16),
               strokeWidth: 1.5,
               dashWidth: 6,
@@ -1042,7 +1084,7 @@ class _StatusBadge extends StatelessWidget {
         color: bgColor ?? color.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(24),
         border: isDashed
-            ? Border.all(color: color.withOpacity(0.5))
+            ? Border.all(color: color.withValues(alpha: 0.5))
             : Border.all(color: Colors.transparent),
       ),
       child: Row(

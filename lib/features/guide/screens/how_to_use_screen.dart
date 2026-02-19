@@ -203,7 +203,7 @@ class _TipCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: tip.color.withOpacity(0.1),
+                  color: tip.color.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: HugeIcon(icon: tip.icon, size: 48, color: tip.color),
@@ -305,7 +305,7 @@ class _TipCard extends StatelessWidget {
                       Icons
                           .open_in_full_rounded, // Changed icon to indicate action
                       size: 18,
-                      color: tip.color.withOpacity(0.6),
+                      color: tip.color.withValues(alpha: 0.6),
                     ),
                   ],
                 ),

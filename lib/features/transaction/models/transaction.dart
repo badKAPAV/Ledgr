@@ -13,7 +13,9 @@ class TransactionModel {
   final List<Tag>? tags;
   final List<Person>? people;
   final String currency;
+  @Deprecated('Use categoryId Instead')
   final String category;
+  final String? categoryId;
   final String? subscriptionId;
   final String? accountId;
   final String purchaseType;
@@ -27,6 +29,7 @@ class TransactionModel {
   TransactionModel({
     this.people,
     required this.category,
+    this.categoryId,
     required this.transactionId,
     required this.type,
     required this.amount,
@@ -49,6 +52,7 @@ class TransactionModel {
   factory TransactionModel.fromMap(Map<String, dynamic> data) {
     return TransactionModel(
       category: data['category'] ?? 'others',
+      categoryId: data['categoryId'],
       transactionId: data['transactionId'] ?? '',
       type: data['type'] ?? 'expense',
       amount: (data['amount'] ?? 0).toDouble(),
@@ -91,6 +95,7 @@ class TransactionModel {
   Map<String, dynamic> toMap() {
     return {
       'category': category,
+      'categoryId': categoryId,
       'transactionId': transactionId,
       'type': type,
       'amount': amount,
@@ -117,6 +122,7 @@ extension TransactionCopyWith on TransactionModel {
   TransactionModel copyWith({
     List<Person>? people,
     String? category,
+    String? categoryId,
     String? transactionId,
     String? type,
     double? amount,
@@ -138,6 +144,7 @@ extension TransactionCopyWith on TransactionModel {
     return TransactionModel(
       people: people ?? this.people,
       category: category ?? this.category,
+      categoryId: categoryId ?? this.categoryId,
       transactionId: transactionId ?? this.transactionId,
       type: type ?? this.type,
       amount: amount ?? this.amount,

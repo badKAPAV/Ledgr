@@ -60,7 +60,7 @@ class GoalIconPickerSheet extends StatelessWidget {
                       color: isSelected
                           ? theme.colorScheme.primary
                           : theme.colorScheme.surfaceContainerHighest
-                                .withOpacity(0.5),
+                                .withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(16),
                       border: isSelected
                           ? Border.all(

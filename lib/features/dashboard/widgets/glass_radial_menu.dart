@@ -128,7 +128,7 @@ class _GlassRadialMenuState extends State<GlassRadialMenu>
                         sigmaY: 5 * value,
                       ),
                       child: Container(
-                        color: Colors.black.withOpacity(0.4 * value),
+                        color: Colors.black.withValues(alpha: 0.4 * value),
                       ),
                     );
                   },
@@ -240,12 +240,12 @@ class _GlassRadialMenuState extends State<GlassRadialMenu>
                   color: Theme.of(context).colorScheme.surface,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     width: 1.5,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       blurRadius: 10,
                       spreadRadius: 1,
                       offset: const Offset(0, 4),
@@ -326,7 +326,7 @@ class _GlassRadialMenuState extends State<GlassRadialMenu>
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).colorScheme.shadow.withOpacity(0.3),
+            color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),

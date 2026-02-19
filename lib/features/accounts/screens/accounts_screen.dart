@@ -410,7 +410,7 @@ class _NetWorthBlock extends StatelessWidget {
         color: theme.colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(32),
         border: Border.all(
-          color: theme.colorScheme.outlineVariant.withOpacity(0.2),
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -649,7 +649,7 @@ class _PremiumAccountCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withOpacity(0.1),
+                color: theme.colorScheme.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: HugeIcon(
@@ -918,8 +918,8 @@ class _PremiumAccountCard extends StatelessWidget {
                                           flex: remainingFlex,
                                           child: Container(
                                             decoration: BoxDecoration(
-                                              color: Colors.white.withOpacity(
-                                                0.3,
+                                              color: Colors.white.withValues(
+                                                alpha: 0.3,
                                               ),
                                               borderRadius:
                                                   BorderRadius.circular(4),
@@ -985,7 +985,7 @@ class _PatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     var paint = Paint()
-      ..color = Colors.white.withOpacity(0.05)
+      ..color = Colors.white.withValues(alpha: 0.05)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
 

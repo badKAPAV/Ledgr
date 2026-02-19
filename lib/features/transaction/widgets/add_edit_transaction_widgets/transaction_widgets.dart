@@ -100,8 +100,8 @@ class DatePill extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.calendar_today_rounded,
+            HugeIcon(
+              icon: HugeIcons.strokeRoundedCalendar03,
               size: 14,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
@@ -147,8 +147,8 @@ class TimePill extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.access_time_rounded,
+            HugeIcon(
+              icon: HugeIcons.strokeRoundedTime01,
               size: 14,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
@@ -192,7 +192,7 @@ class TransactionActionChip extends StatelessWidget {
           decoration: BoxDecoration(
             color: Theme.of(
               context,
-            ).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Row(
@@ -248,8 +248,8 @@ class CompactAccountPill extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.wallet_rounded,
+            HugeIcon(
+              icon: HugeIcons.strokeRoundedWallet01,
               size: 14,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
@@ -270,10 +270,10 @@ class CompactAccountPill extends StatelessWidget {
 }
 
 class FunkyPickerTile extends StatelessWidget {
-  final IconData icon;
+  final dynamic icon;
   final String label;
   final String? value;
-  final IconData? valueIcon;
+  final dynamic valueIcon;
   final Widget? leadingValueWidget;
   final Color? valueColor;
   final Widget? valueWidget;
@@ -327,8 +327,8 @@ class FunkyPickerTile extends StatelessWidget {
                     color: colorScheme.surface,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    icon,
+                  child: HugeIcon(
+                    icon: icon,
                     size: 18,
                     color: isError ? colorScheme.error : colorScheme.primary,
                   ),
@@ -358,8 +358,8 @@ class FunkyPickerTile extends StatelessWidget {
                 if (trailingAction != null)
                   trailingAction!
                 else
-                  Icon(
-                    Icons.chevron_right_rounded,
+                  HugeIcon(
+                    icon: HugeIcons.strokeRoundedArrowRight01,
                     color: colorScheme.onSurfaceVariant.withAlpha(128),
                     size: 20,
                   ),
@@ -394,7 +394,7 @@ class FunkyPickerTile extends StatelessWidget {
             leadingValueWidget!,
             const SizedBox(width: 6),
           ] else if (valueIcon != null) ...[
-            Icon(valueIcon, size: 16, color: pillColor),
+            HugeIcon(icon: valueIcon!, size: 16, color: pillColor),
             const SizedBox(width: 6),
           ],
           if (value != null)
@@ -419,11 +419,13 @@ class FunkyPickerTile extends StatelessWidget {
 class FunkyTextField extends StatelessWidget {
   final TextEditingController controller;
   final String label;
-  final IconData icon;
+  final String? hint;
+  final dynamic icon;
   const FunkyTextField({
     super.key,
     required this.controller,
     required this.label,
+    this.hint,
     required this.icon,
   });
 
@@ -437,9 +439,17 @@ class FunkyTextField extends StatelessWidget {
       style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
       decoration: InputDecoration(
         labelText: label,
+        hintText: hint,
         filled: true,
-        fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.4),
-        prefixIcon: Icon(icon, color: colorScheme.outline),
+        fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+        prefixIcon: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: HugeIcon(
+            icon: icon,
+            color: colorScheme.outline,
+            strokeWidth: 1.5,
+          ),
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
           borderSide: BorderSide.none,
@@ -469,7 +479,7 @@ class PickerItem {
   final String id;
   final String label;
   final String? subtitle;
-  final IconData icon;
+  final dynamic icon;
   final Color? color;
 
   PickerItem({
@@ -520,7 +530,11 @@ Future<String?> showModernPickerSheet({
                     if (showCreateNew && onCreateNew != null)
                       IconButton.filledTonal(
                         onPressed: onCreateNew,
-                        icon: const Icon(Icons.add),
+                        icon: const HugeIcon(
+                          icon: HugeIcons.strokeRoundedAdd01,
+                          size: 24,
+                          color: Colors.black,
+                        ),
                         tooltip: 'Create New',
                       ),
                   ],
@@ -550,7 +564,7 @@ Future<String?> showModernPickerSheet({
                           duration: const Duration(milliseconds: 200),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? baseColor.withOpacity(0.15)
+                                ? baseColor.withValues(alpha: 0.15)
                                 : Theme.of(
                                     context,
                                   ).colorScheme.surfaceContainer,
@@ -573,8 +587,8 @@ Future<String?> showModernPickerSheet({
                                       : Theme.of(context).colorScheme.surface,
                                   shape: BoxShape.circle,
                                 ),
-                                child: Icon(
-                                  item.icon,
+                                child: HugeIcon(
+                                  icon: item.icon,
                                   color: isSelected ? Colors.white : baseColor,
                                   size: 24,
                                 ),
@@ -650,8 +664,8 @@ void showCustomAccountModal(
             label: acc.bankName,
             subtitle: acc.accountNumber,
             icon: acc.bankName.toLowerCase() == 'cash'
-                ? Icons.payments_rounded
-                : Icons.account_balance_rounded,
+                ? HugeIcons.strokeRoundedMoney03
+                : HugeIcons.strokeRoundedBank,
             color: acc.accountType == 'credit'
                 ? Theme.of(context).colorScheme.error
                 : null,
@@ -972,7 +986,7 @@ class _FolderChips extends StatelessWidget {
           backgroundColor: isSelected
               ? Theme.of(context).colorScheme.primaryContainer
               : (tagColor != null
-                    ? tagColor.withOpacity(0.08)
+                    ? tagColor.withValues(alpha: 0.08)
                     : Theme.of(context).colorScheme.surfaceContainerHighest),
           side: isSelected
               ? BorderSide(color: Theme.of(context).colorScheme.primary)

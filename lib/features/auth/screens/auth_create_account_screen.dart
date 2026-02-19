@@ -211,7 +211,7 @@ class _AuthCreateAccountScreenState extends State<AuthCreateAccountScreen> {
                                   shape: BoxShape.circle,
                                   border: Border.all(
                                     color: colorScheme.outlineVariant
-                                        .withOpacity(0.4),
+                                        .withValues(alpha: 0.4),
                                     width: 1,
                                   ),
                                 ),
@@ -258,7 +258,9 @@ class _AuthCreateAccountScreenState extends State<AuthCreateAccountScreen> {
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.2),
+                                        color: Colors.black.withValues(
+                                          alpha: 0.2,
+                                        ),
                                         blurRadius: 8,
                                         offset: const Offset(0, 4),
                                       ),

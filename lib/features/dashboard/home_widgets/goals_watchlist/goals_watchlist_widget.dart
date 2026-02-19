@@ -105,7 +105,7 @@ class GoalsWatchlistWidget extends StatelessWidget {
                   child: DashedBorder(
                     color: Theme.of(
                       context,
-                    ).colorScheme.primary.withOpacity(0.3),
+                    ).colorScheme.primary.withValues(alpha: 0.3),
                     strokeWidth: 1.5,
                     gap: 4.0,
                     borderRadius: BorderRadius.circular(12),
@@ -164,7 +164,7 @@ class GoalsWatchlistWidget extends StatelessWidget {
                           width: 28,
                           height: 28,
                           decoration: BoxDecoration(
-                            color: colorScheme.primary.withOpacity(0.15),
+                            color: colorScheme.primary.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(14), // Rounded
                           ),
                           child: Padding(

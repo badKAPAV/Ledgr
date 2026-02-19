@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:collection/collection.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -34,6 +35,8 @@ import 'package:wallzy/features/people/screens/add_debt_loan_screen.dart';
 import 'package:wallzy/features/subscription/screens/add_subscription_screen.dart';
 import 'package:wallzy/features/accounts/screens/add_edit_account_screen.dart';
 import 'package:uuid/uuid.dart';
+import 'package:wallzy/features/categories/services/category_matcher.dart';
+import 'package:wallzy/features/categories/provider/category_provider.dart';
 
 // New Imports
 import 'package:wallzy/features/dashboard/widgets/sliver_app_bar_widget.dart';
@@ -332,15 +335,6 @@ class _HomeScreenState extends State<HomeScreen>
                       onDueSubscriptionTap:
                           _navigateToAddSubscriptionTransaction,
                       onDueSubscriptionDismiss: (sub) {
-                        // Logic for logic dismissal if needed, or re-use removePending logic?
-                        // Original used _showDismissDueSubscriptionDialog which just removed.
-                        // But Subscriptions are localPrefs?
-                        // Ah, _dueSubscriptions logic in original code:
-                        // Not implemented. It just called _showDismissConfirmationDialog
-                        // which only removed SMS from native side.
-                        // It didn't remove subscription due alert from the list permanently?
-                        // Actually, `_dueSubscriptions` is loaded from SharedPreferences.
-                        // I should add removing from that list + save.
                         setState(() {
                           _dueSubscriptions.remove(sub);
                         });
@@ -429,7 +423,7 @@ class _HomeScreenState extends State<HomeScreen>
                             border: Border.all(
                               color: Theme.of(
                                 context,
-                              ).colorScheme.primary.withOpacity(0.5),
+                              ).colorScheme.primary.withValues(alpha: 0.5),
                               width: 2,
                             ),
                           ),
@@ -627,9 +621,6 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
-  // ... [Existing Helper Methods: permissions, launchData, sms, autoRecord]
-  // I will just copy the existing handlers as they are robust.
-
   Future<void> _requestPermissions() async {
     await Permission.notification.request();
   }
@@ -763,6 +754,9 @@ class _HomeScreenState extends State<HomeScreen>
       _pendingSmsTransactions,
     );
 
+    final matcher = CategoryMatcher();
+    await matcher.loadCategories();
+
     for (final txData in pending) {
       try {
         final amount = (txData['amount'] as num).toDouble();
@@ -798,14 +792,38 @@ class _HomeScreenState extends State<HomeScreen>
         // Check for Auto-Add Tags
         final List<Tag> tags = metaProvider.getAutoAddTagsForDate(date);
 
+        // --- MATCH CATEGORY ---
+        final textToMatch = payee ?? (type == 'income' ? 'Received' : 'Spent');
+
+        String? categoryId = txData['categoryId'];
+        String categoryName = txData['category'] ?? 'Others';
+
+        if (categoryId == null || categoryId.isEmpty) {
+          categoryId = matcher.matchCategory(
+            textToMatch,
+            mode: type == 'income'
+                ? TransactionMode.income
+                : TransactionMode.expense,
+          );
+
+          // Get Category Name for the fallback ID
+          final categoryProvider = context.read<CategoryProvider>();
+          categoryName =
+              categoryProvider.categories
+                  .firstWhereOrNull((c) => c.id == categoryId)
+                  ?.name ??
+              'Others';
+        }
+
         final newTx = TransactionModel(
           transactionId: const Uuid().v4(),
           type: type,
           amount: amount,
           timestamp: date,
-          description: payee ?? (type == 'income' ? 'Received' : 'Spent'),
+          description: textToMatch,
           paymentMethod: txData['paymentMethod'] ?? 'Unknown',
-          category: txData['category'] ?? 'Others',
+          category: categoryName,
+          categoryId: categoryId,
           currency: settingsProvider.currencyCode,
           accountId: accountId,
           tags: tags,
@@ -961,6 +979,7 @@ class _HomeScreenState extends State<HomeScreen>
           initialAccountNumber: map['accountNumber'] ?? map['account'],
           initialBankName: map['bankName'] ?? map['bank'],
           initialCategory: map['category'],
+          initialCategoryId: map['categoryId'],
           initialPaymentMethod: map['paymentMethod'],
           smsTransactionId: map['id']?.toString(),
         ),
@@ -1000,6 +1019,7 @@ class _HomeScreenState extends State<HomeScreen>
           initialAmount: sub!.averageAmount.toString(),
           initialPayee: sub.subscriptionName,
           initialCategory: sub.lastCategory,
+          initialCategoryId: sub.lastCategoryId,
           initialPaymentMethod: sub.lastPaymentMethod,
         ),
       ),
@@ -1086,7 +1106,9 @@ class _BreathingLogoState extends State<BreathingLogo>
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: widget.color.withOpacity(_fadeAnimation.value),
+                      color: widget.color.withValues(
+                        alpha: _fadeAnimation.value,
+                      ),
                       blurRadius: 40,
                       spreadRadius: 10,
                     ),

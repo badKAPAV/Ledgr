@@ -138,7 +138,7 @@ class _AddEditGoalScreenState extends State<AddEditGoalScreen> {
           style: FilledButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 18),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(50),
             ),
             elevation: 0,
           ),

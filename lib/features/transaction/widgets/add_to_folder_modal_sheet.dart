@@ -119,8 +119,8 @@ class _AddToFolderModalSheetState extends State<AddToFolderModalSheet> {
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Container(
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withOpacity(
-                  0.5,
+                color: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.5,
                 ),
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -314,7 +314,7 @@ class _FolderChips extends StatelessWidget {
           backgroundColor: isSelected
               ? Theme.of(context).colorScheme.primaryContainer
               : (tagColor != null
-                    ? tagColor.withOpacity(0.08)
+                    ? tagColor.withValues(alpha: 0.08)
                     : Theme.of(context).colorScheme.surfaceContainerHighest),
           side: isSelected
               ? BorderSide(color: Theme.of(context).colorScheme.primary)

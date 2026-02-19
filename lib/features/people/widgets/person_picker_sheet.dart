@@ -172,8 +172,8 @@ class _PersonPickerSheetState extends State<PersonPickerSheet> {
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Container(
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withOpacity(
-                  0.5,
+                color: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.5,
                 ),
                 borderRadius: BorderRadius.circular(16),
               ),

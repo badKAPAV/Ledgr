@@ -182,13 +182,19 @@ class _CustomComboChartState extends State<CustomComboChart> {
                                                     ? [
                                                         widget.barColor,
                                                         widget.barColor
-                                                            .withOpacity(0.8),
+                                                            .withValues(
+                                                              alpha: 0.8,
+                                                            ),
                                                       ]
                                                     : [
                                                         widget.barColor
-                                                            .withOpacity(0.3),
+                                                            .withValues(
+                                                              alpha: 0.3,
+                                                            ),
                                                         widget.barColor
-                                                            .withOpacity(0.15),
+                                                            .withValues(
+                                                              alpha: 0.15,
+                                                            ),
                                                       ],
                                               ),
                                             ),
@@ -449,7 +455,10 @@ class _SmoothLinePainter extends CustomPainter {
     final Gradient gradient = LinearGradient(
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
-      colors: [lineColor.withOpacity(0.3), lineColor.withOpacity(0.0)],
+      colors: [
+        lineColor.withValues(alpha: 0.3),
+        lineColor.withValues(alpha: 0.0),
+      ],
       stops: const [0.0, 0.9],
     );
 
@@ -475,7 +484,7 @@ class _SmoothLinePainter extends CustomPainter {
         canvas.drawCircle(
           point,
           8,
-          Paint()..color = lineColor.withOpacity(0.3),
+          Paint()..color = lineColor.withValues(alpha: 0.3),
         );
         canvas.drawCircle(point, 5, Paint()..color = Colors.white);
         canvas.drawCircle(point, 3, Paint()..color = lineColor);
@@ -619,7 +628,7 @@ class _BaseTooltipContainer extends StatelessWidget {
               // ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),

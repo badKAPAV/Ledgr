@@ -54,6 +54,19 @@ class GoalIconRegistry {
     'heart': HugeIcons.strokeRoundedFavourite,
     'love': HugeIcons.strokeRoundedFavouriteCircle,
     'folder': HugeIcons.strokeRoundedFolder02,
+
+    // Default Category Icons
+    'food': HugeIcons.strokeRoundedRiceBowl01,
+    'shopping': HugeIcons.strokeRoundedShoppingBag02,
+    'user': HugeIcons.strokeRoundedUser,
+    'fuel': HugeIcons.strokeRoundedFuel,
+    'bill': HugeIcons.strokeRoundedInvoice01,
+    'grocery': HugeIcons.strokeRoundedVegetarianFood,
+    'bulb': HugeIcons.strokeRoundedBulb,
+    'tax': HugeIcons.strokeRoundedTaxes,
+    'bank': HugeIcons.strokeRoundedBank,
+    'refund': HugeIcons.strokeRoundedMoneyExchange01,
+    'menu': HugeIcons.strokeRoundedMenu01,
   };
 
   static dynamic getIcon(String? key) {
