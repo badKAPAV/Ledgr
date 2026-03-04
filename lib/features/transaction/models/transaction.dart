@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:wallzy/features/people/models/person.dart';
-import 'package:wallzy/features/tag/models/tag.dart';
+import 'package:wallzy/features/folders/models/tag.dart';
 
 class TransactionModel {
   final String transactionId;

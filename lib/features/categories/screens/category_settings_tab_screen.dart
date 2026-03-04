@@ -8,7 +8,6 @@ import 'package:wallzy/features/categories/models/category.dart';
 import 'package:wallzy/features/categories/provider/category_provider.dart';
 import 'package:wallzy/common/icon_picker/icons.dart';
 import 'package:wallzy/features/categories/screens/add_edit_category_modal_sheet.dart';
-import 'package:wallzy/features/categories/services/migration_service.dart'; // Ensure this import is present
 import 'package:wallzy/features/transaction/widgets/add_edit_transaction_widgets/transaction_widgets.dart';
 
 class CategorySettingsTabScreen extends StatefulWidget {
@@ -20,33 +19,6 @@ class CategorySettingsTabScreen extends StatefulWidget {
 }
 
 class _CategorySettingsTabScreenState extends State<CategorySettingsTabScreen> {
-  bool _isMigrateLoading = false;
-
-  Future<void> _runMigration(
-    BuildContext context,
-    CategoryProvider provider,
-  ) async {
-    HapticFeedback.mediumImpact();
-    setState(() => _isMigrateLoading = true);
-    try {
-      final migrationService = MigrationService(provider);
-      await migrationService.migrateTransactions();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Migration completed successfully!')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Migration failed: $e')));
-      }
-    } finally {
-      if (mounted) setState(() => _isMigrateLoading = false);
-    }
-  }
-
   void _showAddEditCategoryModal(
     BuildContext context, {
     CategoryModel? category,
@@ -79,140 +51,140 @@ class _CategorySettingsTabScreenState extends State<CategorySettingsTabScreen> {
         activeCategories.where((c) => c.mode == TransactionMode.income).toList()
           ..sort((a, b) => a.name.compareTo(b.name));
 
-    return Stack(
-      children: [
-        // --- MAIN SCROLL CONTENT ---
-        CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            // Just a nice top padding instead of an AppBar
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+    return Scaffold(
+      backgroundColor:
+          Colors.transparent, // Maintain transparency for TabBarView
+      floatingActionButton: _buildGlassFab(context),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          // Just a nice top padding instead of an AppBar
+          const SliverToBoxAdapter(child: SizedBox(height: 0)),
 
-            if (activeCategories.isEmpty)
-              const SliverFillRemaining(
-                child: Center(
-                  child: Text(
-                    "No categories found",
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ),
-              )
-            else ...[
-              // --- EXPENSES SECTION ---
-              if (expenseCategories.isNotEmpty) ...[
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 12),
-                    child: Text(
-                      "EXPENSE",
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: theme.colorScheme.outline,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                  ),
-                ),
-                SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    return _CategoryCard(
-                      category: expenseCategories[index],
-                      provider: categoryProvider,
-                      onTap: () => _showAddEditCategoryModal(
-                        context,
-                        category: expenseCategories[index],
-                      ),
-                    );
-                  }, childCount: expenseCategories.length),
-                ),
-              ],
-
-              // --- INCOME SECTION ---
-              if (incomeCategories.isNotEmpty) ...[
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 32, 24, 12),
-                    child: Text(
-                      "INCOME",
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: theme.colorScheme.outline,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                  ),
-                ),
-                SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    return _CategoryCard(
-                      category: incomeCategories[index],
-                      provider: categoryProvider,
-                      onTap: () => _showAddEditCategoryModal(
-                        context,
-                        category: incomeCategories[index],
-                      ),
-                    );
-                  }, childCount: incomeCategories.length),
-                ),
-              ],
-
-              // Bottom padding to clear the floating toolkit
-              const SliverToBoxAdapter(child: SizedBox(height: 120)),
-            ],
-          ],
-        ),
-
-        // --- FLOATING TOOLKIT (Bottom Center) ---
-        Positioned(
-          bottom: 32,
-          left: 0,
-          right: 0,
-          child: Center(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(30),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(
-                    color: theme.colorScheme.outlineVariant.withOpacity(0.2),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.25),
-                      blurRadius: 10,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Migrate Button
-                    _ToolkitButton(
-                      icon: HugeIcons.strokeRoundedDatabaseSync,
-                      label: "Migrate",
-                      isLoading: _isMigrateLoading,
-                      onTap: () => _runMigration(context, categoryProvider),
-                      theme: theme,
-                    ),
-
-                    // Add Button
-                    _ToolkitButton(
-                      icon: Icons.add_rounded,
-                      label: "New Category",
-                      isPrimary: true,
-                      onTap: () => _showAddEditCategoryModal(context),
-                      theme: theme,
-                    ),
-                  ],
+          if (activeCategories.isEmpty)
+            const SliverFillRemaining(
+              child: Center(
+                child: Text(
+                  "No categories found",
+                  style: TextStyle(color: Colors.grey),
                 ),
               ),
+            )
+          else ...[
+            // --- EXPENSES SECTION ---
+            if (expenseCategories.isNotEmpty) ...[
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 12),
+                  child: Text(
+                    "EXPENSE",
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontSize: 14,
+                      fontWeight: FontWeight.normal,
+                      color: theme.colorScheme.outline,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                ),
+              ),
+              SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  return _CategoryCard(
+                    category: expenseCategories[index],
+                    provider: categoryProvider,
+                    onTap: () => _showAddEditCategoryModal(
+                      context,
+                      category: expenseCategories[index],
+                    ),
+                  );
+                }, childCount: expenseCategories.length),
+              ),
+            ],
+
+            // --- INCOME SECTION ---
+            if (incomeCategories.isNotEmpty) ...[
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 12),
+                  child: Text(
+                    "INCOME",
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontSize: 14,
+                      fontWeight: FontWeight.normal,
+                      color: theme.colorScheme.outline,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                ),
+              ),
+              SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  return _CategoryCard(
+                    category: incomeCategories[index],
+                    provider: categoryProvider,
+                    onTap: () => _showAddEditCategoryModal(
+                      context,
+                      category: incomeCategories[index],
+                    ),
+                  );
+                }, childCount: incomeCategories.length),
+              ),
+            ],
+
+            // Bottom padding to clear the FAB
+            const SliverToBoxAdapter(child: SizedBox(height: 100)),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGlassFab(BuildContext context) {
+    return Container(
+      height: 56,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primary,
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).colorScheme.shadow.withAlpha(50),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _showAddEditCategoryModal(context),
+          borderRadius: BorderRadius.circular(30),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.add_rounded,
+                  color: Theme.of(context).colorScheme.onPrimary,
+                  size: 24,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  "Category",
+                  style: TextStyle(
+                    fontFamily: 'momo',
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.onPrimary,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-      ],
+      ),
     );
   }
 }
@@ -353,86 +325,6 @@ class _CategoryCard extends StatelessWidget {
                 ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-// --- TOOLKIT BUTTON WIDGET ---
-class _ToolkitButton extends StatelessWidget {
-  final dynamic icon;
-  final String label;
-  final VoidCallback onTap;
-  final ThemeData theme;
-  final bool isPrimary;
-  final bool isLoading;
-
-  const _ToolkitButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    required this.theme,
-    this.isPrimary = false,
-    this.isLoading = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: isLoading ? null : onTap,
-      borderRadius: BorderRadius.circular(24),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: isPrimary ? theme.colorScheme.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (isLoading)
-              SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: isPrimary
-                      ? theme.colorScheme.onPrimary
-                      : theme.colorScheme.primary,
-                ),
-              )
-            else if (icon is List<List<dynamic>>) // Checking for HugeIcon
-              HugeIcon(
-                icon: icon,
-                size: 20,
-                color: isPrimary
-                    ? theme.colorScheme.onPrimary
-                    : theme.colorScheme.onSurface,
-              )
-            else
-              Icon(
-                icon,
-                size: 20,
-                color: isPrimary
-                    ? theme.colorScheme.onPrimary
-                    : theme.colorScheme.onSurface,
-              ),
-            const SizedBox(width: 8),
-            Flexible(
-              child: Text(
-                label,
-                style: theme.textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: isPrimary
-                      ? theme.colorScheme.onPrimary
-                      : theme.colorScheme.onSurface,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
         ),
       ),
     );

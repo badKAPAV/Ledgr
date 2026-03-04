@@ -502,15 +502,7 @@ class CategoryProvider with ChangeNotifier {
     }
 
     try {
-      if (!newCategory.isDefault) {
-        // Only set if not already handled by _ensureUniqueDefault (which does batch updates)
-        // But wait, _ensureUniqueDefault iterates existing categories.
-        // If we added it to _categories, it will be included.
-        // However, _ensureUniqueDefault updates FIRESTORE via batch.
-        // So if we rely on that, we don't need to set() here IF it was default.
-        // BUT, _ensureUniqueDefault updates fields, it doesn't create documents.
-        // So we MUST create the document first.
-      }
+      if (!newCategory.isDefault) {}
       await newRef.set(newCategory.toJson());
     } catch (e) {
       debugPrint("Error adding category to Firestore: $e");

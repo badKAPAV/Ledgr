@@ -72,8 +72,9 @@ class _DebtsLoansViewState extends State<DebtsLoansView> {
               _selectedType == 'youOwe'
                   ? 'PEOPLE YOU OWE'
                   : 'PEOPLE WHO OWE YOU',
-              style: theme.textTheme.labelSmall?.copyWith(
-                fontWeight: FontWeight.bold,
+              style: theme.textTheme.headlineMedium?.copyWith(
+                fontSize: 14,
+                fontWeight: FontWeight.normal,
                 letterSpacing: 1.5,
                 color: theme.colorScheme.secondary,
               ),

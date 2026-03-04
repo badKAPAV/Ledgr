@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:wallzy/features/tag/models/tag.dart';
+import 'package:wallzy/features/folders/models/tag.dart';
 import 'package:wallzy/features/transaction/provider/meta_provider.dart';
 
 class EventModeSettingsCard extends StatefulWidget {

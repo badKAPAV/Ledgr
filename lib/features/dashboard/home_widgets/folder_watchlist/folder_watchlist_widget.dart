@@ -7,7 +7,7 @@ import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/common/helpers/dashed_border.dart';
 import 'package:wallzy/features/dashboard/home_widgets/folder_watchlist/folder_selection_sheet.dart';
-import 'package:wallzy/features/tag/services/budget_helper.dart';
+import 'package:wallzy/features/folders/services/budget_helper.dart';
 import 'package:wallzy/common/icon_picker/icons.dart';
 import 'package:wallzy/common/progress_bar/segmented_progress_bar.dart';
 

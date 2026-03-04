@@ -16,7 +16,7 @@ import 'package:wallzy/features/accounts/screens/accounts_screen.dart';
 import 'package:wallzy/features/people/screens/people_screen.dart';
 import 'package:wallzy/features/profile/screens/user_profile_screen.dart';
 import 'package:wallzy/features/transaction/screens/all_transactions_screen.dart';
-import 'package:wallzy/features/tag/screens/tags_screen.dart';
+import 'package:wallzy/features/folders/screens/tags_screen.dart';
 import 'package:wallzy/features/guide/screens/how_to_use_screen.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 
@@ -225,7 +225,7 @@ class _AppDrawerState extends State<AppDrawer> {
                     isSelected: widget.selectedItem == DrawerItem.reports,
                     onTap: () => _handleNav(
                       context,
-                      const AllTransactionsScreen(),
+                      const AllTransactionsScreen(initialTabIndex: 0),
                       DrawerItem.reports,
                     ),
                   ),

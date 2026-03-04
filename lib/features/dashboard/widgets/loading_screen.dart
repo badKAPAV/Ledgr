@@ -65,11 +65,9 @@ class LoadingScreen extends StatelessWidget {
                               fit: BoxFit.contain,
                               delegates: LottieDelegates(
                                 values: [
-                                  ValueDelegate.strokeColor(
-                                    const ['**'],
-                                    value:
-                                        theme.colorScheme.surfaceContainerHigh,
-                                  ),
+                                  ValueDelegate.strokeColor(const [
+                                    '**',
+                                  ], value: theme.colorScheme.surface),
                                   ValueDelegate.color(const [
                                     '**',
                                   ], value: theme.colorScheme.primary),

@@ -558,6 +558,7 @@ class _AddSubscriptionScreenState extends State<AddSubscriptionScreen> {
                         final selected = await showModernPickerSheet(
                           context: context,
                           title: 'Select Category',
+
                           items: categories
                               .map(
                                 (c) => PickerItem(

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:wallzy/features/tag/services/tag_info.dart';
+import 'package:wallzy/features/folders/services/tag_info.dart';
 
 class Tag {
   final String id;

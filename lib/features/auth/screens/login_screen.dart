@@ -189,7 +189,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: FilledButton(
                             style: FilledButton.styleFrom(
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius: BorderRadius.circular(50),
                               ),
                               elevation: 0,
                             ),

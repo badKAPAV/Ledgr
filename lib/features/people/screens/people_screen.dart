@@ -119,7 +119,7 @@ class _PeopleScreenState extends State<PeopleScreen>
             ),
           ],
           controller: _tabController,
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
         ),
         centerTitle: true,
         automaticallyImplyLeading: false,

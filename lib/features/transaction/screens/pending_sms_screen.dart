@@ -5,6 +5,18 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:wallzy/common/widgets/empty_report_placeholder.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
+import 'package:wallzy/features/auth/provider/auth_provider.dart';
+import 'package:wallzy/features/accounts/provider/account_provider.dart';
+import 'package:wallzy/features/transaction/provider/meta_provider.dart';
+import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
+import 'package:wallzy/features/categories/provider/category_provider.dart';
+import 'package:wallzy/features/transaction/models/transaction.dart';
+import 'package:wallzy/features/folders/models/tag.dart';
+import 'package:wallzy/features/transaction/widgets/add_edit_transaction_widgets/transaction_widgets.dart';
+import 'package:uuid/uuid.dart';
+import 'package:collection/collection.dart';
+import 'package:wallzy/features/categories/services/category_matcher.dart';
+import 'dart:async';
 
 class PendingSmsScreen extends StatefulWidget {
   final List<Map<String, dynamic>> transactions;
@@ -30,10 +42,21 @@ class _PendingSmsScreenState extends State<PendingSmsScreen> {
   late List<Map<String, dynamic>> _transactions;
   final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
 
+  final ValueNotifier<int> _autoRecordTotal = ValueNotifier(0);
+  final ValueNotifier<int> _autoRecordProgress = ValueNotifier(0);
+  bool _isRecordingAll = false;
+
   @override
   void initState() {
     super.initState();
     _transactions = List.from(widget.transactions);
+  }
+
+  @override
+  void dispose() {
+    _autoRecordTotal.dispose();
+    _autoRecordProgress.dispose();
+    super.dispose();
   }
 
   // --- Single Item Logic ---
@@ -159,6 +182,206 @@ class _PendingSmsScreenState extends State<PendingSmsScreen> {
     }
   }
 
+  Future<void> _handleAutoRecordAll() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (!authProvider.isLoggedIn) return;
+    if (_transactions.isEmpty) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Auto Record All?"),
+        content: Text(
+          "This will automatically categorize and save all ${_transactions.length} pending transactions.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Cancel"),
+          ),
+          FilledButton.icon(
+            icon: const HugeIcon(
+              icon: HugeIcons.strokeRoundedCheckmarkBadge01,
+              size: 20,
+              color: Colors.white,
+            ),
+            label: const Text("Auto Record"),
+            onPressed: () => Navigator.pop(context, true),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    setState(() {
+      _isRecordingAll = true;
+    });
+
+    _autoRecordTotal.value = _transactions.length;
+    _autoRecordProgress.value = 0;
+
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: ValueListenableBuilder<int>(
+          valueListenable: _autoRecordProgress,
+          builder: (context, progress, _) {
+            final total = _autoRecordTotal.value;
+            return Text(
+              "Recording transactions... $progress / $total",
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onInverseSurface,
+              ),
+            );
+          },
+        ),
+        duration: const Duration(days: 1),
+        backgroundColor: Theme.of(context).colorScheme.inverseSurface,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+
+    final txProvider = Provider.of<TransactionProvider>(context, listen: false);
+    final accountProvider = Provider.of<AccountProvider>(
+      context,
+      listen: false,
+    );
+    final metaProvider = Provider.of<MetaProvider>(context, listen: false);
+    final settingsProvider = Provider.of<SettingsProvider>(
+      context,
+      listen: false,
+    );
+
+    int savedCount = 0;
+    final List<Map<String, dynamic>> pending = List.from(_transactions);
+
+    final matcher = CategoryMatcher();
+    await matcher.loadCategories();
+
+    for (final txData in pending) {
+      if (!mounted) break;
+      try {
+        final amount = (txData['amount'] as num).toDouble();
+        final type = txData['type'] ?? 'expense';
+        final bankName = txData['bankName'] as String?;
+        final accountNumber = txData['accountNumber'] as String?;
+        final payee = txData['payee'] as String?;
+
+        DateTime date;
+        if (txData['timestamp'] != null && txData['timestamp'] is int) {
+          date = DateTime.fromMillisecondsSinceEpoch(txData['timestamp']);
+        } else {
+          date = DateTime.now();
+        }
+
+        String? accountId;
+        if (bankName != null && accountNumber != null) {
+          final account = await accountProvider.findOrCreateAccount(
+            bankName: bankName,
+            accountNumber: accountNumber,
+          );
+          accountId = account.id;
+        } else if (type == 'expense' &&
+            payee != null &&
+            payee.toLowerCase().contains('upi')) {
+          final primary = await accountProvider.getPrimaryAccount();
+          accountId = primary?.id;
+        } else {
+          final primary = await accountProvider.getPrimaryAccount();
+          accountId = primary?.id;
+        }
+
+        final List<Tag> tags = metaProvider.getAutoAddTagsForDate(date);
+        final textToMatch = payee ?? (type == 'income' ? 'Received' : 'Spent');
+
+        String? categoryId = txData['categoryId'];
+        String categoryName = txData['category'] ?? 'Others';
+
+        if (categoryId == null || categoryId.isEmpty) {
+          categoryId = matcher.matchCategory(
+            textToMatch,
+            mode: type == 'income'
+                ? TransactionMode.income
+                : TransactionMode.expense,
+          );
+
+          final categoryProvider = context.read<CategoryProvider>();
+          categoryName =
+              categoryProvider.categories
+                  .firstWhereOrNull((c) => c.id == categoryId)
+                  ?.name ??
+              'Others';
+        }
+
+        final newTx = TransactionModel(
+          transactionId: const Uuid().v4(),
+          type: type,
+          amount: amount,
+          timestamp: date,
+          description: textToMatch,
+          paymentMethod: txData['paymentMethod'] ?? 'Unknown',
+          category: categoryName,
+          categoryId: categoryId,
+          currency: settingsProvider.currencyCode,
+          accountId: accountId,
+          tags: tags,
+        );
+
+        await txProvider.addTransaction(newTx);
+
+        // Trigger callback so parent removes it from both platform and UI
+        widget.onDismiss(txData);
+
+        // Remove from UI list
+        final index = _transactions.indexOf(txData);
+        if (index != -1) {
+          _transactions.removeAt(index);
+          _listKey.currentState?.removeItem(
+            index,
+            (context, animation) => SizeTransition(
+              sizeFactor: animation,
+              child: const SizedBox.shrink(),
+            ),
+            duration: const Duration(milliseconds: 200),
+          );
+        }
+
+        savedCount++;
+        _autoRecordProgress.value = savedCount;
+        await Future.delayed(const Duration(milliseconds: 100));
+      } catch (e) {
+        debugPrint("Error auto-saving transaction: $e");
+      }
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _isRecordingAll = false;
+    });
+
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+    if (savedCount > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Auto-recorded $savedCount transactions",
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onPrimaryContainer,
+            ),
+          ),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    }
+  }
+
   void _showUndoSnackbar({
     required String message,
     required VoidCallback onUndo,
@@ -208,23 +431,83 @@ class _PendingSmsScreenState extends State<PendingSmsScreen> {
           ],
         ),
         actions: [
-          if (_transactions.isNotEmpty)
-            TextButton.icon(
-              onPressed: _handleClearAll,
-              icon: Icon(
-                Icons.clear_all_rounded,
-                size: 18,
-                color: theme.colorScheme.primary,
+          if (_transactions.isNotEmpty && !_isRecordingAll) ...[
+            // --- RECORD ALL BUTTON ---
+            Container(
+              height: 36, // Fixed height for symmetry
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                  width: 1,
+                ),
               ),
-              label: Text(
-                "Clear All",
-                style: TextStyle(
+              child: TextButton.icon(
+                onPressed: _handleAutoRecordAll,
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                icon: HugeIcon(
+                  icon: HugeIcons.strokeRoundedBookmarkAdd02,
+                  size: 18,
                   color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.bold,
+                ),
+                label: Text(
+                  "Record All",
+                  style: TextStyle(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
                 ),
               ),
             ),
-          const SizedBox(width: 8),
+            const SizedBox(width: 8),
+
+            // --- CLEAR ALL BUTTON ---
+            Container(
+              height: 36, // Matching height
+              width: 40, // Square-ish for the icon button
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: theme.colorScheme.error.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: IconButton(
+                onPressed: _handleClearAll,
+                padding: EdgeInsets.zero,
+                icon: HugeIcon(
+                  icon: HugeIcons.strokeRoundedCancel01,
+                  size: 18,
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+          ],
+
+          // --- LOADING STATE ---
+          if (_isRecordingAll) ...[
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
       body: _transactions.isEmpty

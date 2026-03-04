@@ -18,7 +18,7 @@ import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/features/subscription/models/subscription.dart';
 import 'package:wallzy/features/subscription/provider/subscription_provider.dart';
 import 'package:wallzy/features/subscription/screens/add_subscription_screen.dart';
-import 'package:wallzy/features/tag/models/tag.dart';
+import 'package:wallzy/features/folders/models/tag.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
 import 'package:wallzy/features/transaction/provider/meta_provider.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
@@ -26,8 +26,9 @@ import 'package:wallzy/features/transaction/services/receipt_service.dart';
 import 'package:wallzy/features/categories/provider/category_provider.dart';
 import 'package:wallzy/common/icon_picker/icons.dart';
 import 'package:wallzy/features/transaction/widgets/add_edit_transaction_widgets/transaction_widgets.dart';
-import 'package:wallzy/features/transaction/widgets/add_receipt_modal_sheet.dart';
 import 'package:wallzy/features/transaction/widgets/link_transaction_modal_sheet.dart';
+import 'package:wallzy/features/categories/screens/add_edit_category_modal_sheet.dart';
+import 'package:wallzy/features/transaction/widgets/add_receipt_modal_sheet.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class TransactionForm extends StatefulWidget {
@@ -144,16 +145,16 @@ class TransactionFormState extends State<TransactionForm> {
     }
   }
 
-  static final Map<String, IconData> _paymentMethodIcons = {
-    'Cash': Icons.money_rounded,
-    'UPI': Icons.qr_code_rounded,
-    'Card': Icons.credit_card_rounded,
-    'Net banking': Icons.account_balance_rounded,
-    'Other': Icons.payment_rounded,
+  static final Map<String, dynamic> _paymentMethodIcons = {
+    'Cash': HugeIcons.strokeRoundedCash02,
+    'UPI': HugeIcons.strokeRoundedQrCode01,
+    'Card': HugeIcons.strokeRoundedCreditCardPos,
+    'Net banking': HugeIcons.strokeRoundedBank,
+    'Other': HugeIcons.strokeRoundedPayment01,
   };
 
-  IconData _getMethodIcon(String name) {
-    return _paymentMethodIcons[name] ?? Icons.payment_outlined;
+  dynamic _getMethodIcon(String name) {
+    return _paymentMethodIcons[name] ?? HugeIcons.strokeRoundedMoney03;
   }
 
   bool get _isEditing => widget.transaction != null;
@@ -1372,7 +1373,45 @@ class TransactionFormState extends State<TransactionForm> {
 
     final selected = await showModernPickerSheet(
       context: context,
-      title: 'Select Category',
+      title: 'SELECT CATEGORY',
+      showSearch: true,
+      showCreateNew: true,
+      onCreateNew: () async {
+        Navigator.pop(context); // Close the picker list
+        HapticFeedback.selectionClick();
+        await showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => const AddEditCategoryModalSheet(),
+        );
+
+        // After the modal closes, if a category was added, we select it
+        if (!mounted) return;
+        final newCatProvider = context.read<CategoryProvider>();
+        final latestCategories = newCatProvider.categories
+            .where((c) => c.mode == widget.mode && !c.isDeleted)
+            .toList();
+
+        if (latestCategories.length > categories.length) {
+          // A new category was added, find and select it
+          // Assuming it's added at the end or we can just sort by created time if available.
+          // For now, we take the one not in the old list.
+          final oldIds = categories.map((c) => c.id).toSet();
+          final newCat = latestCategories.firstWhereOrNull(
+            (c) => !oldIds.contains(c.id),
+          );
+          if (newCat != null) {
+            setState(() {
+              _selectedCategoryId = newCat.id;
+              _selectedCategory = newCat.name;
+              if (newCat.name != 'People') _selectedPerson = null;
+              _markAsDirty();
+            });
+            if (newCat.name == 'People') _showPeopleModal();
+          }
+        }
+      },
       items: categories
           .map(
             (c) => PickerItem(

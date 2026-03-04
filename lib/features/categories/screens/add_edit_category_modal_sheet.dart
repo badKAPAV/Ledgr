@@ -341,12 +341,13 @@ class _AddEditCategoryModalSheetState extends State<AddEditCategoryModalSheet> {
                         Text(
                           isEditing
                               ? (isSystemCategory
-                                    ? 'System Category'
-                                    : 'Edit Category')
-                              : 'New Category',
+                                    ? 'SYSTEM CATEGORY'
+                                    : 'EDIT CATEGORY')
+                              : 'NEW CATEGORY',
                           style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.5,
+                            fontSize: 16,
+                            fontWeight: FontWeight.normal,
+                            letterSpacing: 1,
                           ),
                         ),
                         if (isSystemCategory) ...[

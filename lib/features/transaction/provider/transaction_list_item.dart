@@ -48,10 +48,13 @@ class TransactionListItem extends StatelessWidget {
     final icon = GoalIconRegistry.getIcon(iconKey);
 
     // Resolve Title
-    String title = category?.name ?? transaction.category;
-    if (title.toLowerCase() == 'people' &&
+    final categoryName = category?.name ?? transaction.category;
+    String title = categoryName;
+    if (categoryName.toLowerCase() == 'people' &&
         (transaction.people?.isNotEmpty ?? false)) {
       title = transaction.people!.first.fullName;
+    } else if (transaction.description.isNotEmpty) {
+      title = transaction.description;
     }
 
     // Resolve Account & Subtitle

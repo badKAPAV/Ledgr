@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
+import 'package:wallzy/common/tabbar/custom_tab_bar.dart';
 import 'package:wallzy/features/people/models/person.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
@@ -113,61 +115,35 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    final height = MediaQuery.of(context).size.height;
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text(
-          _isEditing ? 'Edit Details' : 'New Transaction',
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
+        toolbarHeight: height * 0.08,
+        title: _isEditing
+            ? Text('Edit Details')
+            : CustomTabBar(
+                tabs: [
+                  CustomTabItem(
+                    label: 'Expense',
+                    icon: HugeIcons.strokeRoundedArrowUpRight01,
+                  ),
+                  CustomTabItem(
+                    label: 'Income',
+                    icon: HugeIcons.strokeRoundedArrowDownRight01,
+                  ),
+                  CustomTabItem(
+                    label: 'Transfer',
+                    icon: HugeIcons.strokeRoundedArrowUpDown,
+                  ),
+                ],
+                controller: _tabController,
+                padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+              ),
         centerTitle: true,
         elevation: 0,
         backgroundColor: theme.colorScheme.surface,
-        bottom: _isEditing
-            ? null
-            : PreferredSize(
-                preferredSize: const Size.fromHeight(80),
-                child: Container(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 8,
-                  ),
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: TabBar(
-                    controller: _tabController,
-                    onTap: (_) => HapticFeedback.selectionClick(),
-                    indicator: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(25),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    indicatorSize: TabBarIndicatorSize.tab,
-                    dividerColor: Colors.transparent,
-                    labelColor: theme.colorScheme.primary,
-                    unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
-                    labelStyle: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                    ),
-                    splashBorderRadius: BorderRadius.circular(25),
-                    tabs: const [
-                      Tab(text: 'Expense'),
-                      Tab(text: 'Income'),
-                      Tab(text: 'Transfer'),
-                    ],
-                  ),
-                ),
-              ),
       ),
       body: SafeArea(
         child: _isEditing

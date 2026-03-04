@@ -18,7 +18,7 @@ import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/app_drawer.dart';
 import 'package:wallzy/features/dashboard/models/radial_menu_item_model.dart';
 import 'package:wallzy/features/subscription/models/due_subscription.dart';
-import 'package:wallzy/features/tag/models/tag.dart';
+import 'package:wallzy/features/folders/models/tag.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
 import 'package:wallzy/features/transaction/provider/meta_provider.dart';
 import 'package:wallzy/features/transaction/screens/all_transactions_screen.dart';
@@ -375,7 +375,10 @@ class _HomeScreenState extends State<HomeScreen>
                                 });
                               },
                               onUndo: (tx) {
-                                // Undo logic...
+                                _platform.invokeMethod('newTransaction', tx);
+                                setState(() {
+                                  _pendingSmsTransactions.insert(0, tx);
+                                });
                               },
                             ),
                           ),
@@ -874,7 +877,8 @@ class _HomeScreenState extends State<HomeScreen>
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => const AllTransactionsScreen(),
+                      builder: (_) =>
+                          const AllTransactionsScreen(initialTabIndex: 0),
                     ),
                   );
                 }

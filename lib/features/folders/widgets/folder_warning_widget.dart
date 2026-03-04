@@ -6,8 +6,8 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:wallzy/common/pie_chart/pie_chart_widget.dart';
 import 'package:wallzy/common/pie_chart/pie_model.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
-import 'package:wallzy/features/tag/models/tag.dart';
-import 'package:wallzy/features/tag/services/budget_helper.dart';
+import 'package:wallzy/features/folders/models/tag.dart';
+import 'package:wallzy/features/folders/services/budget_helper.dart';
 import 'package:wallzy/features/transaction/provider/meta_provider.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
 

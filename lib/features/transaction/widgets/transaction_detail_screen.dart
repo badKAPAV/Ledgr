@@ -13,10 +13,10 @@ import 'package:wallzy/features/subscription/provider/subscription_provider.dart
 import 'package:wallzy/features/transaction/models/transaction.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
 import 'package:wallzy/features/transaction/screens/add_edit_transaction_screen.dart';
-import 'package:wallzy/features/tag/screens/tag_details_screen.dart';
+import 'package:wallzy/features/folders/screens/tag_details_screen.dart';
 import 'package:wallzy/features/transaction/widgets/add_to_folder_modal_sheet.dart';
 import 'package:wallzy/features/transaction/provider/meta_provider.dart';
-import 'package:wallzy/features/tag/models/tag.dart';
+import 'package:wallzy/features/folders/models/tag.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:wallzy/common/helpers/dashed_border.dart';
 import 'package:wallzy/features/transaction/widgets/add_receipt_modal_sheet.dart';

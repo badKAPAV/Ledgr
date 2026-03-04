@@ -428,12 +428,19 @@ class _SmoothLinePainter extends CustomPainter {
     final path = Path();
     final points = <Offset>[];
 
+    // 1. START ANCHOR: Force the line to start from 0 at the very left edge
+    points.add(Offset(0, size.height));
+
+    // 2. Add actual data points
     for (int i = 0; i < data.length; i++) {
       final x = (i * itemWidth) + (itemWidth / 2);
       final y =
           size.height - ((data[i].lineValue / maxY) * size.height * animValue);
       points.add(Offset(x, y));
     }
+
+    // 3. END ANCHOR: Force the line to return to 0 at the very right edge
+    points.add(Offset(size.width, size.height));
 
     if (points.isEmpty) return;
 
@@ -448,8 +455,8 @@ class _SmoothLinePainter extends CustomPainter {
     }
 
     final Path fillPath = Path.from(path);
-    fillPath.lineTo(points.last.dx, size.height);
-    fillPath.lineTo(points.first.dx, size.height);
+    fillPath.lineTo(size.width, size.height); // Bottom right corner
+    fillPath.lineTo(0, size.height); // Bottom left corner
     fillPath.close();
 
     final Gradient gradient = LinearGradient(
@@ -477,9 +484,11 @@ class _SmoothLinePainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
     canvas.drawPath(path, strokePaint);
 
-    if (selectedIndex != null && selectedIndex! < points.length) {
-      final point = points[selectedIndex!];
-      // Only draw dot if value is non-zero (optional preference, but looks cleaner)
+    // 4. Update the selected dot logic (shift index by 1 because of the start anchor)
+    if (selectedIndex != null && selectedIndex! < data.length) {
+      final point = points[selectedIndex! + 1]; // +1 skips the anchor point
+
+      // Only draw dot if value is non-zero
       if (data[selectedIndex!].lineValue > 0) {
         canvas.drawCircle(
           point,

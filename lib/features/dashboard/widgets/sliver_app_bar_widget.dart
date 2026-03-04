@@ -6,11 +6,12 @@ import 'package:flutter_svg/svg.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:wallzy/common/widgets/illumated_border.dart';
 import 'package:wallzy/core/utils/budget_cycle_helper.dart';
 import 'package:wallzy/features/auth/provider/auth_provider.dart';
-import 'package:wallzy/features/planning/screens/planning_screen.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
+import 'package:wallzy/features/transaction/screens/all_transactions_screen.dart';
 import 'package:wallzy/features/transaction/screens/search_transactions_screen.dart';
 import 'package:wallzy/features/dashboard/widgets/analytics_widget.dart';
 
@@ -593,28 +594,32 @@ class _NoBudgetState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Ghost Gauge
-        Opacity(
-          opacity: 0.1,
-          child: DualRadialGauge(
-            outerValue: 1.0,
-            innerValue: 0.6,
-            outerColor: theme.colorScheme.onSurface,
-            innerColor: theme.colorScheme.onSurface,
-            trackColor: Colors.transparent,
+    return SizedBox(
+      height: 180,
+      width: 180,
+      child: Stack(
+        alignment: Alignment.center,
+        clipBehavior: Clip.none,
+        children: [
+          Opacity(
+            opacity: 0.1,
+            child: DualRadialGauge(
+              outerValue: 1.0,
+              innerValue: 0.6,
+              outerColor: theme.colorScheme.onSurface,
+              innerColor: theme.colorScheme.onSurface,
+              trackColor: Colors.transparent,
+            ),
           ),
-        ),
-        // Action
-        Transform.translate(
-          offset: const Offset(0, -120), // Pull up into the ghost gauge
-          child: Column(
+
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                "No Budget Set",
+                "What's your budget?",
                 style: theme.textTheme.titleMedium?.copyWith(
+                  fontFamily: 'momo',
                   color: theme.colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w600,
                 ),
@@ -622,30 +627,37 @@ class _NoBudgetState extends StatelessWidget {
               const SizedBox(height: 12),
               SizedBox(
                 height: 40,
-                child: FilledButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            const PlanningScreen(initialTabIndex: 2),
-                      ),
-                    );
-                  },
-                  style: FilledButton.styleFrom(
-                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                    foregroundColor: theme.colorScheme.onSurface,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: IlluminatedBorder(
+                  borderWidth: 4,
+                  glowColor: theme.colorScheme.onSurface,
+                  borderRadius: BorderRadius.circular(20),
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              const AllTransactionsScreen(initialTabIndex: 2),
+                        ),
+                      );
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor:
+                          theme.colorScheme.surfaceContainerHighest,
+                      foregroundColor: theme.colorScheme.onSurface,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      side: BorderSide.none,
+                    ),
+                    icon: const Icon(Icons.add_rounded, size: 18),
+                    label: const Text("Set Budgets"),
                   ),
-                  icon: const Icon(Icons.add_rounded, size: 18),
-                  label: const Text("Set Goals"),
                 ),
               ),
             ],
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

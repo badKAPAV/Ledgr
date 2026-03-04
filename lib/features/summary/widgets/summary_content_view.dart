@@ -157,7 +157,9 @@ class SummaryContentView extends StatelessWidget {
                           onTap: () {
                             Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (_) => const AllTransactionsScreen(),
+                                builder: (_) => const AllTransactionsScreen(
+                                  initialTabIndex: 0,
+                                ),
                               ),
                             );
                           },
@@ -177,7 +179,9 @@ class SummaryContentView extends StatelessWidget {
                           onTap: () {
                             Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (_) => const AllTransactionsScreen(),
+                                builder: (_) => const AllTransactionsScreen(
+                                  initialTabIndex: 0,
+                                ),
                               ),
                             );
                           },

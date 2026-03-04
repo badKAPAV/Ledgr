@@ -1,7 +1,7 @@
 import 'package:uuid/uuid.dart';
 import 'package:wallzy/features/subscription/services/subscription_info.dart';
 import 'package:wallzy/features/people/models/person.dart';
-import 'package:wallzy/features/tag/models/tag.dart';
+import 'package:wallzy/features/folders/models/tag.dart';
 
 class Subscription {
   final String id;

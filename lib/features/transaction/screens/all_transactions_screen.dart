@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:wallzy/common/tabbar/custom_tab_bar.dart';
+import 'package:wallzy/features/planning/widgets/budget_tab_screen.dart';
 import 'package:wallzy/features/transaction/screens/search_transactions_screen.dart';
 import 'package:wallzy/features/transaction/widgets/categories_tab_screen.dart';
 import 'package:wallzy/features/transaction/widgets/transactions_tab_screen.dart';
@@ -8,7 +9,8 @@ import 'package:wallzy/features/transaction/widgets/transactions_tab_screen.dart
 import 'package:wallzy/app_drawer.dart';
 
 class AllTransactionsScreen extends StatefulWidget {
-  const AllTransactionsScreen({super.key});
+  final int initialTabIndex;
+  const AllTransactionsScreen({super.key, required this.initialTabIndex});
 
   @override
   State<AllTransactionsScreen> createState() => _AllTransactionsScreenState();
@@ -21,7 +23,11 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(
+      length: 3,
+      vsync: this,
+      initialIndex: widget.initialTabIndex,
+    );
   }
 
   @override
@@ -48,9 +54,13 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen>
               label: 'Categories',
               icon: HugeIcons.strokeRoundedPieChart02,
             ),
+            CustomTabItem(
+              label: 'Budgets',
+              icon: HugeIcons.strokeRoundedAnalytics03,
+            ),
           ],
           controller: _tabController,
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
         ),
         centerTitle: true,
         automaticallyImplyLeading: false,
@@ -96,6 +106,7 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen>
         children: [
           TransactionsTabScreen(),
           CategoriesTabScreen(),
+          BudgetTabScreen(),
           // PeopleTabScreen(),
         ],
       ),

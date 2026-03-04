@@ -308,12 +308,6 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
   Future<void> _handleLink(Uri uri) async {
     debugPrint('Received Deep Link: $uri');
-    // Check if it's a firebase auth link.
-    // The link from sendSignInLinkToEmail usually contains the 'mode=signIn' or similar,
-    // and we configured the url 'https://wallet-wallzy.firebaseapp.com/login'.
-
-    // Check if the link is a signed-in link
-    // Firebase Auth handles validity checks, we just need to pass the full link.
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final prefs = await SharedPreferences.getInstance();

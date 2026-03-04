@@ -4,8 +4,8 @@ import 'package:intl/intl.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/features/transaction/provider/meta_provider.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
-import 'package:wallzy/features/tag/models/tag.dart';
-import 'package:wallzy/features/tag/screens/tag_details_screen.dart';
+import 'package:wallzy/features/folders/models/tag.dart';
+import 'package:wallzy/features/folders/screens/tag_details_screen.dart';
 import 'package:wallzy/core/themes/theme.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:wallzy/common/widgets/empty_report_placeholder.dart';
@@ -13,7 +13,7 @@ import 'package:wallzy/common/icon_picker/icon_picker_sheet.dart';
 import 'package:wallzy/common/icon_picker/icons.dart';
 
 import 'package:wallzy/app_drawer.dart';
-import 'package:wallzy/features/tag/widgets/folder_warning_widget.dart';
+import 'package:wallzy/features/folders/widgets/folder_warning_widget.dart';
 
 class TagsScreen extends StatefulWidget {
   const TagsScreen({super.key});
@@ -372,9 +372,10 @@ class _TagsScreenState extends State<TagsScreen> {
                               : _selectedColorFilter != null
                               ? "FILTERED FOLDERS"
                               : "ALL FOLDERS",
-                          style: Theme.of(context).textTheme.labelSmall
+                          style: Theme.of(context).textTheme.headlineMedium
                               ?.copyWith(
-                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                fontWeight: FontWeight.normal,
                                 letterSpacing: 1.5,
                                 color: Theme.of(context).colorScheme.secondary,
                               ),

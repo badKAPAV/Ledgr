@@ -350,7 +350,7 @@ class _AuthEmailScreenState extends State<AuthEmailScreen> {
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(50),
                 ),
               ),
               child: authProvider.isLoading
@@ -508,7 +508,7 @@ class _AuthEmailScreenState extends State<AuthEmailScreen> {
                   vertical: 12,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(50),
                 ),
               ),
               child: Text(

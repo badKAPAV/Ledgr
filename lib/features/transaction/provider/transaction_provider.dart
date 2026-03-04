@@ -11,7 +11,7 @@ import 'package:wallzy/features/auth/provider/auth_provider.dart';
 import 'package:wallzy/features/accounts/models/account.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/features/people/models/person.dart';
-import 'package:wallzy/features/tag/models/tag.dart';
+import 'package:wallzy/features/folders/models/tag.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
 
 class TransactionFilter {

@@ -70,9 +70,10 @@ class _GoalsScreenState extends State<GoalsScreen> {
                       children: [
                         Text(
                           "ALL GOALS",
-                          style: Theme.of(context).textTheme.labelSmall
+                          style: Theme.of(context).textTheme.headlineMedium
                               ?.copyWith(
-                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                fontWeight: FontWeight.normal,
                                 letterSpacing: 1.5,
                                 color: Theme.of(context).colorScheme.secondary,
                               ),

@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wallzy/features/dashboard/provider/home_widgets_provider.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:wallzy/features/tag/screens/tags_screen.dart';
+import 'package:wallzy/features/folders/screens/tags_screen.dart';
 import 'package:wallzy/features/transaction/provider/meta_provider.dart';
 import 'package:wallzy/common/icon_picker/icons.dart';
 import 'package:wallzy/common/progress_bar/segmented_progress_bar.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
-import 'package:wallzy/features/tag/services/budget_helper.dart';
+import 'package:wallzy/features/folders/services/budget_helper.dart';
 
 class FolderSelectionSheet extends StatefulWidget {
   final String widgetId;

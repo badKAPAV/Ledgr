@@ -5,9 +5,9 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
-import 'package:wallzy/features/tag/models/tag.dart';
-import 'package:wallzy/features/tag/services/budget_helper.dart';
-import 'package:wallzy/features/tag/services/tag_info.dart';
+import 'package:wallzy/features/folders/models/tag.dart';
+import 'package:wallzy/features/folders/services/budget_helper.dart';
+import 'package:wallzy/features/folders/services/tag_info.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
 import 'package:wallzy/core/utils/budget_cycle_helper.dart';
