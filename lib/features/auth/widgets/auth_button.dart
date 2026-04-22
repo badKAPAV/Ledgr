@@ -22,7 +22,7 @@ class AuthButton extends StatelessWidget {
             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
           ),
         ),
-      ),
+      )
     );
   }
 }

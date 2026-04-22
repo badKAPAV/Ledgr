@@ -145,7 +145,7 @@ class _AddReceiptModalSheetState extends State<AddReceiptModalSheet> {
             const SizedBox(height: 16),
           ],
         ),
-      ),
+      )
     );
   }
 }
@@ -211,7 +211,7 @@ class _OptionTile extends StatelessWidget {
             ),
           ),
         ),
-      ),
+      )
     );
   }
 }

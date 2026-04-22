@@ -68,7 +68,7 @@ class _BiometricGuardState extends State<BiometricGuard>
           return const LockScreen();
         }
         return widget.child;
-      },
+      }
     );
   }
 }

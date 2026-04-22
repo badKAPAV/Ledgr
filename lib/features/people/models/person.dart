@@ -30,7 +30,7 @@ class Person {
       owesYou: (data['owesYou'] ?? 0.0).toDouble(),
       reminderDate: data['reminderDate'] != null
           ? (data['reminderDate'] as Timestamp).toDate()
-          : null,
+          : null
     );
   }
 
@@ -62,7 +62,7 @@ class Person {
       nickname: nickname ?? this.nickname,
       youOwe: youOwe ?? this.youOwe,
       owesYou: owesYou ?? this.owesYou,
-      reminderDate: reminderDate ?? this.reminderDate,
+      reminderDate: reminderDate ?? this.reminderDate
     );
   }
 

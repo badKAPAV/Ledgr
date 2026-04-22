@@ -67,7 +67,7 @@ class TallSegmentedSlider extends StatelessWidget {
           onChanged: onChanged,
           onChangeEnd: onChangeEnd,
         ),
-      ),
+      )
     );
   }
 }
@@ -119,7 +119,7 @@ class _M3GapTrackShape extends SliderTrackShape with BaseSliderTrackShape {
       offset: offset,
       sliderTheme: sliderTheme,
       isEnabled: isEnabled,
-      isDiscrete: isDiscrete,
+      isDiscrete: isDiscrete
     );
 
     final Canvas canvas = context.canvas;
@@ -203,7 +203,7 @@ class _M3TallThumbShape extends SliderComponentShape {
     // Draw the tall rounded rectangle at the exact touch center
     final RRect thumbRRect = RRect.fromRectAndRadius(
       Rect.fromCenter(center: center, width: thumbWidth, height: thumbHeight),
-      Radius.circular(thumbWidth / 2),
+      Radius.circular(thumbWidth / 2)
     );
 
     canvas.drawRRect(thumbRRect, paint);

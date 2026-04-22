@@ -5,6 +5,7 @@ import 'dart:ui';
 
 import 'package:wallzy/core/helpers/transaction_category.dart';
 import 'package:wallzy/core/themes/theme.dart';
+import 'package:wallzy/core/utils/budget_cycle_helper.dart';
 import 'package:wallzy/features/accounts/provider/account_provider.dart';
 import 'package:wallzy/features/people/provider/people_provider.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
@@ -12,7 +13,6 @@ import 'package:wallzy/features/transaction/provider/meta_provider.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
 
-// --- MAIN SHEET WIDGET ---
 class TransactionFilterSheet extends StatefulWidget {
   final TransactionFilter initialFilter;
   final Function(TransactionFilter) onApply;
@@ -29,8 +29,7 @@ class TransactionFilterSheet extends StatefulWidget {
   State<TransactionFilterSheet> createState() => _TransactionFilterSheetState();
 }
 
-class _TransactionFilterSheetState extends State<TransactionFilterSheet>
-    with TickerProviderStateMixin {
+class _TransactionFilterSheetState extends State<TransactionFilterSheet> {
   // Filter State
   String _dateRangeType = 'this_month';
   DateTime? _startDate;
@@ -47,49 +46,10 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
   List<String> _selectedTagIds = [];
   String _selectedType = 'expense';
 
-  // Animation Controllers
-  late AnimationController _slideController;
-  late AnimationController _fadeController;
-  late Animation<Offset> _slideAnimation;
-  late Animation<double> _fadeAnimation;
-
   @override
   void initState() {
     super.initState();
     _initializeFilters();
-    _initializeAnimations();
-  }
-
-  void _initializeAnimations() {
-    _slideController = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-    );
-
-    _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-
-    _slideAnimation =
-        Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
-          CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
-        );
-
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeIn));
-
-    _slideController.forward();
-    _fadeController.forward();
-  }
-
-  @override
-  void dispose() {
-    _slideController.dispose();
-    _fadeController.dispose();
-    super.dispose();
   }
 
   void _initializeFilters() {
@@ -127,9 +87,9 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
     }
   }
 
-  void _setDateRange(String type) {
+  void _setDateRange(String type) async {
     if (type == 'custom') {
-      _showCustomDateRangePicker();
+      await _showCustomDateRangePicker();
       return;
     }
 
@@ -140,53 +100,25 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
       if (type == 'today') {
         _startDate = DateTime(now.year, now.month, now.day);
         _endDate = DateTime(now.year, now.month, now.day, 23, 59, 59);
-      } else if (type == 'yesterday') {
-        final yesterday = now.subtract(const Duration(days: 1));
-        _startDate = DateTime(yesterday.year, yesterday.month, yesterday.day);
-        _endDate = DateTime(
-          yesterday.year,
-          yesterday.month,
-          yesterday.day,
-          23,
-          59,
-          59,
-        );
       } else if (type == 'this_week') {
-        // Assuming Monday is the start of the week
         final difference = now.weekday - 1;
         final start = now.subtract(Duration(days: difference));
         final end = start.add(const Duration(days: 6));
         _startDate = DateTime(start.year, start.month, start.day);
         _endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
-      } else if (type == 'last_week') {
-        final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-        final startOfLastWeek = startOfWeek.subtract(const Duration(days: 7));
-        final endOfLastWeek = startOfLastWeek.add(const Duration(days: 6));
-        _startDate = DateTime(
-          startOfLastWeek.year,
-          startOfLastWeek.month,
-          startOfLastWeek.day,
-        );
-        _endDate = DateTime(
-          endOfLastWeek.year,
-          endOfLastWeek.month,
-          endOfLastWeek.day,
-          23,
-          59,
-          59,
-        );
       } else if (type == 'this_month') {
-        _startDate = DateTime(now.year, now.month, 1);
-        _endDate = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
-      } else if (type == 'last_month') {
-        _startDate = DateTime(now.year, now.month - 1, 1);
-        _endDate = DateTime(now.year, now.month, 0, 23, 59, 59);
+        final settings = context.read<SettingsProvider>();
+        final range = BudgetCycleHelper.getCycleRange(
+          targetMonth: now.month,
+          targetYear: now.year,
+          mode: settings.budgetCycleMode,
+          startDay: settings.budgetCycleStartDay,
+        );
+        _startDate = range.start;
+        _endDate = range.end;
       } else if (type == 'this_year') {
         _startDate = DateTime(now.year, 1, 1);
         _endDate = DateTime(now.year, 12, 31, 23, 59, 59);
-      } else if (type == 'last_year') {
-        _startDate = DateTime(now.year - 1, 1, 1);
-        _endDate = DateTime(now.year - 1, 12, 31, 23, 59, 59);
       } else if (type == 'all_time') {
         _startDate = null;
         _endDate = null;
@@ -200,12 +132,11 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
       currentDate: DateTime.now(),
-      saveText: 'Done',
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: Theme.of(context).colorScheme.copyWith(
-              onPrimary: Theme.of(context).colorScheme.onBackground,
+              primary: Theme.of(context).colorScheme.primary,
             ),
           ),
           child: child!,
@@ -265,6 +196,10 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
     if (_selectedTagIds.isNotEmpty) count++;
     if (_selectedPersonIds.isNotEmpty) count++;
     if (_dateRangeType != 'all_time') count++;
+    if (_currentPriceRange.start > 0 ||
+        _currentPriceRange.end < _absMaxAmount) {
+      count++;
+    }
     return count;
   }
 
@@ -279,7 +214,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
       bool dateMatch = true;
       if (_startDate != null) dateMatch = !t.timestamp.isBefore(_startDate!);
       if (_endDate != null && dateMatch) {
-        dateMatch = t.timestamp.isBefore(_endDate!);
+        dateMatch = !t.timestamp.isAfter(_endDate!);
       }
 
       bool typeMatch = t.type == _selectedType;
@@ -290,474 +225,351 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
           _selectedAccountIds.isEmpty ||
           (t.accountId != null && _selectedAccountIds.contains(t.accountId));
 
-      bool tagMatch = true;
-      if (_selectedTagIds.isNotEmpty) {
-        tagMatch =
-            t.tags?.any((tag) => _selectedTagIds.contains(tag.id)) ?? false;
-      }
-
-      bool personMatch = true;
-      if (_selectedPersonIds.isNotEmpty) {
-        personMatch =
-            t.people?.any((person) => _selectedPersonIds.contains(person.id)) ??
-            false;
-      }
-
-      return dateMatch &&
-          typeMatch &&
-          categoryMatch &&
-          accountMatch &&
-          tagMatch &&
-          personMatch;
+      return dateMatch && typeMatch && categoryMatch && accountMatch;
     }).toList();
 
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: SlideTransition(
-        position: _slideAnimation,
-        child: Container(
-          decoration: BoxDecoration(
-            color: colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          ),
-          height: MediaQuery.of(context).size.height * 0.9,
-          child: Column(
-            children: [
-              // --- Drag Handle ---
-              _buildDragHandle(colorScheme),
-
-              // --- Header ---
-              _buildHeader(theme, colorScheme),
-
-              const Divider(height: 1),
-
-              // --- Content ---
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.all(24),
-                  physics: const BouncingScrollPhysics(),
-                  children: [
-                    // 1. Type Toggle with Hero Animation
-                    _AnimatedSection(
-                      delay: 0,
-                      child: ModernSlidingToggle(
-                        labels: const ['Expense', 'Income'],
-                        selectedIndex: _selectedType == 'expense' ? 0 : 1,
-                        onTabChanged: (index) {
-                          final newType = index == 0 ? 'expense' : 'income';
-                          if (newType != _selectedType) {
-                            setState(() {
-                              _selectedType = newType;
-                              _selectedCategories.clear();
-                            });
-                          }
-                        },
-                      ),
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // 2. Filter Cards
-                    _AnimatedSection(
-                      delay: 100,
-                      child: _buildFilterCard(
-                        context,
-                        icon: Icons.calendar_today_rounded,
-                        label: "Date Range",
-                        value: _getDateRangeLabel(),
-                        onTap: () => _showDateSheet(context),
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    _AnimatedSection(
-                      delay: 150,
-                      child: _buildFilterCard(
-                        context,
-                        icon: Icons.category_rounded,
-                        label: "Category",
-                        value: _selectedCategories.isEmpty
-                            ? "All"
-                            : "${_selectedCategories.length} selected",
-                        hasSelection: _selectedCategories.isNotEmpty,
-                        onTap: () => _showSelectionSheet(
-                          context,
-                          "Select ${_selectedType == 'expense' ? 'Expense' : 'Income'} Categories",
-                          _selectedType == 'expense'
-                              ? TransactionCategories.expense
-                              : TransactionCategories.income,
-                          _selectedCategories,
-                          (selected) =>
-                              setState(() => _selectedCategories = selected),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    _AnimatedSection(
-                      delay: 200,
-                      child: _buildFilterCard(
-                        context,
-                        icon: Icons.account_balance_rounded,
-                        label: "Account",
-                        value: _selectedAccountIds.isEmpty
-                            ? "All"
-                            : "${_selectedAccountIds.length} selected",
-                        hasSelection: _selectedAccountIds.isNotEmpty,
-                        onTap: () {
-                          final accounts = context
-                              .read<AccountProvider>()
-                              .accounts;
-                          _showSelectionSheet(
-                            context,
-                            "Select Accounts",
-                            accounts.map((e) => e.bankName).toList(),
-                            _selectedAccountIds,
-                            (selectedIds) => setState(
-                              () => _selectedAccountIds = selectedIds,
-                            ),
-                            optionIds: accounts.map((e) => e.id).toList(),
-                          );
-                        },
-                      ),
-                    ),
-
-                    const SizedBox(height: 40),
-
-                    // 3. Price Range Section
-                    _AnimatedSection(
-                      delay: 250,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                "Price Range",
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: _selectedType == 'income'
-                                      ? theme
-                                            .extension<AppColors>()!
-                                            .income
-                                            .withValues(alpha: 0.1)
-                                      : theme
-                                            .extension<AppColors>()!
-                                            .expense
-                                            .withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  "${filteredForGraph.length} transactions",
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: _selectedType == 'income'
-                                        ? theme.extension<AppColors>()!.income
-                                        : theme.extension<AppColors>()!.expense,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-
-                          // Graph container - removed border, made it blend
-                          Container(
-                            height: 100,
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            child: PriceDistributionChart(
-                              transactions: filteredForGraph,
-                              minRange: _currentPriceRange.start,
-                              maxRange: _currentPriceRange.end,
-                              color: _selectedType == 'income'
-                                  ? theme.extension<AppColors>()!.income
-                                  : theme.extension<AppColors>()!.expense,
-                              maxCap: _absMaxAmount,
-                            ),
-                          ),
-
-                          const SizedBox(height: 24),
-
-                          // Modern Slider
-                          SliderTheme(
-                            data: SliderTheme.of(context).copyWith(
-                              activeTrackColor: _selectedType == 'income'
-                                  ? theme.extension<AppColors>()!.income
-                                  : theme.extension<AppColors>()!.expense,
-                              inactiveTrackColor:
-                                  colorScheme.surfaceContainerHighest,
-                              thumbColor: _selectedType == 'income'
-                                  ? theme.extension<AppColors>()!.income
-                                  : theme.extension<AppColors>()!.expense,
-                              overlayColor:
-                                  (_selectedType == 'income'
-                                          ? theme.extension<AppColors>()!.income
-                                          : theme
-                                                .extension<AppColors>()!
-                                                .expense)
-                                      .withValues(alpha: 0.2),
-                              trackHeight: 6,
-                              thumbShape: const RoundSliderThumbShape(
-                                enabledThumbRadius: 12,
-                                elevation: 4,
-                              ),
-                              overlayShape: const RoundSliderOverlayShape(
-                                overlayRadius: 24,
-                              ),
-                            ),
-                            child: RangeSlider(
-                              values: _currentPriceRange,
-                              min: 0,
-                              max: _absMaxAmount,
-                              onChanged: (values) =>
-                                  setState(() => _currentPriceRange = values),
-                            ),
-                          ),
-
-                          const SizedBox(height: 16),
-
-                          // Price Input Boxes
-                          Row(
-                            children: [
-                              Expanded(
-                                child: ModernPriceInput(
-                                  currencySymbol,
-                                  _currentPriceRange.start,
-                                  label: "Min",
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: colorScheme.surfaceContainerHighest,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Icons.remove,
-                                  size: 16,
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: ModernPriceInput(
-                                  currencySymbol,
-                                  _currentPriceRange.end,
-                                  label: "Max",
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-                  ],
-                ),
-              ),
-
-              // --- Bottom Bar with Glassmorphic Effect ---
-              _buildBottomBar(context, colorScheme, filteredForGraph.length),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDragHandle(ColorScheme colorScheme) {
-    return Center(
-      child: Container(
-        margin: const EdgeInsets.only(top: 12, bottom: 4),
-        width: 40,
-        height: 4,
-        decoration: BoxDecoration(
-          color: colorScheme.outlineVariant,
-          borderRadius: BorderRadius.circular(2),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader(ThemeData theme, ColorScheme colorScheme) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-      child: Center(
-        child: Text(
-          "Filter Actions",
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: colorScheme.onSurface,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilterCard(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required String value,
-    required VoidCallback onTap,
-    bool hasSelection = false,
-  }) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Ink(
-          decoration: BoxDecoration(
-            color: hasSelection
-                ? colorScheme.primaryContainer.withValues(alpha: 0.3)
-                : colorScheme.surfaceContainerHigh.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: hasSelection
-                      ? colorScheme.primary.withValues(alpha: 0.2)
-                      : colorScheme.surface.withValues(alpha: 0.5),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  icon,
-                  size: 18,
-                  color: hasSelection
-                      ? colorScheme.primary
-                      : colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      value,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.onSurface,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              if (hasSelection)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colorScheme.primary,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    "Active",
-                    style: TextStyle(
-                      color: colorScheme.onPrimary,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                )
-              else
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                  size: 20,
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBottomBar(
-    BuildContext context,
-    ColorScheme colorScheme,
-    int resultCount,
-  ) {
-    final activeCount = _countActiveFilters();
+    // Dynamically fetch lists
+    final availableCategories = _selectedType == 'expense'
+        ? TransactionCategories.expense
+        : TransactionCategories.income;
+    final availableAccounts = context.read<AccountProvider>().accounts;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        border: Border(
-          top: BorderSide(
-            color: colorScheme.outlineVariant.withValues(alpha: 0.2),
-          ),
-        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
       ),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          children: [
-            Expanded(
-              child: TextButton(
-                onPressed: () {
-                  widget.onReset();
-                  Navigator.pop(context);
-                },
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: colorScheme.surfaceContainer,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                child: Text(
-                  "Reset${activeCount > 0 ? ' ($activeCount)' : ''}",
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: colorScheme.onSurface,
-                    fontSize: 16,
-                  ),
+      height: MediaQuery.of(context).size.height * 0.92,
+      child: Column(
+        children: [
+          // --- HEADER & DRAG HANDLE ---
+          Container(
+            padding: const EdgeInsets.fromLTRB(24, 12, 16, 12),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.2),
                 ),
               ),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              flex: 2,
+            child: Column(
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Filters",
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        widget.onReset();
+                        Navigator.pop(context);
+                      },
+                      child: Text(
+                        "Reset All",
+                        style: TextStyle(
+                          color: colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // --- SCROLLABLE CONTENT ---
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              physics: const BouncingScrollPhysics(),
+              children: [
+                // 1. TRANSACTION TYPE (Segmented Control)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: ModernSlidingToggle(
+                    labels: const ['Expense', 'Income'],
+                    selectedIndex: _selectedType == 'expense' ? 0 : 1,
+                    onTabChanged: (index) {
+                      final newType = index == 0 ? 'expense' : 'income';
+                      if (newType != _selectedType) {
+                        setState(() {
+                          _selectedType = newType;
+                          _selectedCategories.clear();
+                        });
+                      }
+                    },
+                  ),
+                ),
+                const SizedBox(height: 32),
+
+                // 2. DATE RANGE (Horizontal Pills)
+                _buildSectionTitle(theme, "TIME PERIOD"),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  physics: const BouncingScrollPhysics(),
+                  child: Row(
+                    children: [
+                      _buildChoiceChip(
+                        theme,
+                        label: 'All Time',
+                        isSelected: _dateRangeType == 'all_time',
+                        onTap: () => _setDateRange('all_time'),
+                      ),
+                      _buildChoiceChip(
+                        theme,
+                        label: 'Today',
+                        isSelected: _dateRangeType == 'today',
+                        onTap: () => _setDateRange('today'),
+                      ),
+                      _buildChoiceChip(
+                        theme,
+                        label: 'This Month',
+                        isSelected: _dateRangeType == 'this_month',
+                        onTap: () => _setDateRange('this_month'),
+                      ),
+                      _buildChoiceChip(
+                        theme,
+                        label: 'This Year',
+                        isSelected: _dateRangeType == 'this_year',
+                        onTap: () => _setDateRange('this_year'),
+                      ),
+                      _buildChoiceChip(
+                        theme,
+                        label: _dateRangeType == 'custom' && _startDate != null
+                            ? "${DateFormat('MMM d').format(_startDate!)} - ${DateFormat('MMM d').format(_endDate!)}"
+                            : 'Custom...',
+                        isSelected: _dateRangeType == 'custom',
+                        icon: Icons.calendar_today_rounded,
+                        onTap: () => _setDateRange('custom'),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 32),
+
+                // 3. CATEGORIES (Inline Wrap)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildSectionTitle(theme, "CATEGORIES", padding: false),
+                      if (_selectedCategories.isNotEmpty)
+                        GestureDetector(
+                          onTap: () =>
+                              setState(() => _selectedCategories.clear()),
+                          child: Text(
+                            "Clear",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.error,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 12,
+                    children: availableCategories.map((cat) {
+                      final isSelected = _selectedCategories.contains(cat);
+                      return _buildFilterChip(
+                        theme,
+                        label: cat,
+                        isSelected: isSelected,
+                        onTap: () {
+                          setState(() {
+                            if (isSelected) {
+                              _selectedCategories.remove(cat);
+                            } else {
+                              _selectedCategories.add(cat);
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ),
+                const SizedBox(height: 32),
+
+                // 4. ACCOUNTS (Inline Wrap)
+                if (availableAccounts.isNotEmpty) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildSectionTitle(theme, "ACCOUNTS", padding: false),
+                        if (_selectedAccountIds.isNotEmpty)
+                          GestureDetector(
+                            onTap: () =>
+                                setState(() => _selectedAccountIds.clear()),
+                            child: Text(
+                              "Clear",
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.error,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 12,
+                      children: availableAccounts.map((acc) {
+                        final isSelected = _selectedAccountIds.contains(acc.id);
+                        return _buildFilterChip(
+                          theme,
+                          label: acc.bankName,
+                          isSelected: isSelected,
+                          onTap: () {
+                            setState(() {
+                              if (isSelected) {
+                                _selectedAccountIds.remove(acc.id);
+                              } else {
+                                _selectedAccountIds.add(acc.id);
+                              }
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                ],
+
+                // 5. PRICE RANGE
+                _buildSectionTitle(theme, "AMOUNT RANGE"),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    children: [
+                      // Graph container
+                      Container(
+                        height: 80,
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: PriceDistributionChart(
+                          transactions: filteredForGraph,
+                          minRange: _currentPriceRange.start,
+                          maxRange: _currentPriceRange.end,
+                          color: _selectedType == 'income'
+                              ? theme.extension<AppColors>()?.income ??
+                                    Colors.green
+                              : theme.extension<AppColors>()?.expense ??
+                                    Colors.red,
+                          maxCap: _absMaxAmount,
+                        ),
+                      ),
+                      // Range Slider
+                      SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          activeTrackColor: _selectedType == 'income'
+                              ? theme.extension<AppColors>()?.income
+                              : theme.extension<AppColors>()?.expense,
+                          inactiveTrackColor:
+                              colorScheme.surfaceContainerHighest,
+                          thumbColor: _selectedType == 'income'
+                              ? theme.extension<AppColors>()?.income
+                              : theme.extension<AppColors>()?.expense,
+                          trackHeight: 4,
+                          rangeThumbShape: const RoundRangeSliderThumbShape(
+                            enabledThumbRadius: 10,
+                            elevation: 2,
+                          ),
+                        ),
+                        child: RangeSlider(
+                          values: _currentPriceRange,
+                          min: 0,
+                          max: _absMaxAmount,
+                          onChanged: (values) =>
+                              setState(() => _currentPriceRange = values),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Direct Inputs
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ModernPriceInput(
+                              currencySymbol,
+                              _currentPriceRange.start,
+                              label: "Minimum",
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Container(
+                              height: 2,
+                              width: 12,
+                              color: colorScheme.onSurfaceVariant.withValues(
+                                alpha: 0.3,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: ModernPriceInput(
+                              currencySymbol,
+                              _currentPriceRange.end,
+                              label: "Maximum",
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 40),
+              ],
+            ),
+          ),
+
+          // --- STICKY BOTTOM ACTION BAR ---
+          Container(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, -4),
+                ),
+              ],
+            ),
+            child: SafeArea(
+              top: false,
               child: FilledButton(
                 onPressed: _apply,
                 style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  minimumSize: const Size(double.infinity, 56),
                   backgroundColor: colorScheme.primary,
                   foregroundColor: colorScheme.onPrimary,
                   shape: RoundedRectangleBorder(
@@ -765,13 +577,112 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
                   ),
                   elevation: 0,
                 ),
-                child: Text(
-                  "Show $resultCount Results",
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Apply Filters",
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    if (_countActiveFilters() > 0) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colorScheme.onPrimary.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          "${_countActiveFilters()}",
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper widget for small caps section titles
+  Widget _buildSectionTitle(
+    ThemeData theme,
+    String title, {
+    bool padding = true,
+  }) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: padding ? 24 : 0,
+        right: padding ? 24 : 0,
+        bottom: 12,
+      ),
+      child: Text(
+        title,
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.2,
+        ),
+      ),
+    );
+  }
+
+  // Helper widget for horizontal scrolling single-choice pills (Date Range)
+  Widget _buildChoiceChip(
+    ThemeData theme, {
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+    IconData? icon,
+  }) {
+    final colorScheme = theme.colorScheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? colorScheme.primary
+              : colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? colorScheme.primary : Colors.transparent,
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(
+                icon,
+                size: 14,
+                color: isSelected
+                    ? colorScheme.onPrimary
+                    : colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected
+                    ? colorScheme.onPrimary
+                    : colorScheme.onSurface,
               ),
             ),
           ],
@@ -780,204 +691,48 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
     );
   }
 
-  String _getDateRangeLabel() {
-    if (_dateRangeType == 'today') return 'Today';
-    if (_dateRangeType == 'yesterday') return 'Yesterday';
-    if (_dateRangeType == 'this_week') return 'This Week';
-    if (_dateRangeType == 'last_week') return 'Last Week';
-    if (_dateRangeType == 'this_month') return 'This Month';
-    if (_dateRangeType == 'last_month') return 'Last Month';
-    if (_dateRangeType == 'this_year') return 'This Year';
-    if (_dateRangeType == 'last_year') return 'Last Year';
-    if (_dateRangeType == 'custom' && _startDate != null) {
-      return "${DateFormat('MMM d').format(_startDate!)}${_endDate != null ? " - ${DateFormat('MMM d').format(_endDate!)}" : ""}";
-    }
-    return 'All Time';
-  }
-
-  void _showDateSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => ModernSelectionSheet(
-        title: "Date Range",
-        icon: Icons.calendar_today_rounded,
-        items: [
-          SelectionItem(
-            title: "All Time",
-            icon: Icons.all_inclusive_rounded,
-            isSelected: _dateRangeType == 'all_time',
-            onTap: () {
-              _setDateRange('all_time');
-              Navigator.pop(ctx);
-            },
-          ),
-          SelectionItem(
-            title: "Today",
-            icon: Icons.today_rounded,
-            isSelected: _dateRangeType == 'today',
-            onTap: () {
-              _setDateRange('today');
-              Navigator.pop(ctx);
-            },
-          ),
-          SelectionItem(
-            title: "Yesterday",
-            icon: Icons.history_rounded,
-            isSelected: _dateRangeType == 'yesterday',
-            onTap: () {
-              _setDateRange('yesterday');
-              Navigator.pop(ctx);
-            },
-          ),
-          SelectionItem(
-            title: "This Week",
-            icon: Icons.date_range_rounded,
-            isSelected: _dateRangeType == 'this_week',
-            onTap: () {
-              _setDateRange('this_week');
-              Navigator.pop(ctx);
-            },
-          ),
-          SelectionItem(
-            title: "Last Week",
-            icon: Icons.history_rounded,
-            isSelected: _dateRangeType == 'last_week',
-            onTap: () {
-              _setDateRange('last_week');
-              Navigator.pop(ctx);
-            },
-          ),
-          SelectionItem(
-            title: "This Month",
-            icon: Icons.calendar_month_rounded,
-            isSelected: _dateRangeType == 'this_month',
-            onTap: () {
-              _setDateRange('this_month');
-              Navigator.pop(ctx);
-            },
-          ),
-          SelectionItem(
-            title: "Last Month",
-            icon: Icons.calendar_today_rounded,
-            isSelected: _dateRangeType == 'last_month',
-            onTap: () {
-              _setDateRange('last_month');
-              Navigator.pop(ctx);
-            },
-          ),
-          SelectionItem(
-            title: "This Year",
-            icon: Icons.calendar_view_month_rounded,
-            isSelected: _dateRangeType == 'this_year',
-            onTap: () {
-              _setDateRange('this_year');
-              Navigator.pop(ctx);
-            },
-          ),
-          SelectionItem(
-            title: "Last Year",
-            icon: Icons.history_rounded,
-            isSelected: _dateRangeType == 'last_year',
-            onTap: () {
-              _setDateRange('last_year');
-              Navigator.pop(ctx);
-            },
-          ),
-          SelectionItem(
-            title: "Custom Range",
-            icon: Icons.date_range_rounded,
-            isSelected: _dateRangeType == 'custom',
-            onTap: () {
-              Navigator.pop(ctx);
-              _setDateRange('custom');
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showSelectionSheet(
-    BuildContext context,
-    String title,
-    List<String> options,
-    List<String> currentSelection,
-    Function(List<String>) onConfirm, {
-    List<String>? optionIds,
+  // Helper widget for multi-choice wraps (Categories, Accounts)
+  Widget _buildFilterChip(
+    ThemeData theme, {
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
   }) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => MultiSelectionSheet(
-        title: title,
-        options: options,
-        optionIds: optionIds,
-        initialSelection: currentSelection,
-        onConfirm: onConfirm,
+    final colorScheme = theme.colorScheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? colorScheme.primaryContainer
+              : colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? colorScheme.primary.withValues(alpha: 0.5)
+                : colorScheme.outlineVariant.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            color: isSelected
+                ? colorScheme.onPrimaryContainer
+                : colorScheme.onSurface,
+          ),
+        ),
       ),
-    );
-  }
-}
-
-// --- ANIMATED SECTION WIDGET ---
-class _AnimatedSection extends StatefulWidget {
-  final Widget child;
-  final int delay;
-
-  const _AnimatedSection({required this.child, required this.delay});
-
-  @override
-  State<_AnimatedSection> createState() => _AnimatedSectionState();
-}
-
-class _AnimatedSectionState extends State<_AnimatedSection>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
-    );
-
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
-
-    Future.delayed(Duration(milliseconds: widget.delay), () {
-      if (mounted) _controller.forward();
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: SlideTransition(position: _slideAnimation, child: widget.child),
     );
   }
 }
 
 // --- MODERN SLIDING TOGGLE ---
+// Kept logic but refined aesthetics heavily
 class ModernSlidingToggle extends StatelessWidget {
   final List<String> labels;
   final int selectedIndex;
@@ -995,17 +750,17 @@ class ModernSlidingToggle extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
-      height: 48,
+      height: 52,
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(24),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(16),
       ),
       padding: const EdgeInsets.all(4),
       child: Stack(
         children: [
           AnimatedAlign(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOutCubic,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOutCubic,
             alignment: selectedIndex == 0
                 ? Alignment.centerLeft
                 : Alignment.centerRight,
@@ -1014,12 +769,12 @@ class ModernSlidingToggle extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   color: colorScheme.surface,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
@@ -1037,7 +792,9 @@ class ModernSlidingToggle extends StatelessWidget {
                     child: AnimatedDefaultTextStyle(
                       duration: const Duration(milliseconds: 200),
                       style: TextStyle(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.w500,
                         fontSize: 14,
                         color: isSelected
                             ? colorScheme.onSurface
@@ -1057,6 +814,7 @@ class ModernSlidingToggle extends StatelessWidget {
 }
 
 // --- MODERN PRICE INPUT ---
+// Refined to look like a solid input field
 class ModernPriceInput extends StatelessWidget {
   final String symbol;
   final double value;
@@ -1074,10 +832,13 @@ class ModernPriceInput extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(12),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.2),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1085,30 +846,33 @@ class ModernPriceInput extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              fontSize: 10,
-              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+              fontSize: 11,
+              color: colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 4),
           Row(
             children: [
               Text(
                 symbol,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 16,
                   color: colorScheme.primary,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
-              const SizedBox(width: 2),
-              Text(
-                value.toStringAsFixed(0),
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: colorScheme.onSurface,
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  value.toStringAsFixed(0),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: colorScheme.onSurface,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
@@ -1119,7 +883,8 @@ class ModernPriceInput extends StatelessWidget {
   }
 }
 
-// --- PRICE DISTRIBUTION CHART (Improved) ---
+// --- PRICE DISTRIBUTION CHART ---
+// Intact from original, layout wrapper improved
 class PriceDistributionChart extends StatelessWidget {
   final List<TransactionModel> transactions;
   final double minRange;
@@ -1192,14 +957,8 @@ class _ModernDistributionPainter extends CustomPainter {
       return;
     }
 
-    // Draw background gradient area
     _drawBackgroundArea(canvas, size, bins, maxCount, binCount);
-
-    // Draw active range with gradient
     _drawActiveRange(canvas, size, bins, maxCount, binCount);
-
-    // Draw grid lines
-    _drawGridLines(canvas, size);
   }
 
   void _drawBackgroundArea(
@@ -1285,33 +1044,20 @@ class _ModernDistributionPainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [color.withValues(alpha: 0.4), color.withValues(alpha: 0.2)],
+        colors: [color.withValues(alpha: 0.4), color.withValues(alpha: 0.1)],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
       ..style = PaintingStyle.fill;
 
     canvas.drawPath(path, paint);
 
-    // Draw stroke
     final strokePaint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.5
+      ..strokeWidth = 2
       ..strokeCap = StrokeCap.round;
 
     canvas.drawPath(path, strokePaint);
-
     canvas.restore();
-  }
-
-  void _drawGridLines(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.grey.withValues(alpha: 0.1)
-      ..strokeWidth = 1;
-
-    for (int i = 1; i <= 3; i++) {
-      final y = (size.height / 4) * i;
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
-    }
   }
 
   void _drawEmptyState(Canvas canvas, Size size) {
@@ -1321,12 +1067,12 @@ class _ModernDistributionPainter extends CustomPainter {
 
     final path = Path()
       ..moveTo(0, size.height)
-      ..lineTo(0, size.height * 0.7)
+      ..lineTo(0, size.height * 0.8)
       ..quadraticBezierTo(
         size.width / 2,
-        size.height * 0.3,
+        size.height * 0.5,
         size.width,
-        size.height * 0.6,
+        size.height * 0.8,
       )
       ..lineTo(size.width, size.height)
       ..close();
@@ -1336,295 +1082,4 @@ class _ModernDistributionPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-}
-
-// --- MODERN SELECTION SHEET (Single Choice) ---
-class SelectionItem {
-  final String title;
-  final IconData icon;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  SelectionItem({
-    required this.title,
-    required this.icon,
-    required this.isSelected,
-    required this.onTap,
-  });
-}
-
-class ModernSelectionSheet extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final List<SelectionItem> items;
-
-  const ModernSelectionSheet({
-    super.key,
-    required this.title,
-    required this.icon,
-    required this.items,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Container(
-      margin: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
-            child: Row(
-              children: [
-                Icon(icon, color: colorScheme.primary, size: 24),
-                const SizedBox(width: 16),
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1),
-          Flexible(
-            child: ListView.separated(
-              shrinkWrap: true,
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              itemCount: items.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 4),
-              itemBuilder: (ctx, i) {
-                final item = items[i];
-                return Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: item.onTap,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
-                      child: Row(
-                        children: [
-                          if (item.isSelected)
-                            Icon(
-                              Icons.check_rounded,
-                              size: 20,
-                              color: colorScheme.primary,
-                            )
-                          else
-                            const SizedBox(width: 20),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Text(
-                              item.title,
-                              style: TextStyle(
-                                fontWeight: item.isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.normal,
-                                color: item.isSelected
-                                    ? colorScheme.primary
-                                    : colorScheme.onSurface,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 12),
-        ],
-      ),
-    );
-  }
-}
-
-// --- MULTI SELECTION SHEET ---
-class MultiSelectionSheet extends StatefulWidget {
-  final String title;
-  final List<String> options;
-  final List<String>? optionIds;
-  final List<String> initialSelection;
-  final Function(List<String>) onConfirm;
-
-  const MultiSelectionSheet({
-    super.key,
-    required this.title,
-    required this.options,
-    this.optionIds,
-    required this.initialSelection,
-    required this.onConfirm,
-  });
-
-  @override
-  State<MultiSelectionSheet> createState() => _MultiSelectionSheetState();
-}
-
-class _MultiSelectionSheetState extends State<MultiSelectionSheet> {
-  late List<String> _selected;
-
-  @override
-  void initState() {
-    super.initState();
-    _selected = List.from(widget.initialSelection);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final ids = widget.optionIds ?? widget.options;
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.8,
-      margin: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Column(
-        children: [
-          // Header
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    widget.title,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                if (_selected.isNotEmpty)
-                  TextButton(
-                    onPressed: () => setState(() => _selected.clear()),
-                    style: TextButton.styleFrom(
-                      foregroundColor: colorScheme.error,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                    ),
-                    child: const Text("Clear all"),
-                  ),
-              ],
-            ),
-          ),
-
-          const Divider(height: 1),
-
-          // List
-          Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              itemCount: widget.options.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 4),
-              itemBuilder: (ctx, i) {
-                final isSelected = _selected.contains(ids[i]);
-                return Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () {
-                      setState(() {
-                        isSelected
-                            ? _selected.remove(ids[i])
-                            : _selected.add(ids[i]);
-                      });
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            isSelected
-                                ? Icons.check_circle_rounded
-                                : Icons.radio_button_unchecked_rounded,
-                            color: isSelected
-                                ? colorScheme.primary
-                                : colorScheme.onSurfaceVariant.withValues(
-                                    alpha: 0.5,
-                                  ),
-                            size: 24,
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Text(
-                              widget.options[i],
-                              style: TextStyle(
-                                fontWeight: isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.normal,
-                                color: isSelected
-                                    ? colorScheme.primary
-                                    : colorScheme.onSurface,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          // Bottom Button
-          Container(
-            padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-            decoration: BoxDecoration(
-              border: Border(
-                top: BorderSide(
-                  color: colorScheme.outlineVariant.withValues(alpha: 0.2),
-                ),
-              ),
-            ),
-            child: SafeArea(
-              top: false,
-              child: FilledButton(
-                onPressed: () {
-                  widget.onConfirm(_selected);
-                  Navigator.pop(context);
-                },
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 56),
-                  backgroundColor: colorScheme.primary,
-                  foregroundColor: colorScheme.onPrimary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 0,
-                ),
-                child: Text(
-                  _selected.isEmpty ? "Select" : "Apply (${_selected.length})",
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

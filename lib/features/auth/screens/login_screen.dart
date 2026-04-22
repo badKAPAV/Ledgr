@@ -23,7 +23,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _passwordReset() {
     // [Keep existing logic, just styling the dialog later if needed]
     final emailController = TextEditingController(
-      text: _emailController.text.trim(),
+      text: _emailController.text.trim()
     );
     showDialog<String?>(
       context: context,
@@ -70,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final authProvider = Provider.of<auth_provider.AuthProvider>(
       context,
-      listen: false,
+      listen: false
     );
     try {
       await authProvider.signIn(email, password);
@@ -248,7 +248,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ],
-      ),
+      )
     );
   }
 }
@@ -321,7 +321,7 @@ class _PasswordResetDialogContentState
           onPressed: _sendResetLink,
           child: const Text('Send Link'),
         ),
-      ],
+      ]
     );
   }
 }

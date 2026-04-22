@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
+import 'package:wallzy/common/switch/custom_switch.dart';
 import 'package:wallzy/core/helpers/transaction_category.dart';
 import 'package:wallzy/core/themes/theme.dart';
 import 'package:wallzy/features/accounts/models/account.dart';
@@ -15,10 +16,10 @@ import 'package:wallzy/features/people/models/person.dart';
 import 'package:wallzy/features/people/provider/people_provider.dart';
 import 'package:wallzy/features/people/widgets/person_picker_sheet.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
-import 'package:wallzy/features/subscription/models/subscription.dart';
-import 'package:wallzy/features/subscription/provider/subscription_provider.dart';
-import 'package:wallzy/features/subscription/screens/add_subscription_screen.dart';
-import 'package:wallzy/features/folders/models/tag.dart';
+import 'package:wallzy/features/recurring_payment/models/recurring_payment.dart';
+import 'package:wallzy/features/recurring_payment/provider/recurring_payment_provider.dart';
+import 'package:wallzy/features/recurring_payment/screens/add_recurring_payment_screen.dart';
+import 'package:wallzy/features/folders/models/folder.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
 import 'package:wallzy/features/transaction/provider/meta_provider.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
@@ -88,6 +89,7 @@ class TransactionFormState extends State<TransactionForm> {
   Person? _selectedPerson;
   bool _isLoan = false;
   String _loanSubtype = 'new'; // 'new' vs 'repayment'
+  bool _excludeFromBudgets = false;
 
   // Power Fields (Hidden by default)
   List<Tag> _selectedFolders = [];
@@ -235,6 +237,8 @@ class TransactionFormState extends State<TransactionForm> {
           _showLinkedTransaction = true;
         }
       }
+
+      _excludeFromBudgets = tx.excludeFromBudgets;
     } else {
       // New Transaction Logic
       if (widget.initialAmount != null) {
@@ -431,6 +435,7 @@ class TransactionFormState extends State<TransactionForm> {
       _newReceiptData = null;
       _existingReceiptUrl = null;
       _isDeletingReceipt = false;
+      _excludeFromBudgets = false;
 
       // Reset View State
       _showFolders = false;
@@ -617,6 +622,7 @@ class TransactionFormState extends State<TransactionForm> {
         receiptUrl: () => finalReceiptUrl,
         isTransfer: _selectedLinkedTransaction != null ? true : null,
         linkedTransactionId: () => _selectedLinkedTransaction?.transactionId,
+        excludeFromBudgets: _excludeFromBudgets,
       );
       await txProvider.updateTransaction(updatedTransaction);
       if (_selectedLinkedTransaction != null) {
@@ -656,6 +662,7 @@ class TransactionFormState extends State<TransactionForm> {
         receiptUrl: finalReceiptUrl,
         isTransfer: _selectedLinkedTransaction != null ? true : null,
         linkedTransactionId: _selectedLinkedTransaction?.transactionId,
+        excludeFromBudgets: _excludeFromBudgets,
       );
       await txProvider.addTransaction(newTransaction);
       if (_selectedLinkedTransaction != null) {
@@ -834,6 +841,47 @@ class TransactionFormState extends State<TransactionForm> {
                         : "Received from or payer",
                     icon: HugeIcons.strokeRoundedNote01,
                   ),
+
+                  const SizedBox(height: 12),
+
+                  if (widget.mode == TransactionMode.expense)
+                    Container(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 0,
+                        vertical: 8,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surfaceContainer,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.outline.withValues(alpha: 0.1),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Exclude from Budgets",
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          LedgrSwitch(
+                            value: _excludeFromBudgets,
+                            // activeColor: Theme.of(context).colorScheme.primary,
+                            onChanged: (v) => setState(() {
+                              _excludeFromBudgets = v;
+                              _markAsDirty();
+                            }),
+                          ),
+                        ],
+                      ),
+                    ),
 
                   const SizedBox(height: 24),
 
@@ -1189,7 +1237,7 @@ class TransactionFormState extends State<TransactionForm> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Switch(
+                    LedgrSwitch(
                       value: _isLoan,
                       onChanged: (v) => setState(() {
                         _isLoan = v;

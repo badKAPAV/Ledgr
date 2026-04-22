@@ -77,7 +77,7 @@ class ThemeSelector extends StatelessWidget {
             ],
           );
         },
-      ),
+      )
     );
   }
 
@@ -151,7 +151,7 @@ class _ThemeTab extends StatelessWidget {
             ],
           ),
         ),
-      ),
+      )
     );
   }
 }

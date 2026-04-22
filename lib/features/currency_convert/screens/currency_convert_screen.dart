@@ -174,7 +174,7 @@ class _CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
           initialCurrencyCode: isFrom ? _fromCurrency : _toCurrency,
           initialIsoCodeNum: isFrom ? _fromIsoCodeNum : _toIsoCodeNum,
         ),
-      ),
+      )
     );
 
     if (result != null && result is Map) {
@@ -470,7 +470,7 @@ class _CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
               ),
           ],
         ),
-      ),
+      )
     );
   }
 }
@@ -521,7 +521,7 @@ class _CurrencyDropdown extends StatelessWidget {
             Icon(Icons.keyboard_arrow_down_rounded, color: textColor, size: 20),
           ],
         ),
-      ),
+      )
     );
   }
 }

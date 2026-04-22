@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:wallzy/common/helpers/fading_divider.dart';
 import 'package:wallzy/common/widgets/empty_report_placeholder.dart';
 import 'package:wallzy/features/goals/provider/goals_provider.dart';
 import 'package:wallzy/features/accounts/provider/account_provider.dart';
@@ -70,10 +71,9 @@ class _GoalsScreenState extends State<GoalsScreen> {
                       children: [
                         Text(
                           "ALL GOALS",
-                          style: Theme.of(context).textTheme.headlineMedium
+                          style: Theme.of(context).textTheme.labelSmall
                               ?.copyWith(
-                                fontSize: 14,
-                                fontWeight: FontWeight.normal,
+                                fontWeight: FontWeight.bold,
                                 letterSpacing: 1.5,
                                 color: Theme.of(context).colorScheme.secondary,
                               ),
@@ -97,6 +97,15 @@ class _GoalsScreenState extends State<GoalsScreen> {
                               fontWeight: FontWeight.bold,
                               color: Theme.of(context).colorScheme.onSurface,
                             ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: FadingDivider(
+                            thickness: 2,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.secondary.withValues(alpha: 0.5),
                           ),
                         ),
                       ],

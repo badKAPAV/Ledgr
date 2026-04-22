@@ -107,12 +107,17 @@ class _AnalyticsWidgetState extends State<AnalyticsWidget>
           );
           label = DateFormat('d MMM').format(startDay);
           fullLabel =
-              "${DateFormat('d MMM').format(startDay)} - ${DateFormat('d MMM').format(range.end.subtract(const Duration(days: 1)))}";
+              "${DateFormat('d MMM').format(startDay)} - ${DateFormat('d MMM').format(range.end)}";
           break;
 
         case Timeframe.months:
-          var targetMonth = now.month - i;
-          var targetYear = now.year;
+          final currentTarget = BudgetCycleHelper.getTargetMonthForDate(
+            now,
+            settings.budgetCycleMode,
+            settings.budgetCycleStartDay,
+          );
+          var targetMonth = currentTarget.month - i;
+          var targetYear = currentTarget.year;
           while (targetMonth <= 0) {
             targetMonth += 12;
             targetYear--;

@@ -34,7 +34,7 @@ class _DailyExpenseGraphState extends State<DailyExpenseGraph> {
     // 1. Process Data
     final daysInMonth = DateUtils.getDaysInMonth(
       widget.monthDate.year,
-      widget.monthDate.month,
+      widget.monthDate.month
     );
     final Map<int, double> dailyTotals = {};
 

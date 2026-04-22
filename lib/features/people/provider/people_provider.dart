@@ -84,7 +84,7 @@ class PeopleProvider with ChangeNotifier {
     final existing = _people.where(
       (p) =>
           p.fullName.toLowerCase().trim() ==
-          person.fullName.toLowerCase().trim(),
+          person.fullName.toLowerCase().trim()
     );
     if (existing.isNotEmpty) {
       return existing.first;

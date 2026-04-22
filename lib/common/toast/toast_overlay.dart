@@ -45,7 +45,7 @@ class ToastOverlay {
             _currentOverlay = null;
           },
         );
-      },
+      }
     );
 
     _currentOverlay = entry;

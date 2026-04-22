@@ -190,7 +190,7 @@ class _CurrencySelectionScreenState extends State<CurrencySelectionScreen> {
                   ),
                 );
               },
-            ),
+            )
     );
   }
 }

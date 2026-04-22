@@ -34,8 +34,9 @@ class BudgetProvider with ChangeNotifier {
     final now = DateTime.now();
 
     for (int i = 1; i <= months; i++) {
-      var targetMonth = now.month - i;
-      var targetYear = now.year;
+      final currentTarget = BudgetCycleHelper.getTargetMonthForDate(now, settings.budgetCycleMode, settings.budgetCycleStartDay);
+      var targetMonth = currentTarget.month - i;
+      var targetYear = currentTarget.year;
       while (targetMonth <= 0) {
         targetMonth += 12;
         targetYear--;
@@ -61,6 +62,33 @@ class BudgetProvider with ChangeNotifier {
     }
 
     return count > 0 ? total / count : 0;
+  }
+
+  double calculateCurrentDailyBudget(SettingsProvider settings) {
+    final monthlyBudget = authProvider.user?.monthlyBudget ?? 0.0;
+    if (monthlyBudget <= 0) return 0.0;
+
+    final now = DateTime.now();
+    final cycle = BudgetCycleHelper.currentCycleRange(
+      now,
+      settings.budgetCycleMode,
+      settings.budgetCycleStartDay
+    );
+
+    final todayStart = DateTime(now.year, now.month, now.day);
+
+    final beforeTodayResult = transactionProvider.getFilteredResults(
+      TransactionFilter(startDate: cycle.start, endDate: todayStart)
+    );
+    final spentBeforeToday = beforeTodayResult.totalExpense;
+
+    final remainingMonthBudget = monthlyBudget - spentBeforeToday;
+    final daysRemaining = cycle.end.difference(todayStart).inDays + 1;
+
+    if (remainingMonthBudget > 0 && daysRemaining > 0) {
+      return remainingMonthBudget / daysRemaining;
+    }
+    return 0.0;
   }
 
   Future<void> updateMonthlyBudget(double amount) async {

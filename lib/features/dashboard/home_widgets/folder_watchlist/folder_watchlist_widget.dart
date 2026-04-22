@@ -23,7 +23,7 @@ class FolderWatchlistWidget extends StatelessWidget {
       builder: (_) => FolderSelectionSheet(
         widgetId: model.id,
         initialSelection: model.configIds,
-      ),
+      )
     );
   }
 
@@ -286,7 +286,7 @@ class FolderWatchlistWidget extends StatelessWidget {
             },
           ),
         ),
-      ],
+      ]
     );
   }
 }

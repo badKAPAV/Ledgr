@@ -87,7 +87,7 @@ class _RollingBalanceState extends State<RollingBalance> {
                   ),
           ),
         ),
-      ],
+      ]
     );
   }
 }
@@ -132,7 +132,7 @@ class _RollingDigit extends StatelessWidget {
             },
           ),
         ),
-      ],
+      ]
     );
   }
 }

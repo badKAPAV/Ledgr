@@ -47,7 +47,7 @@ class BudgetTabScreen extends StatelessWidget {
                 )
               : null,
         );
-      },
+      }
     );
   }
 }

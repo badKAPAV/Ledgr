@@ -11,6 +11,7 @@ import 'package:wallzy/core/utils/budget_cycle_helper.dart';
 import 'package:wallzy/features/auth/provider/auth_provider.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
+import 'package:wallzy/features/planning/provider/budget_provider.dart';
 import 'package:wallzy/features/transaction/screens/all_transactions_screen.dart';
 import 'package:wallzy/features/transaction/screens/search_transactions_screen.dart';
 import 'package:wallzy/features/dashboard/widgets/analytics_widget.dart';
@@ -40,6 +41,7 @@ class _HomeSliverAppBarState extends State<HomeSliverAppBar> {
     final settingsProvider = Provider.of<SettingsProvider>(context);
     final authProvider = Provider.of<AuthProvider>(context);
     final transactionProvider = Provider.of<TransactionProvider>(context);
+    final budgetProvider = Provider.of<BudgetProvider>(context);
 
     // 1. Setup Data & Formatters
     final monthlyBudget = authProvider.user?.monthlyBudget ?? 0.0;
@@ -51,11 +53,10 @@ class _HomeSliverAppBarState extends State<HomeSliverAppBar> {
 
     // 2. Calculate MONTHLY Expenses
     final now = DateTime.now();
-    final cycle = BudgetCycleHelper.getCycleRange(
-      targetMonth: now.month,
-      targetYear: now.year,
-      mode: settingsProvider.budgetCycleMode,
-      startDay: settingsProvider.budgetCycleStartDay,
+    final cycle = BudgetCycleHelper.currentCycleRange(
+      now,
+      settingsProvider.budgetCycleMode,
+      settingsProvider.budgetCycleStartDay,
     );
 
     final monthResult = transactionProvider.getFilteredResults(
@@ -64,29 +65,12 @@ class _HomeSliverAppBarState extends State<HomeSliverAppBar> {
     double monthExpense = monthResult.totalExpense;
 
     // 3. Calculate DAILY Expenses (Context Aware)
-    // Daily budget = (Monthly Budget - Spent BEFORE Today) / (Days Remaining incl Today)
     final todayStart = DateTime(now.year, now.month, now.day);
     final todayEnd = todayStart.add(const Duration(days: 1));
 
-    // Calculate spent BEFORE today in the current cycle
-    final beforeTodayResult = transactionProvider.getFilteredResults(
-      TransactionFilter(startDate: cycle.start, endDate: todayStart),
+    final double dailyBudget = budgetProvider.calculateCurrentDailyBudget(
+      settingsProvider,
     );
-    final spentBeforeToday = beforeTodayResult.totalExpense;
-
-    // Calculate Remaining Budget for the rest of the month
-    final remainingMonthBudget = monthlyBudget - spentBeforeToday;
-
-    // Calculate Days Remaining (Inclusive of Today)
-    final daysRemaining = cycle.end.difference(todayStart).inDays;
-
-    // Context Aware Daily Budget
-    // If remaining budget is <= 0, daily budget is 0.
-    // If daysRemaining is somehow 0 or less (shouldn't happen in valid cycle), handle it.
-    final double dailyBudget =
-        (monthlyBudget > 0 && remainingMonthBudget > 0 && daysRemaining > 0)
-        ? remainingMonthBudget / daysRemaining
-        : 0.0;
 
     final todayResult = transactionProvider.getFilteredResults(
       TransactionFilter(startDate: todayStart, endDate: todayEnd),
@@ -112,7 +96,7 @@ class _HomeSliverAppBarState extends State<HomeSliverAppBar> {
         monthlyBudget > 0 && todayExpense > dailyBudget;
 
     return SliverAppBar(
-      expandedHeight: 320, // Taller to accommodate the large gauge
+      expandedHeight: 300, // Taller to accommodate the large gauge
       collapsedHeight: 60,
       pinned: true,
       stretch: true,
@@ -144,7 +128,7 @@ class _HomeSliverAppBarState extends State<HomeSliverAppBar> {
             // --- Main Content ---
             SafeArea(
               child: Padding(
-                padding: const EdgeInsets.only(top: 140, bottom: 0),
+                padding: const EdgeInsets.only(top: 120, bottom: 0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -162,7 +146,7 @@ class _HomeSliverAppBarState extends State<HomeSliverAppBar> {
                               innerValue: monthProgress, // Inner is now MONTHLY
                               outerColor: isTodayOverspent
                                   ? theme.colorScheme.error
-                                  : theme.colorScheme.primary,
+                                  : theme.colorScheme.secondary,
                               innerColor: isMonthOverspent
                                   ? theme.colorScheme.error
                                   : theme.colorScheme.tertiary,
@@ -183,7 +167,7 @@ class _HomeSliverAppBarState extends State<HomeSliverAppBar> {
                                   SizedBox(
                                     height: 120, // Height for text content
                                     width:
-                                        170, // Constrain width to fit inside inner gauge (Safe for 103px radius)
+                                        140, // Constrain width to fit inside inner gauge (Safe for 103px radius)
                                     child: PageView(
                                       physics: BouncingScrollPhysics(),
                                       controller: _pageController,
@@ -319,7 +303,7 @@ class _DualRadialGaugeState extends State<DualRadialGauge>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500), // Smooth, slow entry
+      duration: const Duration(milliseconds: 1500),
     );
     _animation = CurvedAnimation(
       parent: _controller,
@@ -350,7 +334,8 @@ class _DualRadialGaugeState extends State<DualRadialGauge>
       animation: _animation,
       builder: (context, child) {
         return CustomPaint(
-          size: const Size(360, 320), // Increased Size
+          // Reduced canvas size to pull the layout footprint in
+          size: const Size(200, 200),
           painter: _DualGaugePainter(
             outerProgress: widget.outerValue * _animation.value,
             innerProgress: widget.innerValue * _animation.value,
@@ -381,29 +366,28 @@ class _DualGaugePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2); // Center exactly
+    final center = Offset(size.width / 2, size.height / 2);
 
     // CONFIGURATION
-    const double startAngle =
-        135.0 + 30; // Start at ~165 degrees (Bottom Left ish)
-    const double sweepAngle = 210.0; // Sweep 210 degrees to Right
+    const double startAngle = 135.0 + 30;
+    const double sweepAngle = 210.0;
 
-    // OUTER BAR (Thicker) - INCREASED RADIUS
-    const double outerRadius = 140;
-    const double outerStroke = 26; // Thick
+    // OUTER BAR - Smaller radius, wider stroke
+    const double outerRadius = 126; // Was 140
+    const double outerStroke = 28; // Was 26
 
-    // INNER BAR (Thinner) - INCREASED RADIUS
-    const double innerRadius = 115;
-    const double innerStroke = 8; // Thin
+    // INNER BAR - Smaller radius, significantly wider stroke
+    const double innerRadius = 100; // Was 115
+    const double innerStroke = 6; // Was 8
 
     // 1. Draw Tracks
     final trackPaint = Paint()
       ..color = trackColor
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
+      ..style = PaintingStyle.stroke;
 
-    // Outer Track
+    // Outer Track -> SQUARE
     trackPaint.strokeWidth = outerStroke;
+    trackPaint.strokeCap = StrokeCap.square;
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: outerRadius),
       _degToRad(startAngle),
@@ -412,8 +396,9 @@ class _DualGaugePainter extends CustomPainter {
       trackPaint,
     );
 
-    // Inner Track
+    // Inner Track -> ROUND
     trackPaint.strokeWidth = innerStroke;
+    trackPaint.strokeCap = StrokeCap.round;
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: innerRadius),
       _degToRad(startAngle),
@@ -422,14 +407,12 @@ class _DualGaugePainter extends CustomPainter {
       trackPaint,
     );
 
-    // 2. Draw Progress (With "pixel perfect" caps)
-
-    // Outer Progress
+    // 2. Draw Progress
     final outerProgressPaint = Paint()
       ..color = outerColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = outerStroke
-      ..strokeCap = StrokeCap.round; // Radius ~4ish visually relative to size
+      ..strokeCap = StrokeCap.square;
 
     if (outerProgress > 0.01) {
       canvas.drawArc(
@@ -441,12 +424,11 @@ class _DualGaugePainter extends CustomPainter {
       );
     }
 
-    // Inner Progress
     final innerProgressPaint = Paint()
       ..color = innerColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = innerStroke
-      ..strokeCap = StrokeCap.round; // Radius 20ish visually (fully rounded)
+      ..strokeCap = StrokeCap.round;
 
     if (innerProgress > 0.01) {
       canvas.drawArc(
@@ -498,7 +480,7 @@ class _GaugeInfoContent extends StatelessWidget {
             fontSize: 10,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -510,7 +492,7 @@ class _GaugeInfoContent extends StatelessWidget {
                   // The Large Amount
                   TextSpan(
                     text: formatter.format(amount),
-                    style: theme.textTheme.displaySmall?.copyWith(
+                    style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w900,
                       color: isOverspent
                           ? theme.colorScheme.error
@@ -521,13 +503,14 @@ class _GaugeInfoContent extends StatelessWidget {
                   ),
                   // The Small Limit
                   TextSpan(
-                    text: "  / ${formatter.format(limit)}",
-                    style: theme.textTheme.displaySmall?.copyWith(
+                    text: " / ${formatter.format(limit)}",
+                    style: theme.textTheme.bodyLarge?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant.withValues(
                         alpha: 0.7,
                       ),
+                      letterSpacing: -1.5,
                       fontWeight: FontWeight.w400,
-                      fontSize: 16,
+                      fontSize: 14,
                     ),
                   ),
                 ],
@@ -535,7 +518,7 @@ class _GaugeInfoContent extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         if (isOverspent)
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -552,13 +535,26 @@ class _GaugeInfoContent extends StatelessWidget {
             ],
           )
         else if (!isOverspent) ...[
-          const SizedBox(height: 8),
-          Text(
-            "You're doing good!",
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.primary,
-              fontWeight: FontWeight.w500,
-              fontSize: 10,
+          // const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(24),
+              border: .all(
+                color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                width: 0.5,
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              child: Text(
+                "You're doing good!",
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 10,
+                ),
+              ),
             ),
           ),
         ],
@@ -595,8 +591,8 @@ class _NoBudgetState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 180,
-      width: 180,
+      height: 240, // MATCHES THE NEW GAUGE SIZE
+      width: 240, // MATCHES THE NEW GAUGE SIZE
       child: Stack(
         alignment: Alignment.center,
         clipBehavior: Clip.none,
@@ -611,7 +607,6 @@ class _NoBudgetState extends StatelessWidget {
               trackColor: Colors.transparent,
             ),
           ),
-
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
@@ -622,13 +617,14 @@ class _NoBudgetState extends StatelessWidget {
                   fontFamily: 'momo',
                   color: theme.colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w600,
+                  fontSize: 14, // Slightly smaller to fit the new cozy center
                 ),
               ),
               const SizedBox(height: 12),
               SizedBox(
                 height: 40,
                 child: IlluminatedBorder(
-                  borderWidth: 4,
+                  borderWidth: 2, // Adjusted to match the chunkier UI nicely
                   glowColor: theme.colorScheme.onSurface,
                   borderRadius: BorderRadius.circular(20),
                   child: FilledButton.icon(

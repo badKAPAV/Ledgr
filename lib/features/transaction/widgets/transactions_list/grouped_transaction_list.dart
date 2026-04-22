@@ -103,7 +103,7 @@ class GroupedTransactionList extends StatelessWidget {
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.2,
-                  color: theme.colorScheme.secondary,
+                  color: theme.colorScheme.secondary.withValues(alpha: 0.5),
                 ),
               ),
               if (totalExpense > 0)

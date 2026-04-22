@@ -111,7 +111,7 @@ class _UserProfileScreenState extends State<UserProfileScreen>
             ],
           ),
         ),
-      ),
+      )
     );
   }
 
@@ -239,7 +239,7 @@ class _UserProfileScreenState extends State<UserProfileScreen>
             child: const Text('Update'),
           ),
         ],
-      ),
+      )
     );
   }
 
@@ -548,7 +548,7 @@ class _UserProfileScreenState extends State<UserProfileScreen>
               ),
           ],
         ),
-      ),
+      )
     );
   }
 
@@ -596,7 +596,7 @@ class _UserProfileScreenState extends State<UserProfileScreen>
             child: const Text('Set Password'),
           ),
         ],
-      ),
+      )
     );
   }
 
@@ -660,7 +660,7 @@ class _SectionHeader extends StatelessWidget {
           fontWeight: FontWeight.bold,
           letterSpacing: 1.2,
         ),
-      ),
+      )
     );
   }
 }
@@ -712,7 +712,7 @@ class _ModernTextField extends StatelessWidget {
           border: InputBorder.none,
           contentPadding: const EdgeInsets.all(20),
         ),
-      ),
+      )
     );
   }
 }
@@ -741,7 +741,7 @@ class _DialogTextField extends StatelessWidget {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         filled: true,
         fillColor: Theme.of(context).colorScheme.surface,
-      ),
+      )
     );
   }
 }
@@ -776,7 +776,7 @@ class _ImageSourceOption extends StatelessWidget {
             Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
           ],
         ),
-      ),
+      )
     );
   }
 }

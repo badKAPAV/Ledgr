@@ -11,7 +11,7 @@ import 'package:wallzy/features/transaction/provider/meta_provider.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
 import 'package:wallzy/features/categories/provider/category_provider.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
-import 'package:wallzy/features/folders/models/tag.dart';
+import 'package:wallzy/features/folders/models/folder.dart';
 import 'package:wallzy/features/transaction/widgets/add_edit_transaction_widgets/transaction_widgets.dart';
 import 'package:uuid/uuid.dart';
 import 'package:collection/collection.dart';

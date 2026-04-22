@@ -19,7 +19,7 @@ class CropperPainter extends CustomPainter {
     final cropRect = Rect.fromCenter(
       center: center,
       width: cropSize.width,
-      height: cropSize.height,
+      height: cropSize.height
     );
 
     // 1. Draw transformed image
@@ -33,7 +33,7 @@ class CropperPainter extends CustomPainter {
       canvas: canvas,
       rect: Rect.fromLTWH(0, 0, size.width, size.height),
       image: image,
-      fit: BoxFit.contain,
+      fit: BoxFit.contain
     );
     canvas.restore();
 
@@ -45,7 +45,7 @@ class CropperPainter extends CustomPainter {
     final overlayPath = Path.combine(
       PathOperation.difference,
       backgroundPath,
-      cutoutPath,
+      cutoutPath
     );
     canvas.drawPath(overlayPath, paint);
 
@@ -55,7 +55,7 @@ class CropperPainter extends CustomPainter {
       Paint()
         ..color = Colors.white
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 2,
+        ..strokeWidth = 2
     );
   }
 

@@ -260,7 +260,7 @@ class _AuthEmailScreenState extends State<AuthEmailScreen> {
             ],
           ),
         ],
-      ),
+      )
     );
   }
 
@@ -447,7 +447,7 @@ class _AuthEmailScreenState extends State<AuthEmailScreen> {
             ),
           ],
         ),
-      ),
+      )
     );
   }
 
@@ -570,7 +570,7 @@ class _AuthEmailScreenState extends State<AuthEmailScreen> {
             ).animate().fadeIn(delay: 400.ms),
           ],
         ),
-      ),
+      )
     );
   }
 }

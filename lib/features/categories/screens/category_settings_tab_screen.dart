@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
+import 'package:wallzy/common/helpers/fading_divider.dart';
 import 'package:wallzy/core/themes/theme.dart';
 import 'package:wallzy/features/categories/models/category.dart';
 import 'package:wallzy/features/categories/provider/category_provider.dart';
@@ -77,28 +78,49 @@ class _CategorySettingsTabScreenState extends State<CategorySettingsTabScreen> {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(24, 8, 24, 12),
-                  child: Text(
-                    "EXPENSE",
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontSize: 14,
-                      fontWeight: FontWeight.normal,
-                      color: theme.colorScheme.outline,
-                      letterSpacing: 1.5,
-                    ),
+                  child: Row(
+                    children: [
+                      Text(
+                        "EXPENSE CATEGORIES",
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.5,
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: FadingDivider(
+                          thickness: 2,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.secondary.withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  return _CategoryCard(
-                    category: expenseCategories[index],
-                    provider: categoryProvider,
-                    onTap: () => _showAddEditCategoryModal(
-                      context,
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                sliver: SliverGrid(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 1.5,
+                  ),
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    return _CategoryCard(
                       category: expenseCategories[index],
-                    ),
-                  );
-                }, childCount: expenseCategories.length),
+                      provider: categoryProvider,
+                      onTap: () => _showAddEditCategoryModal(
+                        context,
+                        category: expenseCategories[index],
+                      ),
+                    );
+                  }, childCount: expenseCategories.length),
+                ),
               ),
             ],
 
@@ -107,28 +129,49 @@ class _CategorySettingsTabScreenState extends State<CategorySettingsTabScreen> {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(24, 32, 24, 12),
-                  child: Text(
-                    "INCOME",
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontSize: 14,
-                      fontWeight: FontWeight.normal,
-                      color: theme.colorScheme.outline,
-                      letterSpacing: 1.5,
-                    ),
+                  child: Row(
+                    children: [
+                      Text(
+                        "INCOME CATEGORIES",
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.5,
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: FadingDivider(
+                          thickness: 2,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.secondary.withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  return _CategoryCard(
-                    category: incomeCategories[index],
-                    provider: categoryProvider,
-                    onTap: () => _showAddEditCategoryModal(
-                      context,
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                sliver: SliverGrid(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 1.5,
+                  ),
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    return _CategoryCard(
                       category: incomeCategories[index],
-                    ),
-                  );
-                }, childCount: incomeCategories.length),
+                      provider: categoryProvider,
+                      onTap: () => _showAddEditCategoryModal(
+                        context,
+                        category: incomeCategories[index],
+                      ),
+                    );
+                  }, childCount: incomeCategories.length),
+                ),
               ),
             ],
 
@@ -189,7 +232,6 @@ class _CategorySettingsTabScreenState extends State<CategorySettingsTabScreen> {
   }
 }
 
-// --- MODERN CATEGORY CARD ---
 class _CategoryCard extends StatelessWidget {
   final CategoryModel category;
   final CategoryProvider provider;
@@ -207,120 +249,142 @@ class _CategoryCard extends StatelessWidget {
     final isExpense = category.mode == TransactionMode.expense;
     final isSystemDefault = category.type == CategoryType.defaultType;
     final appColors = theme.extension<AppColors>()!;
+    final isDefault = category.isDefault;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withOpacity(0.3),
-        ),
-      ),
+    return Material(
+      color: isDefault
+          ? theme.colorScheme.primaryContainer.withValues(alpha: 0.15)
+          : theme.colorScheme.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(12.0),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isDefault
+                  ? theme.colorScheme.primary.withValues(alpha: 0.5)
+                  : theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+              width: isDefault ? 1.5 : 1.0,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min, // Forces extreme compactness
             children: [
-              // Icon Badge
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: (isExpense ? appColors.expense : appColors.income)
-                      .withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: HugeIcon(
-                  icon: GoalIconRegistry.getIcon(category.iconKey),
-                  color: isExpense ? appColors.expense : appColors.income,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-
-              // Title & Subtitle
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      category.name,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.2,
-                      ),
-                      overflow: TextOverflow.ellipsis,
+              // --- ROW 1: Icon & Type Badge ---
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Compact Icon
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: (isExpense ? appColors.expense : appColors.income)
+                          .withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        if (isSystemDefault) ...[
-                          Icon(
-                            Icons.lock_outline_rounded,
-                            size: 12,
-                            color: theme.colorScheme.outline,
+                    child: Center(
+                      child: HugeIcon(
+                        icon: GoalIconRegistry.getIcon(category.iconKey),
+                        color: isExpense ? appColors.expense : appColors.income,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+
+                  // Tiny SYS/CUST Badge
+                  isSystemDefault
+                      ? Icon(
+                          Icons.lock_outline_rounded,
+                          size: 16,
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.3,
                           ),
-                          const SizedBox(width: 4),
-                          Text(
-                            "SYSTEM",
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: theme.colorScheme.outline,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 10,
-                            ),
-                          ),
-                        ] else
-                          Text(
-                            "CUSTOM",
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                              fontSize: 10,
-                            ),
-                          ),
-                      ],
+                        )
+                      : const SizedBox.shrink(),
+                ],
+              ),
+
+              const SizedBox(height: 10),
+
+              // --- ROW 2: Category Title ---
+              Text(
+                category.name,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: isSystemDefault
+                      ? FontWeight.w400
+                      : FontWeight.bold,
+                  letterSpacing: -0.2,
+                  fontSize: 13,
+                  color: isSystemDefault
+                      ? theme.colorScheme.onSurface.withValues(alpha: 0.5)
+                      : theme.colorScheme.onSurface,
+                ),
+                maxLines: 1, // Kept to 1 line for maximum vertical savings
+                overflow: TextOverflow.ellipsis,
+              ),
+
+              const SizedBox(height: 8),
+
+              // --- ROW 3: Compact Action Area ---
+              if (isDefault)
+                Row(
+                  children: [
+                    Icon(
+                      Icons.check_circle_rounded,
+                      size: 14,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'DEFAULT',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 10,
+                        letterSpacing: 0.2,
+                      ),
                     ),
                   ],
-                ),
-              ),
-
-              const SizedBox(width: 16),
-
-              // Trailing Actions (Default Badge / Set Default Button)
-              if (category.isDefault)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    'DEFAULT',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onPrimary,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 10,
-                    ),
-                  ),
                 )
               else
-                FilledButton.tonal(
-                  onPressed: () {
+                GestureDetector(
+                  onTap: () {
                     HapticFeedback.selectionClick();
                     provider.setAsDefault(category.id);
                   },
-                  style: FilledButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    minimumSize: const Size(0, 32),
-                  ),
-                  child: const Text(
-                    "Set Default",
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    // Padding makes the tap target larger without increasing visual size
+                    padding: const EdgeInsets.only(
+                      top: 2,
+                      bottom: 2,
+                      right: 12,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.radio_button_unchecked_rounded,
+                          size: 14,
+                          color: theme.colorScheme.outline,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          "Set default",
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
             ],

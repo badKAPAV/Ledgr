@@ -61,7 +61,7 @@ class HomeWidgetsSection extends StatelessWidget {
         }
 
         return SmartStackWidget(height: 160, children: stackChildren);
-      },
+      }
     );
   }
 
@@ -70,7 +70,7 @@ class HomeWidgetsSection extends StatelessWidget {
       context: context,
       backgroundColor: Theme.of(context).colorScheme.surface,
       showDragHandle: false,
-      builder: (_) => const WidgetSelectionSheet(),
+      builder: (_) => const WidgetSelectionSheet()
     );
   }
 }
@@ -110,7 +110,7 @@ class _WidgetContainer extends StatelessWidget {
         child: model.needsSetup
             ? _buildSetupState(theme)
             : _buildWidgetContent(model),
-      ),
+      )
     );
   }
 
@@ -143,7 +143,7 @@ class _WidgetContainer extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-      ],
+      ]
     );
   }
 
@@ -203,7 +203,7 @@ class _WidgetContainer extends StatelessWidget {
             ],
           ),
         ),
-      ),
+      )
     );
   }
 
@@ -215,7 +215,7 @@ class _WidgetContainer extends StatelessWidget {
       builder: (_) => GoalsSelectionSheet(
         widgetId: model.id,
         initialSelection: model.configIds,
-      ),
+      )
     );
   }
 
@@ -228,7 +228,7 @@ class _WidgetContainer extends StatelessWidget {
       builder: (_) => FolderSelectionSheet(
         widgetId: model.id,
         initialSelection: model.configIds,
-      ),
+      )
     );
   }
 }
@@ -285,7 +285,7 @@ class _AddWidgetButton extends StatelessWidget {
                   color: Theme.of(context).colorScheme.primary,
                 ),
         ),
-      ),
+      )
     );
   }
 }
@@ -305,10 +305,10 @@ class WidgetSelectionSheet extends StatelessWidget {
 
     // 2. Define availability logic
     final bool canAddFolderWatchlist = !activeTypes.contains(
-      HomeWidgetType.folderWatchlist,
+      HomeWidgetType.folderWatchlist
     );
     final bool canAddGoalsWatchlist = !activeTypes.contains(
-      HomeWidgetType.goalsWatchlist,
+      HomeWidgetType.goalsWatchlist
     );
 
     final bool hasAvailableWidgets =
@@ -396,7 +396,7 @@ class WidgetSelectionSheet extends StatelessWidget {
             const SizedBox(height: 24),
           ],
         ),
-      ),
+      )
     );
   }
 }
@@ -456,7 +456,7 @@ class _WidgetPreviewTile extends StatelessWidget {
             ),
           ),
         ],
-      ),
+      )
     );
   }
 }
@@ -654,7 +654,7 @@ class _DummyFolderWatchlistWidget extends StatelessWidget {
             ),
           ),
         ],
-      ),
+      )
     );
   }
 }
@@ -846,7 +846,7 @@ class _DummyGoalsWatchlistWidget extends StatelessWidget {
             ),
           ),
         ],
-      ),
+      )
     );
   }
 }

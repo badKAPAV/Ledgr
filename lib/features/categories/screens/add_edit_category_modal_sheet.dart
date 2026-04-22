@@ -8,6 +8,7 @@ import 'package:wallzy/common/icon_picker/icons.dart';
 import 'package:wallzy/common/icon_picker/icon_picker_sheet.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
 import 'package:wallzy/features/transaction/widgets/add_edit_transaction_widgets/transaction_widgets.dart';
+import 'package:wallzy/common/switch/custom_switch.dart';
 
 class AddEditCategoryModalSheet extends StatefulWidget {
   final CategoryModel? category;
@@ -64,7 +65,7 @@ class _AddEditCategoryModalSheetState extends State<AddEditCategoryModalSheet> {
             _keywords.add(newKeyword);
           });
         },
-      ),
+      )
     );
   }
 
@@ -281,7 +282,7 @@ class _AddEditCategoryModalSheetState extends State<AddEditCategoryModalSheet> {
             );
           },
         );
-      },
+      }
     );
   }
 
@@ -295,7 +296,7 @@ class _AddEditCategoryModalSheetState extends State<AddEditCategoryModalSheet> {
       builder: (context) => GoalIconPickerSheet(
         selectedIconKey: _iconKey,
         onIconSelected: (key) => setState(() => _iconKey = key),
-      ),
+      )
     );
   }
 
@@ -536,7 +537,7 @@ class _AddEditCategoryModalSheetState extends State<AddEditCategoryModalSheet> {
               const SizedBox(height: 32),
 
               // --- Unboxed Default Toggle ---
-              SwitchListTile(
+              ListTile(
                 contentPadding: EdgeInsets.zero,
                 title: const Text(
                   'Set as Default',
@@ -548,9 +549,27 @@ class _AddEditCategoryModalSheetState extends State<AddEditCategoryModalSheet> {
                     color: colors.onSurfaceVariant,
                   ),
                 ),
-                value: _isDefault,
-                activeColor: colors.primary,
-                onChanged: (value) {
+                trailing: LedgrSwitch(
+                  value: _isDefault,
+                  activeTrackColor: colors.primary,
+                  onChanged: (value) {
+                    if (widget.category?.isDefault == true && value == false) {
+                      HapticFeedback.heavyImpact();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            "A default category cannot be turned off. To replace it, set another category as default.",
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+                    HapticFeedback.lightImpact();
+                    setState(() => _isDefault = value);
+                  },
+                ),
+                onTap: () {
+                  final value = !_isDefault;
                   if (widget.category?.isDefault == true && value == false) {
                     HapticFeedback.heavyImpact();
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -626,7 +645,7 @@ class _AddEditCategoryModalSheetState extends State<AddEditCategoryModalSheet> {
             ],
           ),
         ),
-      ),
+      )
     );
   }
 }
@@ -745,7 +764,7 @@ class _AddKeywordSheetState extends State<_AddKeywordSheet> {
           ),
           const SizedBox(height: 24),
         ],
-      ),
+      )
     );
   }
 }
@@ -866,7 +885,7 @@ class _AnimatedModeSelector extends StatelessWidget {
             ],
           );
         },
-      ),
+      )
     );
   }
 }

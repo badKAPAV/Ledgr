@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:wallzy/app_drawer.dart';
 import 'package:wallzy/common/tabbar/custom_tab_bar.dart';
 import 'package:wallzy/features/goals/screens/goals_screen.dart';
-import 'package:wallzy/features/subscription/screens/subscriptions_screen.dart';
+import 'package:wallzy/features/recurring_payment/screens/recurring_payment_screen.dart';
 import 'package:wallzy/features/categories/screens/category_settings_tab_screen.dart';
 import 'package:wallzy/features/categories/provider/category_provider.dart';
 import 'package:wallzy/features/categories/services/migration_service.dart';

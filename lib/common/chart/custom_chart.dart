@@ -298,7 +298,7 @@ class _CustomComboChartState extends State<CustomComboChart> {
             ),
           );
         },
-      ),
+      )
     );
   }
 
@@ -399,7 +399,7 @@ class _CustomComboChartState extends State<CustomComboChart> {
               ),
           ],
         ],
-      ),
+      )
     );
   }
 }
@@ -466,7 +466,7 @@ class _SmoothLinePainter extends CustomPainter {
         lineColor.withValues(alpha: 0.3),
         lineColor.withValues(alpha: 0.0),
       ],
-      stops: const [0.0, 0.9],
+      stops: const [0.0, 0.9]
     );
 
     canvas.drawPath(
@@ -474,7 +474,7 @@ class _SmoothLinePainter extends CustomPainter {
       Paint()
         ..shader = gradient.createShader(
           Rect.fromLTWH(0, 0, size.width, size.height),
-        ),
+        )
     );
 
     final strokePaint = Paint()
@@ -531,7 +531,7 @@ class _SingleTooltip extends StatelessWidget {
           fontWeight: FontWeight.bold,
           fontSize: 11,
         ),
-      ),
+      )
     );
   }
 }
@@ -605,7 +605,7 @@ class _MergedTooltip extends StatelessWidget {
             ],
           ),
         ],
-      ),
+      )
     );
   }
 }
@@ -646,7 +646,7 @@ class _BaseTooltipContainer extends StatelessWidget {
             child: child,
           ),
         );
-      },
+      }
     );
   }
 }

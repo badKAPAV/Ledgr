@@ -79,7 +79,7 @@ class HomeWidgetsProvider extends ChangeNotifier {
   // Add a new empty widget
   void addWidget(HomeWidgetType type) {
     _activeWidgets.add(
-      HomeWidgetModel(id: const Uuid().v4(), type: type, width: 4),
+      HomeWidgetModel(id: const Uuid().v4(), type: type, width: 4)
     );
     _saveWidgets();
     notifyListeners();

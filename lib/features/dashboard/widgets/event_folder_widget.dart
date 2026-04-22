@@ -6,8 +6,8 @@ import 'package:wallzy/common/pie_chart/pie_chart_widget.dart'; // Use LedgrPieC
 import 'package:wallzy/common/pie_chart/pie_model.dart';
 import 'package:wallzy/core/utils/budget_cycle_helper.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
-import 'package:wallzy/features/folders/models/tag.dart';
-import 'package:wallzy/features/folders/services/tag_info.dart';
+import 'package:wallzy/features/folders/models/folder.dart';
+import 'package:wallzy/features/folders/services/folder_info.dart';
 import 'package:wallzy/features/transaction/provider/meta_provider.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
 
@@ -157,11 +157,10 @@ class _EventFolderItem extends StatelessWidget {
 
     if (currentTag.tagBudgetFrequency == TagBudgetResetFrequency.monthly) {
       final now = DateTime.now();
-      final range = BudgetCycleHelper.getCycleRange(
-        targetMonth: now.month,
-        targetYear: now.year,
-        mode: settingsProvider.budgetCycleMode,
-        startDay: settingsProvider.budgetCycleStartDay,
+      final range = BudgetCycleHelper.currentCycleRange(
+        now,
+        settingsProvider.budgetCycleMode,
+        settingsProvider.budgetCycleStartDay,
       );
       rangeStart = range.start;
       rangeEnd = range.end;

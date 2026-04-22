@@ -23,7 +23,7 @@ class GoalsWatchlistWidget extends StatelessWidget {
       builder: (_) => GoalsSelectionSheet(
         widgetId: model.id,
         initialSelection: model.configIds,
-      ),
+      )
     );
   }
 
@@ -271,7 +271,7 @@ class GoalsWatchlistWidget extends StatelessWidget {
             },
           ),
         ),
-      ],
+      ]
     );
   }
 }

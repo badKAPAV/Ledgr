@@ -74,7 +74,7 @@ class _AuthCreateAccountScreenState extends State<AuthCreateAccountScreen> {
           ),
           child: child!,
         );
-      },
+      }
     );
     if (picked != null) {
       setState(() {
@@ -137,7 +137,7 @@ class _AuthCreateAccountScreenState extends State<AuthCreateAccountScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         margin: const EdgeInsets.all(16),
         duration: const Duration(seconds: 2),
-      ),
+      )
     );
   }
 
@@ -454,7 +454,7 @@ class _AuthCreateAccountScreenState extends State<AuthCreateAccountScreen> {
             ),
           ],
         ),
-      ),
+      )
     );
   }
 }

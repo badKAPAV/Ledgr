@@ -44,7 +44,7 @@ class EmptyReportPlaceholder extends StatelessWidget {
             ),
           ],
         ),
-      ),
+      )
     );
   }
 }

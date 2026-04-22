@@ -98,7 +98,7 @@ class _MessagesPermissionBannerState extends State<MessagesPermissionBanner>
       builder: (context) => _PremiumInstructionDialog(
         onOpenSettings: _openListenerSettings,
         onOpenAppInfo: _openAppInfo,
-      ),
+      )
     );
   }
 
@@ -164,7 +164,7 @@ class _MessagesPermissionBannerState extends State<MessagesPermissionBanner>
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(100),
         // A subtle gradient to make it stand out from standard cards
         gradient: LinearGradient(
           colors: [
@@ -192,54 +192,48 @@ class _MessagesPermissionBannerState extends State<MessagesPermissionBanner>
           onTap: _showInstructionDialog,
           borderRadius: BorderRadius.circular(24),
           child: Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: const EdgeInsets.all(12.0),
             child: Row(
               children: [
                 // Attention Grabbing Icon
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: colorScheme.primary,
+                    color: colorScheme.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: colorScheme.primary.withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
                   ),
                   child: HugeIcon(
                     icon: HugeIcons.strokeRoundedMagicWand01,
-                    color: colorScheme.onPrimary,
+                    color: colorScheme.primary,
                     size: 24,
                   ),
                 ),
                 const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Automate your tracking",
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: colorScheme.onSurface,
-                          letterSpacing: -0.5,
-                        ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Automate tracking transactions",
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: colorScheme.onSurface,
+                        fontSize: 14,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        "Never manually add a transaction again. Sync directly from alerts.",
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                          height: 1.3,
-                        ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      softWrap: true,
+                      maxLines: 2,
+                      "Sync transactions directly from SMS alerts",
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        height: 1.3,
+                        fontSize: 11,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
+                const Spacer(),
                 HugeIcon(
                   icon: HugeIcons.strokeRoundedArrowRight02,
                   color: theme.colorScheme.primary,
@@ -249,7 +243,7 @@ class _MessagesPermissionBannerState extends State<MessagesPermissionBanner>
             ),
           ),
         ),
-      ),
+      )
     );
   }
 }
@@ -301,9 +295,11 @@ class _PremiumInstructionDialogState extends State<_PremiumInstructionDialog> {
             ),
             const SizedBox(height: 16),
             Text(
-              "Enable AutoLog",
+              "ENABLE AUTO-LOG",
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
+                fontSize: 16,
+                letterSpacing: 1.5,
               ),
             ),
             const SizedBox(height: 8),
@@ -422,7 +418,7 @@ class _PremiumInstructionDialogState extends State<_PremiumInstructionDialog> {
                 style: FilledButton.styleFrom(
                   elevation: 0,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(50),
                   ),
                 ),
                 child: const Text(
@@ -433,7 +429,7 @@ class _PremiumInstructionDialogState extends State<_PremiumInstructionDialog> {
             ),
           ],
         ),
-      ),
+      )
     );
   }
 }
@@ -481,7 +477,7 @@ class _StepRow extends StatelessWidget {
             ),
           ),
         ),
-      ],
+      ]
     );
   }
 }
@@ -500,7 +496,7 @@ class _SubStep extends StatelessWidget {
           fontSize: 12,
           color: Theme.of(context).colorScheme.onSurface,
         ),
-      ),
+      )
     );
   }
 }

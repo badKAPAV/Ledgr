@@ -33,7 +33,7 @@ class UserModel {
       isProUser: data['isProUser'] ?? false,
       dob: data['dob'] != null ? DateTime.parse(data['dob']) : null,
       hasPassword: data['hasPassword'] ?? false,
-      monthlyBudget: (data['monthlyBudget'] as num?)?.toDouble(),
+      monthlyBudget: (data['monthlyBudget'] as num?)?.toDouble()
     );
   }
 
@@ -70,7 +70,7 @@ class UserModel {
       isProUser: isProUser ?? this.isProUser,
       dob: dob ?? this.dob,
       hasPassword: hasPassword ?? this.hasPassword,
-      monthlyBudget: monthlyBudget ?? this.monthlyBudget,
+      monthlyBudget: monthlyBudget ?? this.monthlyBudget
     );
   }
 }

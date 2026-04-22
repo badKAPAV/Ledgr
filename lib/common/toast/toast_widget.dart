@@ -34,12 +34,12 @@ class ToastWidgetState extends State<ToastWidget>
 
     _slideController = AnimationController(
       duration: const Duration(milliseconds: 250),
-      vsync: this,
+      vsync: this
     );
 
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 250),
-      vsync: this,
+      vsync: this
     );
 
     final beginOffset = widget.position == ToastPosition.top
@@ -53,7 +53,7 @@ class ToastWidgetState extends State<ToastWidget>
 
     _fadeAnimation = CurvedAnimation(
       parent: _fadeController,
-      curve: Curves.easeOut,
+      curve: Curves.easeOut
     );
 
     _slideController.forward();
@@ -132,7 +132,7 @@ class ToastWidgetState extends State<ToastWidget>
             ),
           ),
         ),
-      ),
+      )
     );
   }
 }

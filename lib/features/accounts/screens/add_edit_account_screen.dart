@@ -9,7 +9,7 @@ import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/features/transaction/provider/meta_provider.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
-import 'package:wallzy/features/folders/models/tag.dart';
+import 'package:wallzy/features/folders/models/folder.dart';
 
 class AddEditAccountScreen extends StatefulWidget {
   final Account? account;

@@ -2,7 +2,7 @@ name: wallzy
 description: "A new Flutter project."
 publish_to: "none"
 
-version: 2.2.1+7 #!BUMP THIS VERSION
+version: 2.2.1+8 #!BUMP THIS VERSION
 
 environment:
   sdk: ^3.10.0
@@ -43,6 +43,8 @@ dependencies:
   material_color_utilities: ^0.13.0
   permission_handler: ^12.0.1
   provider: ^6.1.5+1
+  purchases_flutter: ^9.15.1
+  purchases_ui_flutter: ^9.15.1
   shared_preferences: ^2.2.3
   shimmer: ^3.0.0
   timezone: ^0.10.1

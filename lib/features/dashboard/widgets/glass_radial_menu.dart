@@ -43,13 +43,13 @@ class _GlassRadialMenuState extends State<GlassRadialMenu>
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
-      reverseDuration: const Duration(milliseconds: 300),
+      reverseDuration: const Duration(milliseconds: 300)
     );
 
     _expandAnimation = CurvedAnimation(
       parent: _controller,
       curve: Curves.easeOutBack,
-      reverseCurve: Curves.easeInQuad,
+      reverseCurve: Curves.easeInQuad
     );
 
     _rotateAnimation = Tween<double>(
@@ -188,7 +188,7 @@ class _GlassRadialMenuState extends State<GlassRadialMenu>
             ),
           ],
         );
-      },
+      }
     );
   }
 
@@ -215,7 +215,7 @@ class _GlassRadialMenuState extends State<GlassRadialMenu>
 
     final Animation<double> itemScale = CurvedAnimation(
       parent: _controller,
-      curve: Interval(intervalStart, intervalEnd, curve: Curves.easeOutBack),
+      curve: Interval(intervalStart, intervalEnd, curve: Curves.easeOutBack)
     );
 
     return Transform.translate(
@@ -284,7 +284,7 @@ class _GlassRadialMenuState extends State<GlassRadialMenu>
             ],
           ),
         ),
-      ),
+      )
     );
   }
 
@@ -372,7 +372,7 @@ class _GlassRadialMenuState extends State<GlassRadialMenu>
             ),
           ),
         ),
-      ),
+      )
     );
   }
 
@@ -382,7 +382,7 @@ class _GlassRadialMenuState extends State<GlassRadialMenu>
       link: _layerLink,
       // When menu is open, we can either hide this FAB or leave it.
       // Leaving it prevents layout jumps. The Overlay FAB covers it perfectly.
-      child: _buildFabContent(isOverlay: false),
+      child: _buildFabContent(isOverlay: false)
     );
   }
 }

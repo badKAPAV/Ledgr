@@ -485,7 +485,7 @@ class CategoryProvider with ChangeNotifier {
       keywords: keywords,
       budget: budget,
       isDeleted: false,
-      isDefault: isDefault ?? false,
+      isDefault: isDefault ?? false
     );
 
     // Optimistic Update
@@ -586,7 +586,7 @@ class CategoryProvider with ChangeNotifier {
     // 2. Optimistic UI Update (Memory)
     // Find the old default for this mode and turn it off
     final oldDefaultIndex = _categories.indexWhere(
-      (c) => c.mode == mode && c.isDefault,
+      (c) => c.mode == mode && c.isDefault
     );
     if (oldDefaultIndex != -1) {
       _categories[oldDefaultIndex] = _categories[oldDefaultIndex].copyWith(

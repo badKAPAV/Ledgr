@@ -336,7 +336,7 @@ class _PersonPickerSheetState extends State<PersonPickerSheet> {
             ),
           ),
         ],
-      ),
+      )
     );
   }
 
@@ -347,14 +347,14 @@ class _PersonPickerSheetState extends State<PersonPickerSheet> {
         color: theme.colorScheme.outline,
         fontWeight: FontWeight.bold,
         letterSpacing: 1.1,
-      ),
+      )
     );
   }
 
   void _createNewAndSelect(String name) async {
     final peopleProvider = Provider.of<PeopleProvider>(context, listen: false);
     final newPerson = await peopleProvider.addPerson(
-      Person(id: '', fullName: name),
+      Person(id: '', fullName: name)
     );
     widget.onSelected(newPerson);
     if (mounted) Navigator.pop(context);
@@ -367,7 +367,7 @@ class _PersonPickerSheetState extends State<PersonPickerSheet> {
         id: '',
         fullName: contact.displayName,
         email: contact.emails.isNotEmpty ? contact.emails.first.address : null,
-      ),
+      )
     );
     widget.onSelected(newPerson);
     if (mounted) Navigator.pop(context);
@@ -416,7 +416,7 @@ class _PersonListTile extends StatelessWidget {
           ? Icon(Icons.check_circle_rounded, color: theme.colorScheme.primary)
           : null,
       onTap: onTap,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
     );
   }
 }
@@ -442,7 +442,7 @@ class _ContactListTile extends StatelessWidget {
           : null,
       trailing: const Icon(Icons.add_rounded, size: 20),
       onTap: onTap,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
     );
   }
 }
@@ -476,7 +476,7 @@ class _PermissionRequestCard extends StatelessWidget {
           const SizedBox(height: 12),
           TextButton(onPressed: onRequest, child: const Text("Allow Access")),
         ],
-      ),
+      )
     );
   }
 }

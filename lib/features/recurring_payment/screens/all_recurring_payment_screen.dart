@@ -1,0 +1,279 @@
+import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
+import 'package:provider/provider.dart';
+import 'package:collection/collection.dart';
+import 'package:wallzy/common/icon_picker/icons.dart';
+import 'package:wallzy/features/categories/provider/category_provider.dart';
+import 'package:wallzy/common/widgets/empty_report_placeholder.dart';
+import 'package:wallzy/features/settings/provider/settings_provider.dart';
+import 'package:wallzy/features/recurring_payment/models/recurring_payment.dart';
+import 'package:wallzy/features/recurring_payment/provider/recurring_payment_provider.dart';
+import 'package:wallzy/features/recurring_payment/screens/recurring_payment_details_screen.dart';
+import 'package:wallzy/features/recurring_payment/services/recurring_payment_info.dart';
+import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
+
+class AllRecurringPaymentsScreen extends StatefulWidget {
+  const AllRecurringPaymentsScreen({super.key});
+
+  @override
+  State<AllRecurringPaymentsScreen> createState() =>
+      _AllRecurringPaymentsScreenState();
+}
+
+class _AllRecurringPaymentsScreenState
+    extends State<AllRecurringPaymentsScreen> {
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
+  List<Subscription> _filteredSubscriptions = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final subProvider = Provider.of<SubscriptionProvider>(context);
+    final txProvider = Provider.of<TransactionProvider>(context);
+    final theme = Theme.of(context);
+
+    // Filter logic
+    final allSubs = subProvider.allSubscriptions;
+    final query = _searchController.text.toLowerCase();
+    _filteredSubscriptions =
+        allSubs.where((s) {
+          return s.name.toLowerCase().contains(query) ||
+              s.category.toLowerCase().contains(query);
+        }).toList()..sort((a, b) {
+          if (a.isActive != b.isActive) {
+            return a.isActive ? -1 : 1;
+          }
+          return b.nextDueDate.compareTo(a.nextDueDate);
+        });
+
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBar(
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  hintText: 'Search payments',
+                  border: InputBorder.none,
+                ),
+              )
+            : const Text('All Recurring Payments'),
+        actions: [
+          IconButton.filledTonal(
+            icon: HugeIcon(
+              icon: _isSearching
+                  ? HugeIcons.strokeRoundedCancel01
+                  : HugeIcons.strokeRoundedSearch01,
+              strokeWidth: 2,
+              size: 18,
+            ),
+            style: IconButton.styleFrom(
+              backgroundColor: Theme.of(
+                context,
+              ).colorScheme.surfaceContainerHighest,
+            ),
+            onPressed: () {
+              setState(() {
+                if (_isSearching) {
+                  _isSearching = false;
+                  _searchController.clear();
+                } else {
+                  _isSearching = true;
+                }
+              });
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+      body: _filteredSubscriptions.isEmpty
+          ? EmptyReportPlaceholder(
+              message: 'Oops! Nothing found...',
+              icon: HugeIcons.strokeRoundedUmbrella,
+            )
+          : ListView.builder(
+              physics: BouncingScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+              itemCount: _filteredSubscriptions.length,
+              itemBuilder: (context, index) {
+                final sub = _filteredSubscriptions[index];
+                return _SubscriptionListTile(sub: sub, txProvider: txProvider);
+              },
+            ),
+    );
+  }
+}
+
+class _SubscriptionListTile extends StatelessWidget {
+  final Subscription sub;
+  final TransactionProvider txProvider;
+
+  const _SubscriptionListTile({required this.sub, required this.txProvider});
+
+  String _getCategoryName(BuildContext context, Subscription sub) {
+    if (sub.categoryId != null) {
+      final category = context
+          .read<CategoryProvider>()
+          .categories
+          .firstWhereOrNull((c) => c.id == sub.categoryId);
+      if (category != null) return category.name;
+    }
+    return sub.category;
+  }
+
+  dynamic _getCategoryIcon(BuildContext context, Subscription sub) {
+    if (sub.categoryId != null) {
+      final category = context
+          .read<CategoryProvider>()
+          .categories
+          .firstWhereOrNull((c) => c.id == sub.categoryId);
+      if (category != null) return GoalIconRegistry.getIcon(category.iconKey);
+    }
+    return GoalIconRegistry.getIcon(sub.category.toLowerCase());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isPaused = sub.pauseState != SubscriptionPauseState.active;
+    final isArchived = !sub.isActive;
+
+    // Get relevant transactions for details
+    final txs = txProvider.transactions
+        .where((tx) => tx.subscriptionId == sub.id)
+        .toList();
+    txs.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+
+    final settingsProvider = Provider.of<SettingsProvider>(context);
+    final currencySymbol = settingsProvider.currencySymbol;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 0,
+      color: isArchived
+          ? theme.colorScheme.surfaceContainerLow
+          : theme.colorScheme.surfaceContainer,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => SubscriptionDetailsScreen(
+                subscription: sub,
+                transactions: txs,
+              ),
+            ),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: isPaused
+                      ? theme.colorScheme.surfaceContainerHighest
+                      : theme.colorScheme.primary.withAlpha(25),
+                  shape: BoxShape.circle,
+                ),
+                child: HugeIcon(
+                  icon: _getCategoryIcon(context, sub),
+                  color: isArchived
+                      ? theme.colorScheme.outline.withAlpha(128)
+                      : isPaused
+                      ? theme.colorScheme.outline
+                      : theme.colorScheme.primary,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      sub.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _getCategoryName(context, sub),
+                      style: TextStyle(
+                        color: theme.colorScheme.outline,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isArchived
+                          ? theme.colorScheme.surfaceContainerHighest
+                          : isPaused
+                          ? theme.colorScheme.errorContainer
+                          : theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      isArchived
+                          ? "ARCHIVED"
+                          : (isPaused ? "PAUSED" : "ACTIVE"),
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: isArchived
+                            ? theme.colorScheme.onSurfaceVariant
+                            : isPaused
+                            ? theme.colorScheme.onErrorContainer
+                            : theme.colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "$currencySymbol${sub.amount.toStringAsFixed(0)}",
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

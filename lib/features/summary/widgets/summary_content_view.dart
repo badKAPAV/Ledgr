@@ -307,7 +307,7 @@ class SummaryContentView extends StatelessWidget {
             ),
           ],
         ],
-      ),
+      )
     );
   }
 
@@ -325,7 +325,7 @@ class SummaryContentView extends StatelessWidget {
             color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
-      ),
+      )
     );
   }
 
@@ -403,7 +403,7 @@ class SummaryContentView extends StatelessWidget {
             ],
           ),
         ],
-      ),
+      )
     );
   }
 
@@ -536,7 +536,7 @@ class SummaryContentView extends StatelessWidget {
             ),
           ),
         ],
-      ),
+      )
     );
   }
 
@@ -588,7 +588,7 @@ class SummaryContentView extends StatelessWidget {
             style: TextStyle(fontSize: 10, color: Colors.grey),
           ),
         ],
-      ),
+      )
     );
   }
 
@@ -635,7 +635,7 @@ class SummaryContentView extends StatelessWidget {
           fontSize: 16,
           color: Theme.of(context).colorScheme.onSurface,
         ),
-      ),
+      )
     );
   }
 
@@ -655,7 +655,7 @@ class SummaryContentView extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyLarge,
           ),
         ],
-      ),
+      )
     );
   }
 }

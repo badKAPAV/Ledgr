@@ -16,7 +16,7 @@ import 'package:wallzy/features/accounts/screens/accounts_screen.dart';
 import 'package:wallzy/features/people/screens/people_screen.dart';
 import 'package:wallzy/features/profile/screens/user_profile_screen.dart';
 import 'package:wallzy/features/transaction/screens/all_transactions_screen.dart';
-import 'package:wallzy/features/folders/screens/tags_screen.dart';
+import 'package:wallzy/features/folders/screens/folders_screen.dart';
 import 'package:wallzy/features/guide/screens/how_to_use_screen.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 
@@ -209,7 +209,7 @@ class _AppDrawerState extends State<AppDrawer> {
             Expanded(
               child: ListView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 children: [
                   // --- DASHBOARD SECTION ---
                   _MinimalDrawerTile(
@@ -221,7 +221,9 @@ class _AppDrawerState extends State<AppDrawer> {
                   ),
                   _MinimalDrawerTile(
                     icon: HugeIcons.strokeRoundedAnalytics01,
-                    title: 'Analytics & Budgets',
+                    title: 'Transactions & Budgets',
+                    subtitle:
+                        'All transactions, category spends & monthly budget',
                     isSelected: widget.selectedItem == DrawerItem.reports,
                     onTap: () => _handleNav(
                       context,
@@ -232,6 +234,7 @@ class _AppDrawerState extends State<AppDrawer> {
                   _MinimalDrawerTile(
                     icon: HugeIcons.strokeRoundedWallet03,
                     title: 'My Accounts',
+                    subtitle: 'Net worth, debit/credit accounts',
                     isSelected: widget.selectedItem == DrawerItem.accounts,
                     onTap: () => _handleNav(
                       context,
@@ -245,6 +248,7 @@ class _AppDrawerState extends State<AppDrawer> {
                   _MinimalDrawerTile(
                     icon: HugeIcons.strokeRoundedFolder02,
                     title: 'Folders & Events',
+                    subtitle: 'Folders, budgets & events',
                     isSelected: widget.selectedItem == DrawerItem.folders,
                     onTap: () => _handleNav(
                       context,
@@ -255,6 +259,7 @@ class _AppDrawerState extends State<AppDrawer> {
                   _MinimalDrawerTile(
                     icon: HugeIcons.strokeRoundedUserMultiple,
                     title: 'People & Debts',
+                    subtitle: 'People spends, debts & loans',
                     isSelected: widget.selectedItem == DrawerItem.people,
                     onTap: () => _handleNav(
                       context,
@@ -265,6 +270,8 @@ class _AppDrawerState extends State<AppDrawer> {
                   _MinimalDrawerTile(
                     icon: HugeIcons.strokeRoundedTools,
                     title: 'Planning',
+                    subtitle:
+                        'Manage Categories, Goals, and Recurring payments',
                     isSelected: widget.selectedItem == DrawerItem.planning,
                     onTap: () => _handleNav(
                       context,
@@ -315,6 +322,7 @@ class _AppDrawerState extends State<AppDrawer> {
                         _MinimalDrawerTile(
                           icon: HugeIcons.strokeRoundedIdea01,
                           title: 'How to use',
+                          subtitle: 'Quick tutorial to Ledgr',
                           isSelected:
                               widget.selectedItem == DrawerItem.howToUse,
                           onTap: () => _handleNav(
@@ -327,6 +335,8 @@ class _AppDrawerState extends State<AppDrawer> {
                         _MinimalDrawerTile(
                           icon: HugeIcons.strokeRoundedAiChat01,
                           title: 'Feedback & Issues',
+                          subtitle:
+                              'SMS parsing request, bugs, feature requests',
                           isSelected:
                               widget.selectedItem == DrawerItem.feedback,
                           onTap: () => _handleNav(
@@ -415,11 +425,13 @@ class _MinimalDrawerTile extends StatelessWidget {
   final VoidCallback onTap;
   final Widget? trailing;
   final bool isSelected;
+  final String? subtitle;
 
   const _MinimalDrawerTile({
     required this.icon,
     required this.title,
     required this.onTap,
+    this.subtitle,
     // ignore: unused_element_parameter
     this.trailing,
     this.isSelected = false,
@@ -432,9 +444,10 @@ class _MinimalDrawerTile extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(
-        vertical: 2.0,
+        vertical: 0.0,
       ), // Spacing between items
       child: ListTile(
+        minVerticalPadding: 4,
         onTap: () {
           HapticFeedback.lightImpact();
           onTap();
@@ -445,6 +458,18 @@ class _MinimalDrawerTile extends StatelessWidget {
         tileColor: isSelected
             ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
             : Colors.transparent,
+        subtitle: subtitle != null
+            ? Text(
+                subtitle!,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  fontWeight: .w400,
+                  color: isSelected
+                      ? colorScheme.primary.withValues(alpha: 0.5)
+                      : colorScheme.onSurface.withValues(alpha: 0.5),
+                  fontSize: 10,
+                ),
+              )
+            : null,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
         leading: HugeIcon(
           icon: icon,

@@ -190,7 +190,7 @@ class _SmartStackWidgetState extends State<SmartStackWidget> {
               ),
             ),
         ],
-      ),
+      )
     );
   }
 }

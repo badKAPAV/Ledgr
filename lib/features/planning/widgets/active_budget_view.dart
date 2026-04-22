@@ -32,7 +32,7 @@ class _ActiveBudgetViewState extends State<ActiveBudgetView> {
   void _showEditBudgetSheet(BuildContext context, double currentBudget) {
     final theme = Theme.of(context);
     final controller = TextEditingController(
-      text: currentBudget.toStringAsFixed(0),
+      text: currentBudget.toStringAsFixed(0)
     );
     final currencySymbol = context.read<SettingsProvider>().currencySymbol;
 
@@ -110,7 +110,7 @@ class _ActiveBudgetViewState extends State<ActiveBudgetView> {
             ],
           ),
         );
-      },
+      }
     );
   }
 
@@ -128,29 +128,29 @@ class _ActiveBudgetViewState extends State<ActiveBudgetView> {
 
     // 1. Calculate Cycle
     final now = DateTime.now();
-    final cycle = BudgetCycleHelper.getCycleRange(
-      targetMonth: now.month,
-      targetYear: now.year,
-      mode: settingsProvider.budgetCycleMode,
-      startDay: settingsProvider.budgetCycleStartDay,
+    final cycle = BudgetCycleHelper.currentCycleRange(
+      now,
+      settingsProvider.budgetCycleMode,
+      settingsProvider.budgetCycleStartDay
     );
 
     // 2. Calculate Spend
     final double totalSpent = txProvider.getNetTotal(
       start: cycle.start,
       end: cycle.end,
-      type: 'expense',
+      type: 'expense'
     );
 
     // 3. Category Spends
     Map<String, double> catSpends = {};
     final cycleTxs = txProvider.transactions.where(
       (t) =>
+          !t.excludeFromBudgets &&
           t.type == 'expense' &&
           t.timestamp.isAfter(
             cycle.start.subtract(const Duration(seconds: 1)),
           ) &&
-          t.timestamp.isBefore(cycle.end.add(const Duration(seconds: 1))),
+          t.timestamp.isBefore(cycle.end.add(const Duration(seconds: 1)))
     );
     for (var tx in cycleTxs) {
       if (tx.categoryId != null) {
@@ -705,7 +705,7 @@ class _ActiveBudgetViewState extends State<ActiveBudgetView> {
             ],
           ),
         ),
-      ),
+      )
     );
   }
 }

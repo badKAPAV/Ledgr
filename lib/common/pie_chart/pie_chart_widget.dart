@@ -30,11 +30,11 @@ class _LedgrPieChartState extends State<LedgrPieChart>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 1200)
     );
     _animation = CurvedAnimation(
       parent: _controller,
-      curve: Curves.easeOutQuart,
+      curve: Curves.easeOutQuart
     );
     _controller.forward();
   }
@@ -78,7 +78,7 @@ class _LedgrPieChartState extends State<LedgrPieChart>
             emptyColor: widget.emptyColor,
           ),
         );
-      },
+      }
     );
   }
 }

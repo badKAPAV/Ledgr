@@ -71,7 +71,7 @@ class _CustomTabBarState extends State<CustomTabBar> {
     assert(
       // ignore: unnecessary_null_comparison
       newController != null,
-      'No TabController found. Either provide one or wrap in DefaultTabController.',
+      'No TabController found. Either provide one or wrap in DefaultTabController.'
     );
 
     if (newController != _controller) {
@@ -201,7 +201,7 @@ class _CustomTabBarState extends State<CustomTabBar> {
             }),
           ),
         ),
-      ),
+      )
     );
   }
 }

@@ -37,7 +37,7 @@ class PeopleListView extends StatelessWidget {
           initialIsLoan: true,
           initialLoanSubtype: 'repayment',
         ),
-      ),
+      )
     );
   }
 
@@ -51,7 +51,7 @@ class PeopleListView extends StatelessWidget {
     final settingsProvider = Provider.of<SettingsProvider>(context);
     final currencyFormat = NumberFormat.currency(
       symbol: settingsProvider.currencySymbol,
-      decimalDigits: 0,
+      decimalDigits: 0
     );
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
@@ -145,7 +145,7 @@ class PeopleListView extends StatelessWidget {
           child: card,
         );
       },
-      itemCount: people.length,
+      itemCount: people.length
     );
   }
 }

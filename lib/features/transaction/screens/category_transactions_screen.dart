@@ -3,11 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:wallzy/common/chart/custom_chart.dart';
+import 'package:wallzy/common/helpers/fading_divider.dart';
 import 'package:wallzy/core/themes/theme.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
-import 'package:wallzy/features/transaction/widgets/transaction_detail_screen.dart';
+import 'package:wallzy/features/transaction/widgets/transaction_details_screen/transaction_detail_screen.dart';
 import 'package:wallzy/features/transaction/widgets/transactions_list/grouped_transaction_list.dart';
 
 class _MonthlySummary {
@@ -151,6 +152,8 @@ class _CategoryTransactionsScreenState
       decimalDigits: 0,
     );
 
+    final theme = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         surfaceTintColor: Colors.transparent,
@@ -180,7 +183,18 @@ class _CategoryTransactionsScreenState
                 children: [
                   Text(
                     '${_displayTransactions.length} Transactions',
-                    style: Theme.of(context).textTheme.titleLarge,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.5,
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: FadingDivider(
+                      color: theme.secondary.withValues(alpha: 0.5),
+                      thickness: 2,
+                    ),
                   ),
                 ],
               ),

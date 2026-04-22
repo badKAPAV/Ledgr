@@ -107,7 +107,7 @@ class _SegmentedProgressBarState extends State<SegmentedProgressBar> {
             },
           );
         },
-      ),
+      )
     );
   }
 }

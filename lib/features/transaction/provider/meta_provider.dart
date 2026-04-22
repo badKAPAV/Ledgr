@@ -4,8 +4,8 @@ import 'dart:convert'; // Added for JSON encoding
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../folders/models/tag.dart';
-import '../../folders/services/tag_info.dart';
+import '../../folders/models/folder.dart';
+import '../../folders/services/folder_info.dart';
 import '../../auth/provider/auth_provider.dart';
 
 class MetaProvider with ChangeNotifier {

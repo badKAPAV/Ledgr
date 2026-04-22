@@ -40,7 +40,7 @@ class HomeWidgetModel {
       ),
       width: json['width'] ?? 4,
       height: json['height'] ?? 2,
-      configIds: List<String>.from(json['configIds'] ?? []),
+      configIds: List<String>.from(json['configIds'] ?? [])
     );
   }
 }

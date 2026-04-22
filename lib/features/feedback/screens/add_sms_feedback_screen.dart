@@ -196,7 +196,7 @@ class _AddSmsTemplateScreenState extends State<AddSmsTemplateScreen> {
             child: const Text("Looks Good"),
           ),
         ],
-      ),
+      )
     );
   }
 
@@ -298,7 +298,7 @@ class _AddSmsTemplateScreenState extends State<AddSmsTemplateScreen> {
                   ),
                 ),
               ],
-            ),
+            )
     );
   }
 
@@ -431,7 +431,7 @@ class _AddSmsTemplateScreenState extends State<AddSmsTemplateScreen> {
             "For privacy, please replace sensitive numbers (Account no., Ref no.) with '5555' and names with 'John Doe' for example.\nKeep the body exactly as it is - whitespaces, numbers, symbols and text alike.",
           ),
         ],
-      ),
+      )
     );
   }
 
@@ -540,7 +540,7 @@ class _AddSmsTemplateScreenState extends State<AddSmsTemplateScreen> {
           theme,
           "If both Account number and Card number are present in the same SMS, tag only Account number.",
         ),
-      ],
+      ]
     );
   }
 
@@ -654,7 +654,7 @@ class _AddSmsTemplateScreenState extends State<AddSmsTemplateScreen> {
             ),
           ],
         ),
-      ),
+      )
     );
   }
 
@@ -678,7 +678,7 @@ class _AddSmsTemplateScreenState extends State<AddSmsTemplateScreen> {
             ),
           )
           .toList(),
-      selectedId: _selectedPaymentMethod,
+      selectedId: _selectedPaymentMethod
     );
     if (selected != null) {
       setState(() {
@@ -697,7 +697,7 @@ class _AddSmsTemplateScreenState extends State<AddSmsTemplateScreen> {
         borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide.none,
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16)
     );
   }
 
@@ -739,7 +739,7 @@ class _AddSmsTemplateScreenState extends State<AddSmsTemplateScreen> {
             ),
           ),
         ],
-      ),
+      )
     );
   }
 }
@@ -807,7 +807,7 @@ class _SuccessView extends StatelessWidget {
             ),
           ),
         ),
-      ),
+      )
     );
   }
 }
@@ -824,7 +824,7 @@ class _SectionLabel extends StatelessWidget {
         fontWeight: FontWeight.bold,
         color: Theme.of(context).colorScheme.primary,
         letterSpacing: 1.2,
-      ),
+      )
     );
   }
 }
@@ -870,7 +870,7 @@ class _TypeTab extends StatelessWidget {
             ),
           ),
         ),
-      ),
+      )
     );
   }
 }
@@ -908,7 +908,7 @@ class _LegendChip extends StatelessWidget {
             ),
           ),
         ],
-      ),
+      )
     );
   }
 }
@@ -1125,7 +1125,7 @@ class _TagOptionCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
+      )
     );
   }
 }
@@ -1178,7 +1178,7 @@ class _ConfirmationItem extends StatelessWidget {
             ),
           ),
         ],
-      ),
+      )
     );
   }
 }

@@ -96,7 +96,7 @@ class DataTile extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ],
-      ),
+      )
     );
   }
 }
@@ -163,7 +163,7 @@ class ActionBox extends StatelessWidget {
             ],
           ),
         ),
-      ),
+      )
     );
   }
 }

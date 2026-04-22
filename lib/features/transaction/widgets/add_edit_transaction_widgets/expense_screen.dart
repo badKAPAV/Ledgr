@@ -64,7 +64,7 @@ class ExpenseScreenState extends State<ExpenseScreen> {
       initialCategoryId: widget.initialCategoryId,
       initialPerson: widget.initialPerson,
       initialIsLoan: widget.initialIsLoan,
-      initialLoanSubtype: widget.initialLoanSubtype,
+      initialLoanSubtype: widget.initialLoanSubtype
     );
   }
 }

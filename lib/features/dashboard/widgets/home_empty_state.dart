@@ -123,7 +123,7 @@ class HomeEmptyState extends StatelessWidget {
             ),
           ],
         ),
-      ),
+      )
     );
   }
 }
@@ -236,7 +236,7 @@ class _GuideCard extends StatelessWidget {
             ),
           ),
         ),
-      ),
+      )
     );
   }
 }

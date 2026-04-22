@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:wallzy/common/helpers/fading_divider.dart';
 import 'package:wallzy/common/progress_bar/segmented_progress_bar.dart';
 import 'package:wallzy/core/themes/theme.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
-import 'package:wallzy/features/transaction/widgets/transaction_detail_screen.dart';
+import 'package:wallzy/features/transaction/widgets/transaction_details_screen/transaction_detail_screen.dart';
 import 'package:wallzy/features/transaction/widgets/transactions_list/grouped_transaction_list.dart';
 import 'package:wallzy/common/widgets/date_filter_selector.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -94,6 +95,7 @@ class TransactionsTabScreenState extends State<TransactionsTabScreen> {
       final filter = TransactionFilter(
         startDate: range.start,
         endDate: range.end,
+        excludeFromBudgetsFromTotals: false,
       );
       final result = provider.getFilteredResults(filter);
       if (result.transactions.isNotEmpty) {
@@ -125,7 +127,8 @@ class TransactionsTabScreenState extends State<TransactionsTabScreen> {
     final range = _getFilterRange();
     final filter = TransactionFilter(
       startDate: range.start,
-      endDate: range.end.add(const Duration(days: 1)),
+      endDate: range.end,
+      excludeFromBudgetsFromTotals: false,
     );
     final result = transactionProvider.getFilteredResults(filter);
 
@@ -169,13 +172,26 @@ class TransactionsTabScreenState extends State<TransactionsTabScreen> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(24, 24, 16, 8),
-              child: Text(
-                'ACTIVITY FEED',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.5,
-                  color: Theme.of(context).colorScheme.secondary,
-                ),
+              child: Row(
+                children: [
+                  Text(
+                    'ACTIVITY FEED',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.5,
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: FadingDivider(
+                      thickness: 2,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.secondary.withValues(alpha: 0.5),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

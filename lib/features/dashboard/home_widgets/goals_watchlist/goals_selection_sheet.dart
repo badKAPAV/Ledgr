@@ -289,7 +289,7 @@ class _GoalsSelectionSheetState extends State<GoalsSelectionSheet> {
             ),
           ),
         ],
-      ),
+      )
     );
   }
 }

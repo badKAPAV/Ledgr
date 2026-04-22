@@ -64,7 +64,7 @@ class IncomeScreenState extends State<IncomeScreen> {
       initialCategoryId: widget.initialCategoryId,
       initialPerson: widget.initialPerson,
       initialIsLoan: widget.initialIsLoan,
-      initialLoanSubtype: widget.initialLoanSubtype,
+      initialLoanSubtype: widget.initialLoanSubtype
     );
   }
 }

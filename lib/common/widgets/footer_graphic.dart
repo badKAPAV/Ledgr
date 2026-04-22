@@ -33,7 +33,7 @@ class FooterGraphic extends StatelessWidget {
           ),
           const SizedBox(height: 100),
         ],
-      ),
+      )
     );
   }
 }

@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:wallzy/core/themes/theme.dart'; // Assuming AppColors is here
 import 'package:wallzy/common/widgets/custom_alert_dialog.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
-import 'package:wallzy/features/subscription/models/due_subscription.dart';
+import 'package:wallzy/features/recurring_payment/models/due_recurring_payment.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class ActionDeckWidget extends StatefulWidget {

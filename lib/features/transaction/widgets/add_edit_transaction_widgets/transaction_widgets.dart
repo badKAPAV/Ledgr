@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:wallzy/features/accounts/models/account.dart';
 import 'package:wallzy/features/accounts/screens/add_edit_account_screen.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
-import 'package:wallzy/features/folders/models/tag.dart';
+import 'package:wallzy/features/folders/models/folder.dart';
 import 'package:wallzy/features/transaction/provider/meta_provider.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
 
@@ -507,211 +507,249 @@ Future<String?> showModernPickerSheet({
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
-    builder: (ctx) {
-      String searchQuery = '';
-      return StatefulBuilder(
-        builder: (BuildContext context, StateSetter setState) {
-          final filteredItems = searchQuery.isEmpty
-              ? items
-              : items
-                    .where(
-                      (i) => i.label.toLowerCase().contains(
-                        searchQuery.toLowerCase(),
-                      ),
-                    )
-                    .toList();
+    builder: (ctx) => _ModernPickerSheetContent(
+      title: title,
+      items: items,
+      selectedId: selectedId,
+      showCreateNew: showCreateNew,
+      showSearch: showSearch,
+      onCreateNew: onCreateNew,
+    ),
+  );
+}
 
-          return DraggableScrollableSheet(
-            initialChildSize: 0.6,
-            minChildSize: 0.4,
-            maxChildSize: 0.9,
-            expand: false,
-            builder: (_, controller) {
-              return Padding(
-                padding: EdgeInsets.fromLTRB(
-                  20,
-                  20,
-                  20,
-                  MediaQuery.of(context).viewInsets.bottom +
-                      30, // Pad for keyboard
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+class _ModernPickerSheetContent extends StatefulWidget {
+  final String title;
+  final List<PickerItem> items;
+  final String? selectedId;
+  final bool showCreateNew;
+  final bool showSearch;
+  final VoidCallback? onCreateNew;
+
+  const _ModernPickerSheetContent({
+    required this.title,
+    required this.items,
+    this.selectedId,
+    this.showCreateNew = false,
+    this.showSearch = false,
+    this.onCreateNew,
+  });
+
+  @override
+  State<_ModernPickerSheetContent> createState() =>
+      _ModernPickerSheetContentState();
+}
+
+class _ModernPickerSheetContentState extends State<_ModernPickerSheetContent> {
+  String searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final filteredItems = searchQuery.isEmpty
+        ? widget.items
+        : widget.items
+              .where(
+                (i) =>
+                    i.label.toLowerCase().contains(searchQuery.toLowerCase()),
+              )
+              .toList();
+
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom, // Pad for keyboard
+      ),
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (_, controller) {
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          title,
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                fontWeight: FontWeight.normal,
-                                fontSize: 16,
-                                letterSpacing: 1,
-                              ),
-                        ),
-                        if (showCreateNew && onCreateNew != null)
-                          IconButton.filledTonal(
-                            style: IconButton.styleFrom(
-                              backgroundColor: Theme.of(
-                                context,
-                              ).colorScheme.surfaceContainerHighest,
-                              foregroundColor: Theme.of(
-                                context,
-                              ).colorScheme.onSurface,
-                            ),
-                            onPressed: onCreateNew,
-                            icon: const HugeIcon(
-                              icon: HugeIcons.strokeRoundedAdd01,
-                              size: 24,
-                            ),
-                            tooltip: 'Create New',
-                          ),
-                      ],
+                    Text(
+                      widget.title,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.normal,
+                        fontSize: 16,
+                        letterSpacing: 1,
+                      ),
                     ),
-                    if (showSearch) ...[
-                      const SizedBox(height: 16),
-                      TextField(
-                        onChanged: (value) {
-                          setState(() {
-                            searchQuery = value;
-                          });
-                        },
-                        decoration: InputDecoration(
-                          hintText: 'Search...',
-                          prefixIcon: Padding(
-                            padding: const EdgeInsets.all(14.0),
-                            child: const HugeIcon(
-                              icon: HugeIcons.strokeRoundedSearch01,
-                              size: 10,
-                              strokeWidth: 2,
-                            ),
-                          ),
-                          filled: true,
-                          fillColor: Theme.of(
+                    if (widget.showCreateNew && widget.onCreateNew != null)
+                      IconButton.filledTonal(
+                        style: IconButton.styleFrom(
+                          backgroundColor: Theme.of(
                             context,
                           ).colorScheme.surfaceContainerHighest,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(50),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
+                          foregroundColor: Theme.of(
+                            context,
+                          ).colorScheme.onSurface,
                         ),
+                        onPressed: widget.onCreateNew,
+                        icon: const HugeIcon(
+                          icon: HugeIcons.strokeRoundedAdd01,
+                          size: 24,
+                        ),
+                        tooltip: 'Create New',
                       ),
-                    ],
-                    const SizedBox(height: 20),
-                    Expanded(
-                      child: GridView.builder(
-                        controller: controller,
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 3,
-                              childAspectRatio: 1.1,
-                              crossAxisSpacing: 12,
-                              mainAxisSpacing: 12,
-                            ),
-                        itemCount: filteredItems.length,
-                        itemBuilder: (_, index) {
-                          final item = filteredItems[index];
-                          final isSelected = item.id == selectedId;
-                          final baseColor =
-                              item.color ??
-                              Theme.of(context).colorScheme.primary;
-
-                          return InkWell(
-                            onTap: () => Navigator.pop(ctx, item.id),
-                            borderRadius: BorderRadius.circular(20),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? baseColor.withValues(alpha: 0.15)
-                                    : Theme.of(
-                                        context,
-                                      ).colorScheme.surfaceContainer,
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: isSelected
-                                      ? baseColor
-                                      : Colors.transparent,
-                                  width: 2,
-                                ),
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: isSelected
-                                          ? baseColor
-                                          : Theme.of(
-                                              context,
-                                            ).colorScheme.surface,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: HugeIcon(
-                                      icon: item.icon,
-                                      color: isSelected
-                                          ? Colors.white
-                                          : baseColor,
-                                      size: 24,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    item.label,
-                                    textAlign: TextAlign.center,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: isSelected
-                                          ? FontWeight.bold
-                                          : FontWeight.w500,
-                                      color: isSelected
-                                          ? baseColor
-                                          : Theme.of(
-                                              context,
-                                            ).colorScheme.onSurface,
-                                    ),
-                                  ),
-                                  if (item.subtitle != null) ...[
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      item.subtitle!,
-                                      textAlign: TextAlign.center,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: isSelected
-                                            ? baseColor.withAlpha(204)
-                                            : Theme.of(
-                                                context,
-                                              ).colorScheme.outline,
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
                   ],
                 ),
-              );
-            },
+                if (widget.showSearch) ...[
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _searchController,
+                    onChanged: (value) {
+                      setState(() {
+                        searchQuery = value;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      hintText: 'Search...',
+                      prefixIcon: const Padding(
+                        padding: EdgeInsets.all(14.0),
+                        child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedSearch01,
+                          size: 10,
+                          strokeWidth: 2,
+                        ),
+                      ),
+                      suffixIcon: searchQuery.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.cancel_rounded, size: 20),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() {
+                                  searchQuery = '';
+                                });
+                              },
+                            )
+                          : null,
+                      filled: true,
+                      fillColor: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(50),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 20),
+                Expanded(
+                  child: GridView.builder(
+                    controller: controller,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          childAspectRatio: 1.1,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                        ),
+                    itemCount: filteredItems.length,
+                    itemBuilder: (_, index) {
+                      final item = filteredItems[index];
+                      final isSelected = item.id == widget.selectedId;
+                      final baseColor =
+                          item.color ?? Theme.of(context).colorScheme.primary;
+
+                      return InkWell(
+                        onTap: () => Navigator.pop(context, item.id),
+                        borderRadius: BorderRadius.circular(20),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? baseColor.withValues(alpha: 0.15)
+                                : Theme.of(
+                                    context,
+                                  ).colorScheme.surfaceContainer,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isSelected
+                                  ? baseColor
+                                  : Colors.transparent,
+                              width: 2,
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? baseColor
+                                      : Theme.of(context).colorScheme.surface,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: HugeIcon(
+                                  icon: item.icon,
+                                  color: isSelected ? Colors.white : baseColor,
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                item.label,
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.w500,
+                                  color: isSelected
+                                      ? baseColor
+                                      : Theme.of(context).colorScheme.onSurface,
+                                ),
+                              ),
+                              if (item.subtitle != null) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  item.subtitle!,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: isSelected
+                                        ? baseColor.withAlpha(204)
+                                        : Theme.of(context).colorScheme.outline,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
           );
         },
-      );
-    },
-  );
+      ),
+    );
+  }
 }
 
 void showCustomAccountModal(

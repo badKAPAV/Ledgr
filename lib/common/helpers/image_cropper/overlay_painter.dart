@@ -15,7 +15,7 @@ class OverlayPainter extends CustomPainter {
     final overlayPath = Path.combine(
       PathOperation.difference,
       backgroundPath,
-      cutoutPath,
+      cutoutPath
     );
 
     canvas.drawPath(overlayPath, paint);

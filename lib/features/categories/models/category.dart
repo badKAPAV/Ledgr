@@ -35,7 +35,7 @@ class CategoryModel {
       keywords: List<String>.from(map['keywords']),
       budget: map['budget'],
       isDeleted: map['isDeleted'],
-      isDefault: map['isDefault'] ?? false,
+      isDefault: map['isDefault'] ?? false
     );
   }
 
@@ -73,7 +73,7 @@ class CategoryModel {
       keywords: keywords ?? this.keywords,
       budget: budget ?? this.budget,
       isDeleted: isDeleted ?? this.isDeleted,
-      isDefault: isDefault ?? this.isDefault,
+      isDefault: isDefault ?? this.isDefault
     );
   }
 }

@@ -36,39 +36,39 @@ class BudgetCycleHelper {
         // Adapting to existing app logic which seems to use [start, end_inclusive] or [start, end_exclusive].
         // Looking at home_screen.dart: `end: now.add(const Duration(days: 1))` suggests exclusive upper bound logic for days.
         // Let's return strict boundaries: Start of first day, and strict Start of next cycle's first day.
-        end = nextMonth;
+        // Making it inclusive by subtracting 1 microsecond.
+        end = nextMonth.subtract(const Duration(microseconds: 1));
         break;
 
       case BudgetCycleMode.customDate:
-        // Cycle starts on [startDay] of previous month.
-        // E.g. Target April, StartDay 25.
-        // Range: March 25 - April 24 (End is April 25th 00:00 exclusive)
+        // Cycle starts on [startDay] of current month.
+        // E.g. Target November, StartDay 7.
+        // Range: November 7 - December 6 (End is December 7th 00:00 exclusive)
 
-        // Calculate "Previous Month"
-        int prevMonthYear = targetYear;
-        int prevMonth = targetMonth - 1;
-        if (prevMonth == 0) {
-          prevMonth = 12;
-          prevMonthYear--;
-        }
-
-        // Handle "February 30th" problem for start date
-        // If user set startDay=30, but prevMonth is Feb, start on Feb 28/29.
+        // Start date is [startDay] of current target month.
         final actualStartDate = _resolveValidDate(
-          prevMonthYear,
-          prevMonth,
-          startDay,
-        );
-        start = DateTime(prevMonthYear, prevMonth, actualStartDate);
-
-        // End date is [startDay] of current target month.
-        // If target month is Feb, and startDay=30, end is Feb 28/29 (start of March cycle).
-        final actualEndDateDay = _resolveValidDate(
           targetYear,
           targetMonth,
           startDay,
         );
-        end = DateTime(targetYear, targetMonth, actualEndDateDay);
+        start = DateTime(targetYear, targetMonth, actualStartDate);
+
+        // Calculate "Next Month"
+        int nextMonthYear = targetYear;
+        int nextMonth = targetMonth + 1;
+        if (nextMonth > 12) {
+          nextMonth = 1;
+          nextMonthYear++;
+        }
+
+        // End date is [startDay] of next month, minus 1 microsecond to be inclusive.
+        final actualEndDateDay = _resolveValidDate(
+          nextMonthYear,
+          nextMonth,
+          startDay,
+        );
+        end = DateTime(nextMonthYear, nextMonth, actualEndDateDay)
+            .subtract(const Duration(microseconds: 1));
         break;
 
       case BudgetCycleMode.lastDay:
@@ -94,11 +94,11 @@ class BudgetCycleHelper {
           lastDayPrevMonth.day,
         );
 
-        // End date is the last day of the target month?
+        // End date is the last day of the target month minus 1 microsecond.
         // "Last Day Mode: Starts on the last day of the *previous* month."
         // Meaning the cycle for April starts Mar 31.
         // The cycle for May would start Apr 30.
-        // So the April cycle ends on Apr 30.
+        // So the April cycle ends on Apr 29.
         final targetMonthDate = DateTime(targetYear, targetMonth, 1);
         final lastDayTargetMonth = DateTime(
           targetMonthDate.year,
@@ -110,7 +110,7 @@ class BudgetCycleHelper {
           lastDayTargetMonth.year,
           lastDayTargetMonth.month,
           lastDayTargetMonth.day,
-        );
+        ).subtract(const Duration(microseconds: 1));
         break;
     }
 
@@ -123,5 +123,51 @@ class BudgetCycleHelper {
     // Get last day of this month
     final lastDayOfMonth = DateTime(year, month + 1, 0).day;
     return day > lastDayOfMonth ? lastDayOfMonth : day;
+  }
+
+  /// Determines the logical "target month/year" that the given [date] falls into.
+  /// Useful for figuring out "This Month's" cycle dynamically.
+  static DateTime getTargetMonthForDate(
+    DateTime date,
+    BudgetCycleMode mode,
+    int startDay,
+  ) {
+    int targetMonth = date.month;
+    int targetYear = date.year;
+
+    if (mode == BudgetCycleMode.customDate) {
+      if (date.day < startDay) {
+        targetMonth--;
+        if (targetMonth == 0) {
+          targetMonth = 12;
+          targetYear--;
+        }
+      }
+    } else if (mode == BudgetCycleMode.lastDay) {
+      final lastDayOfMonth = DateTime(date.year, date.month + 1, 0).day;
+      if (date.day == lastDayOfMonth) {
+        targetMonth++;
+        if (targetMonth > 12) {
+          targetMonth = 1;
+          targetYear++;
+        }
+      }
+    }
+    return DateTime(targetYear, targetMonth, 1);
+  }
+
+  /// Returns the budget cycle range that directly contains the given [date].
+  static DateTimeRange currentCycleRange(
+    DateTime date,
+    BudgetCycleMode mode,
+    int startDay,
+  ) {
+    final target = getTargetMonthForDate(date, mode, startDay);
+    return getCycleRange(
+      targetMonth: target.month,
+      targetYear: target.year,
+      mode: mode,
+      startDay: startDay
+    );
   }
 }

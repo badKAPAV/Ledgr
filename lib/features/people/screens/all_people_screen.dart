@@ -253,7 +253,7 @@ class _AllPeopleScreenState extends State<AllPeopleScreen> {
                   ),
           ),
         ],
-      ),
+      )
     );
   }
 }
@@ -276,7 +276,7 @@ class _PersonListTile extends StatelessWidget {
     final theme = Theme.of(context);
     final currencyFormat = NumberFormat.compactCurrency(
       symbol: currencySymbol,
-      decimalDigits: 0,
+      decimalDigits: 0
     );
 
     return Card(
@@ -399,7 +399,7 @@ class _PersonListTile extends StatelessWidget {
             ],
           ),
         ),
-      ),
+      )
     );
   }
 }

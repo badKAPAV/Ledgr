@@ -68,12 +68,12 @@ class _BudgetSetupWizardState extends State<BudgetSetupWizard> {
     final budgetProvider = Provider.of<BudgetProvider>(context, listen: false);
     final settingsProvider = Provider.of<SettingsProvider>(
       context,
-      listen: false,
+      listen: false
     );
 
     _averageExpense = budgetProvider.calculateAverageExpenses(
       3,
-      settingsProvider,
+      settingsProvider
     );
 
     if (_averageExpense <= 0) {
@@ -100,7 +100,7 @@ class _BudgetSetupWizardState extends State<BudgetSetupWizard> {
     final now = DateTime.now();
     final past = now.subtract(const Duration(days: 90));
     final txs = txProvider.transactions.where(
-      (t) => t.type == 'expense' && t.timestamp.isAfter(past),
+      (t) => t.type == 'expense' && t.timestamp.isAfter(past)
     );
 
     Map<String, double> catTotals = {};
@@ -276,7 +276,7 @@ class _BudgetSetupWizardState extends State<BudgetSetupWizard> {
                   ),
                 ],
               ),
-      ),
+      )
     );
   }
 
@@ -338,7 +338,7 @@ class _BudgetSetupWizardState extends State<BudgetSetupWizard> {
           ),
           const SizedBox(height: 24),
         ],
-      ),
+      )
     );
   }
 
@@ -352,7 +352,7 @@ class _BudgetSetupWizardState extends State<BudgetSetupWizard> {
             ? theme.colorScheme.primary
             : theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(4),
-      ),
+      )
     );
   }
 
@@ -398,7 +398,7 @@ class _BudgetSetupWizardState extends State<BudgetSetupWizard> {
             color: theme.colorScheme.outline,
           ),
         ),
-      ],
+      ]
     );
   }
 
@@ -573,7 +573,7 @@ class _BudgetSetupWizardState extends State<BudgetSetupWizard> {
             ),
           ),
         ],
-      ),
+      )
     );
   }
 
@@ -791,7 +791,7 @@ class _BudgetSetupWizardState extends State<BudgetSetupWizard> {
             ),
           ),
         ),
-      ],
+      ]
     );
   }
 }
@@ -960,7 +960,7 @@ class _AnimatedCategorySliderState extends State<_AnimatedCategorySlider> {
             ),
           ),
         ],
-      ),
+      )
     );
   }
 }
@@ -1030,7 +1030,7 @@ class _ArcSlider extends StatelessWidget {
             appColors: Theme.of(context).extension<AppColors>()!,
           ),
         ),
-      ),
+      )
     );
   }
 }
@@ -1075,14 +1075,14 @@ class _ArcPainter extends CustomPainter {
       0.25 * math.pi,
       -1.5 * math.pi * value,
       false,
-      progressPaint,
+      progressPaint
     );
 
     // Thumb position (relative to Right End)
     final thumbAngle = 0.25 * math.pi - (1.5 * math.pi * value);
     final thumbPos = Offset(
       center.dx + radius * math.cos(thumbAngle),
-      center.dy + radius * math.sin(thumbAngle),
+      center.dy + radius * math.sin(thumbAngle)
     );
 
     final shadowPaint = Paint()

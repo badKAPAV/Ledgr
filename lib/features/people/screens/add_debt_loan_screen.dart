@@ -95,7 +95,7 @@ class _AddDebtLoanScreenState extends State<AddDebtLoanScreen>
           _DebtLoanForm(isDebt: true, initialPerson: widget.initialPerson),
           _DebtLoanForm(isDebt: false, initialPerson: widget.initialPerson),
         ],
-      ),
+      )
     );
   }
 }
@@ -116,7 +116,7 @@ class _TabLabel extends StatelessWidget {
           subtitle,
           style: const TextStyle(fontSize: 9, fontWeight: FontWeight.normal),
         ),
-      ],
+      ]
     );
   }
 }
@@ -210,7 +210,7 @@ class _DebtLoanFormState extends State<_DebtLoanForm> {
             });
           },
         ),
-      ),
+      )
     );
   }
 
@@ -316,7 +316,7 @@ class _DebtLoanFormState extends State<_DebtLoanForm> {
             ),
           ),
         ],
-      ),
+      )
     );
   }
 }
@@ -376,7 +376,7 @@ class _AmountInputHero extends StatelessWidget {
             ),
           ],
         ),
-      ],
+      ]
     );
   }
 }
@@ -501,7 +501,7 @@ class _FunkyPickerTile extends StatelessWidget {
             ),
           ],
         ),
-      ),
+      )
     );
   }
 }

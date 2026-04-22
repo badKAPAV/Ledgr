@@ -103,7 +103,7 @@ class AccountProvider with ChangeNotifier {
       accountHolderName: 'Me',
       userId: userId,
       isPrimary: makePrimary,
-      accountType: 'debit',
+      accountType: 'debit'
     );
     await _firestore
         .collection('users')
@@ -202,7 +202,7 @@ class AccountProvider with ChangeNotifier {
     return account.copyWith(
       id: docRef.id,
       userId: _userId,
-      isPrimary: shouldBePrimary,
+      isPrimary: shouldBePrimary
     );
   }
 
@@ -240,7 +240,7 @@ class AccountProvider with ChangeNotifier {
 
     final accountToDelete = _accounts.firstWhere(
       (acc) => acc.id == accountId,
-      orElse: () => throw Exception("Account not found"),
+      orElse: () => throw Exception("Account not found")
     );
 
     // Rule: The "Cash" account cannot be deleted.
@@ -469,7 +469,7 @@ class AccountProvider with ChangeNotifier {
       accountHolderName: accountHolderName ?? 'Main',
       userId: _userId!,
       isPrimary: shouldBePrimary,
-      accountType: 'debit',
+      accountType: 'debit'
     );
     final docRef = await accountsCollection.add(newAccount.toMap());
     final createdAccount = newAccount.copyWith(id: docRef.id);
@@ -487,7 +487,7 @@ class AccountProvider with ChangeNotifier {
     List<TransactionModel> allTransactions,
   ) {
     final accountTransactions = allTransactions.where(
-      (tx) => tx.accountId == account.id,
+      (tx) => tx.accountId == account.id
     );
 
     if (account.accountType == 'credit') {

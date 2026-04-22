@@ -64,7 +64,7 @@ class AccountInfoModalSheet extends StatelessWidget {
             },
           ),
         ],
-      ),
+      )
     );
   }
 
@@ -279,7 +279,7 @@ class AccountInfoModalSheet extends StatelessWidget {
             ),
           ),
         ],
-      ),
+      )
     );
   }
 }
@@ -430,7 +430,7 @@ class _AccountVisualCard extends StatelessWidget {
             ],
           ),
         ],
-      ),
+      )
     );
   }
 }

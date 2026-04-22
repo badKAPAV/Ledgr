@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:wallzy/common/helpers/fading_divider.dart';
 import 'package:wallzy/features/dashboard/widgets/home_empty_state.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
+import 'package:wallzy/features/transaction/screens/all_transactions_screen.dart';
 import 'package:wallzy/features/transaction/widgets/transactions_list/grouped_transaction_list.dart';
 
 class RecentActivityWidget extends StatelessWidget {
@@ -19,75 +21,36 @@ class RecentActivityWidget extends StatelessWidget {
       return const Column(children: [SizedBox(height: 24), HomeEmptyState()]);
     }
 
-    final theme = Theme.of(context);
+    // final theme = Theme.of(context);
     // Base style from your headlineMedium
-    final baseStyle = theme.textTheme.headlineMedium?.copyWith(
-      fontSize: 16,
-      fontWeight: FontWeight.w900,
-      letterSpacing: 1.5,
-    );
+    // final baseStyle = theme.textTheme.headlineMedium?.copyWith(
+    //   fontSize: 16,
+    //   fontWeight: FontWeight.w900,
+    //   letterSpacing: 1.5
+    // );
 
     return Column(
+      // crossAxisAlignment: .start,
       children: [
-        // --- NATIVE "TEXT WALL" HEADER ---
-        Container(
-          width: double.infinity,
-          height: 100,
-          clipBehavior: Clip.hardEdge,
-          decoration: const BoxDecoration(),
-          child: Stack(
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+          child: Row(
             children: [
-              // Faded Top Row - Clipped Left
-              Positioned(
-                top: 10,
-                left: -40,
-                child: _buildTextRow(
-                  "RECENT TRANSACTIONS RECENT TRANSACTIONS RECENT TRANSACTIONS RECENT TRANSACTIONS",
-                  0.05,
-                  baseStyle,
+              Text(
+                'RECENT TRANSACTIONS',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.5,
+                  color: Theme.of(context).colorScheme.secondary,
                 ),
               ),
-              // Focused Center Row
-              Align(
-                alignment: Alignment.center,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _buildTextRow(
-                        "RECENT TRANSACTIONS RECENT TRANSACTIONS ",
-                        0.05,
-                        baseStyle,
-                        TextAlign.right,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Text(
-                        "RECENT TRANSACTIONS",
-                        style: baseStyle?.copyWith(
-                          color: theme.colorScheme.onSurface,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: _buildTextRow(
-                        " RECENT TRANSACTIONS RECENT TRANSACTIONS",
-                        0.05,
-                        baseStyle,
-                        TextAlign.left,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Faded Bottom Row - Clipped Right
-              Positioned(
-                bottom: 10,
-                right: -40,
-                child: _buildTextRow(
-                  "RECENT TRANSACTIONS RECENT TRANSACTIONS RECENT TRANSACTIONS RECENT TRANSACTIONS",
-                  0.05,
-                  baseStyle,
+              const SizedBox(width: 6),
+              Expanded(
+                child: FadingDivider(
+                  thickness: 2,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.secondary.withValues(alpha: 0.5),
                 ),
               ),
             ],
@@ -100,27 +63,80 @@ class RecentActivityWidget extends StatelessWidget {
           onTap: onTap,
           useSliver: false,
         ),
+
+        const SizedBox(height: 6),
+
+        Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainer,
+            // borderRadius: .only(
+            //   topLeft: Radius.circular(6),
+            //   topRight: Radius.circular(6),
+            //   bottomLeft: Radius.circular(24),
+            //   bottomRight: Radius.circular(24),
+            // ),
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: InkWell(
+            // borderRadius: .only(
+            //   topLeft: Radius.circular(6),
+            //   topRight: Radius.circular(6),
+            //   bottomLeft: Radius.circular(24),
+            //   bottomRight: Radius.circular(24),
+            // ),
+            borderRadius: BorderRadius.circular(24),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => AllTransactionsScreen(initialTabIndex: 0),
+                ),
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              child: Row(
+                mainAxisSize: .min,
+                children: [
+                  Text(
+                    'View all',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w400,
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 12,
+                    color: Theme.of(context).colorScheme.secondary,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildTextRow(
-    String text,
-    double opacity,
-    TextStyle? style, [
-    TextAlign textAlign = TextAlign.center,
-  ]) {
-    return Text(
-      text,
-      maxLines: 1,
-      textAlign: textAlign,
-      overflow: TextOverflow.clip,
-      softWrap: false,
-      style: style?.copyWith(
-        color:
-            style.color?.withValues(alpha: opacity) ??
-            Colors.grey.withValues(alpha: opacity),
-      ),
-    );
-  }
+  // Widget _buildTextRow(
+  //   String text,
+  //   double opacity,
+  //   TextStyle? style, [
+  //   TextAlign textAlign = TextAlign.center,
+  // ]) {
+  //   return Text(
+  //     text,
+  //     maxLines: 1,
+  //     textAlign: textAlign,
+  //     overflow: TextOverflow.clip,
+  //     softWrap: false,
+  //     style: style?.copyWith(
+  //       color:
+  //           style.color?.withValues(alpha: opacity) ??
+  //           Colors.grey.withValues(alpha: opacity),
+  //     )
+  //   );
+  // }
 }

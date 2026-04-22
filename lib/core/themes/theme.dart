@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:material_color_utilities/material_color_utilities.dart';
 
 @immutable
@@ -76,11 +77,22 @@ ColorScheme patchedColorScheme(ColorScheme base, CorePalette? palette) {
 
   final isDark = base.brightness == Brightness.dark;
 
-  final primary = palette.primary;
-  final secondary = palette.secondary;
-  final tertiary = palette.tertiary;
-  final neutral = palette.neutral;
-  final neutralVariant = palette.neutralVariant;
+  // THE OEM BUG FIX:
+  // Test if the OS handed us a broken/black secondary palette.
+  final int secondaryTestColor = palette.secondary.get(40);
+  final bool isBrokenPalette =
+      secondaryTestColor == 0 || secondaryTestColor == 0xFF000000;
+
+  // If broken, algorithmically generate a flawless full palette from the Primary color.
+  final CorePalette safePalette = isBrokenPalette
+      ? CorePalette.of(palette.primary.get(40))
+      : palette;
+
+  final primary = safePalette.primary;
+  final secondary = safePalette.secondary;
+  final tertiary = safePalette.tertiary;
+  final neutral = safePalette.neutral;
+  final neutralVariant = safePalette.neutralVariant;
 
   // We use the Primary palette for surfaces to force vibrancy everywhere.
   final surfacePalette = primary;
@@ -94,7 +106,7 @@ ColorScheme patchedColorScheme(ColorScheme base, CorePalette? palette) {
         ? Color(primary.get(90))
         : Color(primary.get(10)),
 
-    // Secondary
+    // Secondary (Now guaranteed to be a harmonious color, not black)
     secondary: isDark ? Color(secondary.get(80)) : Color(secondary.get(40)),
     onSecondary: isDark ? Color(secondary.get(20)) : Color(secondary.get(100)),
     secondaryContainer: isDark
@@ -104,7 +116,7 @@ ColorScheme patchedColorScheme(ColorScheme base, CorePalette? palette) {
         ? Color(secondary.get(90))
         : Color(secondary.get(10)),
 
-    // Tertiary
+    // Tertiary (Now guaranteed to be a harmonious color, not black)
     tertiary: isDark ? Color(tertiary.get(80)) : Color(tertiary.get(40)),
     onTertiary: isDark ? Color(tertiary.get(20)) : Color(tertiary.get(100)),
     tertiaryContainer: isDark
@@ -123,9 +135,6 @@ ColorScheme patchedColorScheme(ColorScheme base, CorePalette? palette) {
         : const Color(0xFF410E0B),
 
     // --- VIBRANT SURFACES ---
-    // Mapping surface roles to the PRIMARY palette.
-
-    // The "Canvas"
     surface: isDark
         ? Color(surfacePalette.get(6))
         : Color(surfacePalette.get(95)),
@@ -135,7 +144,6 @@ ColorScheme patchedColorScheme(ColorScheme base, CorePalette? palette) {
         : Color(surfacePalette.get(10)),
 
     // --- CONTAINERS ---
-    // These now use Primary Tones 99/20 to contrast with the 95/6 Canvas.
     surfaceContainerLowest: isDark
         ? Color(surfacePalette.get(4))
         : Color(surfacePalette.get(100)),
@@ -144,21 +152,19 @@ ColorScheme patchedColorScheme(ColorScheme base, CorePalette? palette) {
         ? Color(surfacePalette.get(10))
         : Color(surfacePalette.get(97)),
 
-    // Standard Card Color
     surfaceContainer: isDark
         ? Color(surfacePalette.get(20))
         : Color(surfacePalette.get(99)),
 
     surfaceContainerHigh: isDark
         ? Color(surfacePalette.get(25))
-        : Color(surfacePalette.get(95)), // Inverted slightly for effect
+        : Color(surfacePalette.get(95)),
 
     surfaceContainerHighest: isDark
         ? Color(surfacePalette.get(30))
         : Color(surfacePalette.get(90)),
 
-    // Variants (Outlines, secondary text)
-    // We map these to NeutralVariant to ensure text is still readable (not too neon)
+    // Variants
     onSurfaceVariant: isDark
         ? Color(neutralVariant.get(80))
         : Color(neutralVariant.get(30)),
@@ -207,7 +213,7 @@ class AppTheme {
       corePalette,
     );
 
-    final interTheme = GoogleFonts.interTextTheme(baseTheme.textTheme);
+    final interTheme = GoogleFonts.geologicaTextTheme(baseTheme.textTheme);
     final oswaldTheme = GoogleFonts.oswaldTextTheme(baseTheme.textTheme);
 
     final finaltextTheme = interTheme.copyWith(
@@ -230,18 +236,18 @@ class AppTheme {
           final theme = Theme.of(context);
           final colorScheme = theme.colorScheme;
 
-          return Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHighest, // M3 background role
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.arrow_back_rounded,
-              size: 24, // Standard M3 size
-              color: colorScheme.onSurface, // Standard M3 icon color
-            ),
+          return Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 20, // Standard M3 size
+            color: colorScheme.onSurface, // Standard M3 icon color
+          );
+        },
+        drawerButtonIconBuilder: (BuildContext context) {
+          // Replace this with any icon you want (e.g., HugeIcons, custom SVG, etc.)
+          return const HugeIcon(
+            icon: HugeIcons.strokeRoundedMenu02,
+            strokeWidth: 2,
+            size: 24,
           );
         },
       ),
@@ -253,6 +259,7 @@ class AppTheme {
         fullColorScheme.surface,
       ),
       appBarTheme: AppBarTheme(
+        titleSpacing: 0,
         backgroundColor: scaffoldSurface(
           corePalette,
           isDark ? Brightness.dark : Brightness.light,

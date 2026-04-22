@@ -48,7 +48,7 @@ class _IlluminatedBorderState extends State<IlluminatedBorder>
         glowColor: widget.glowColor,
         borderRadius: widget.borderRadius,
       ),
-      child: widget.child,
+      child: widget.child
     );
   }
 }
@@ -88,7 +88,7 @@ class _IlluminatedBorderPainter extends CustomPainter {
       ],
       // The tight stops create a short tail and a sharp head
       stops: const [0.0, 0.15, 0.2, 0.25],
-      transform: GradientRotation(animation.value * 2 * math.pi),
+      transform: GradientRotation(animation.value * 2 * math.pi)
     );
 
     final glowPaint = Paint()

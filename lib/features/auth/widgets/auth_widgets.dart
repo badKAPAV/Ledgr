@@ -65,7 +65,7 @@ class AuthBackground extends StatelessWidget {
             child: Container(color: Colors.transparent),
           ),
         ),
-      ],
+      ]
     );
   }
 }
@@ -167,7 +167,7 @@ class ModernTextField extends StatelessWidget {
           horizontal: 20,
           vertical: 18,
         ),
-      ),
+      )
     );
   }
 }

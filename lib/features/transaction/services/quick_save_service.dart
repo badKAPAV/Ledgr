@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wallzy/features/accounts/models/account.dart';
-import 'package:wallzy/features/folders/models/tag.dart';
+import 'package:wallzy/features/folders/models/folder.dart';
 import 'package:wallzy/features/categories/services/category_matcher.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
 import 'package:uuid/uuid.dart';

@@ -86,7 +86,7 @@ class _AddFeedbackScreenState extends State<AddFeedbackScreen> {
           initialAspectRatio: CropAspectRatio.free,
           lockAspectRatio: false,
         ),
-      ),
+      )
     );
 
     if (croppedBytes != null && mounted) {
@@ -441,7 +441,7 @@ class _AddFeedbackScreenState extends State<AddFeedbackScreen> {
                   ],
                 ),
               ),
-            ),
+            )
     );
   }
 }

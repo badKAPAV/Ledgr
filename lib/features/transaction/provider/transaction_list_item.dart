@@ -104,7 +104,7 @@ class TransactionListItem extends StatelessWidget {
     );
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       child: Material(
         color: theme.colorScheme.surfaceContainerLow,
         borderRadius: borderRadius,
@@ -117,27 +117,30 @@ class TransactionListItem extends StatelessWidget {
               // --- 1. MAIN TRANSACTION CONTENT (Original Row) ---
               Padding(
                 padding: EdgeInsets.fromLTRB(
-                  16,
-                  16,
-                  16,
-                  linkedTx != null && netAmount != null ? 6 : 16,
+                  12,
+                  12,
+                  12,
+                  linkedTx != null && netAmount != null ? 6 : 12,
                 ),
                 child: Row(
                   children: [
                     // Icon
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color:
-                            (isExpense ? appColors.expense : appColors.income)
-                                .withValues(alpha: 0.1),
+                        border: Border.all(
+                          color: theme.colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.1,
+                          ),
+                          width: 1,
+                        ),
                         shape: BoxShape.circle,
                       ),
                       child: HugeIcon(
                         icon: icon,
-                        color: isExpense ? appColors.expense : appColors.income,
-                        size: 20,
-                        strokeWidth: 2,
+                        color: theme.colorScheme.onSurfaceVariant,
+                        size: 18,
+                        strokeWidth: 1.5,
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -149,9 +152,12 @@ class TransactionListItem extends StatelessWidget {
                         children: [
                           Text(
                             title,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.8,
+                              ),
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -163,7 +169,12 @@ class TransactionListItem extends StatelessWidget {
                                 DateFormat(
                                   'MMM d, y • h:mm a',
                                 ).format(transaction.timestamp),
-                                style: theme.textTheme.bodySmall,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  fontSize: 10,
+                                  fontWeight: .w300,
+                                  color: theme.colorScheme.onSurfaceVariant
+                                      .withValues(alpha: 0.5),
+                                ),
                               ),
                               if (showCreditTag) ...[
                                 const SizedBox(width: 8),
@@ -210,9 +221,11 @@ class TransactionListItem extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             subtitle,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: theme.colorScheme.outline,
+                            style: theme.textTheme.bodySmall?.copyWith(
                               fontSize: 10,
+                              fontWeight: .w300,
+                              color: theme.colorScheme.onSurfaceVariant
+                                  .withValues(alpha: 0.5),
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),

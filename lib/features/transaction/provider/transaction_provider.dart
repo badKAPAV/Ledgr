@@ -11,8 +11,9 @@ import 'package:wallzy/features/auth/provider/auth_provider.dart';
 import 'package:wallzy/features/accounts/models/account.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/features/people/models/person.dart';
-import 'package:wallzy/features/folders/models/tag.dart';
+import 'package:wallzy/features/folders/models/folder.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
+import 'package:wallzy/core/services/notification_service.dart';
 
 class TransactionFilter {
   final DateTime? startDate;
@@ -25,6 +26,7 @@ class TransactionFilter {
   final double? minAmount;
   final double? maxAmount;
   final String? type;
+  final bool excludeFromBudgetsFromTotals;
 
   const TransactionFilter({
     this.startDate,
@@ -37,6 +39,7 @@ class TransactionFilter {
     this.minAmount,
     this.maxAmount,
     this.type,
+    this.excludeFromBudgetsFromTotals = true,
   });
 
   static const TransactionFilter empty = TransactionFilter();
@@ -52,6 +55,7 @@ class TransactionFilter {
     ValueGetter<double?>? minAmount,
     ValueGetter<double?>? maxAmount,
     ValueGetter<String?>? type,
+    bool? excludeFromBudgetsFromTotals,
   }) {
     return TransactionFilter(
       startDate: startDate != null ? startDate() : this.startDate,
@@ -66,6 +70,8 @@ class TransactionFilter {
       minAmount: minAmount != null ? minAmount() : this.minAmount,
       maxAmount: maxAmount != null ? maxAmount() : this.maxAmount,
       type: type != null ? type() : this.type,
+      excludeFromBudgetsFromTotals:
+          excludeFromBudgetsFromTotals ?? this.excludeFromBudgetsFromTotals,
     );
   }
 
@@ -85,7 +91,8 @@ class TransactionFilter {
           const ListEquality().equals(paymentMethods, other.paymentMethods) &&
           minAmount == other.minAmount &&
           maxAmount == other.maxAmount &&
-          type == other.type;
+          type == other.type &&
+          excludeFromBudgetsFromTotals == other.excludeFromBudgetsFromTotals;
 
   @override
   int get hashCode => Object.hash(
@@ -99,6 +106,7 @@ class TransactionFilter {
     const ListEquality().hash(tags),
     const ListEquality().hash(people),
     const ListEquality().hash(paymentMethods),
+    excludeFromBudgetsFromTotals,
   );
 }
 
@@ -248,6 +256,7 @@ class TransactionProvider with ChangeNotifier, WidgetsBindingObserver {
 
             _error = null;
             notifyListeners();
+            _checkBudgetAlerts();
           },
           onError: (e) {
             _error =
@@ -442,7 +451,251 @@ class TransactionProvider with ChangeNotifier, WidgetsBindingObserver {
     return map;
   }
 
-  // ... [Keep addTransaction, addCreditRepayment, addTransfer, updateTransaction, deleteTransaction, getFilteredResults, getTotal, etc. EXACTLY AS THEY WERE] ...
+  Future<void> _checkBudgetAlerts() async {
+    final user = authProvider.user;
+    if (user == null) return;
+
+    final monthlyBudget = user.monthlyBudget ?? 0.0;
+
+    if (monthlyBudget > 0) {
+      final now = DateTime.now();
+      final cycle = BudgetCycleHelper.currentCycleRange(
+        now,
+        settingsProvider.budgetCycleMode,
+        settingsProvider.budgetCycleStartDay,
+      );
+      final String currencySymbol = settingsProvider.currencySymbol;
+
+      // 1. Monthly Limit Check
+      if (settingsProvider.enableMonthlyLimitAlert) {
+        final monthResult = getFilteredResults(
+          TransactionFilter(startDate: cycle.start, endDate: cycle.end),
+        );
+        final monthExpense = monthResult.totalExpense;
+        final currentMonthStr = "${now.year}-${now.month}";
+
+        if (monthExpense >= monthlyBudget &&
+            settingsProvider.lastMonthlyAlertMonth != currentMonthStr) {
+          await NotificationService().showLimitAlert(
+            id: 1,
+            title: "Monthly Budget Reached!",
+            body:
+                "You've spent $currencySymbol${monthExpense.toStringAsFixed(0)} this month.",
+          );
+          settingsProvider.setLastMonthlyAlertMonth(currentMonthStr);
+        }
+      }
+
+      // 2. Daily Limit Check
+      if (settingsProvider.enableDailyLimitAlert) {
+        final todayStart = DateTime(now.year, now.month, now.day);
+        final todayEnd = todayStart.add(const Duration(days: 1));
+
+        final beforeTodayResult = getFilteredResults(
+          TransactionFilter(startDate: cycle.start, endDate: todayStart),
+        );
+        final spentBeforeToday = beforeTodayResult.totalExpense;
+        final remainingMonthBudget = monthlyBudget - spentBeforeToday;
+        final daysRemaining = cycle.end.difference(todayStart).inDays + 1;
+
+        double dailyBudget = 0;
+        if (remainingMonthBudget > 0 && daysRemaining > 0) {
+          dailyBudget = remainingMonthBudget / daysRemaining;
+        }
+
+        final todayResult = getFilteredResults(
+          TransactionFilter(startDate: todayStart, endDate: todayEnd),
+        );
+        final todayExpense = todayResult.totalExpense;
+        final todayStr = "${now.year}-${now.month}-${now.day}";
+
+        bool isDailyLimitExceeded = false;
+        if (dailyBudget > 0 && todayExpense >= dailyBudget) {
+          isDailyLimitExceeded = true;
+        } else if (dailyBudget <= 0 && todayExpense > 0) {
+          isDailyLimitExceeded = true;
+        }
+
+        if (isDailyLimitExceeded &&
+            settingsProvider.lastDailyAlertDate != todayStr) {
+          await NotificationService().showLimitAlert(
+            id: 2,
+            title: "Daily Limit Reached!",
+            body:
+                "You've already spent $currencySymbol${todayExpense.toStringAsFixed(0)} today!",
+          );
+          settingsProvider.setLastDailyAlertDate(todayStr);
+        }
+      }
+    }
+
+    // 3. Reschedule Summary (Daily)
+    if (settingsProvider.enableDailySummary) {
+      await NotificationService().cancelNotification(10);
+      await NotificationService().scheduleDailySummary(
+        id: 10,
+        title: "Daily Summary",
+        body: getDailySummaryBody(),
+      );
+    } else {
+      await NotificationService().cancelNotification(10);
+    }
+
+    // 4. Reschedule Weekly Summary
+    if (settingsProvider.enableWeeklySummary) {
+      await NotificationService().cancelNotification(11);
+      await NotificationService().scheduleWeeklySummary(
+        id: 11,
+        title: "Weekly Summary",
+        body: getWeeklySummaryBody(),
+      );
+    } else {
+      await NotificationService().cancelNotification(11);
+    }
+
+    // 5. Reschedule Monthly Summary
+    if (settingsProvider.enableMonthlySummary) {
+      await NotificationService().cancelNotification(12);
+      await NotificationService().scheduleMonthlySummary(
+        id: 12,
+        title: "Monthly Summary",
+        body: getMonthlySummaryBody(),
+      );
+    } else {
+      await NotificationService().cancelNotification(12);
+    }
+  }
+
+  String getDailySummaryBody() {
+    final now = DateTime.now();
+    final todayStart = DateTime(now.year, now.month, now.day);
+    final todayEnd = todayStart.add(const Duration(days: 1));
+    final todayResult = getFilteredResults(
+      TransactionFilter(startDate: todayStart, endDate: todayEnd),
+    );
+    final totalSpent = todayResult.totalExpense;
+    final currencySymbol = settingsProvider.currencySymbol;
+
+    TransactionModel? maxTx;
+    for (final tx in todayResult.transactions) {
+      if (tx.type == 'expense' && (maxTx == null || tx.amount > maxTx.amount)) {
+        maxTx = tx;
+      }
+    }
+
+    String body =
+        "You've spent $currencySymbol${totalSpent.toStringAsFixed(0)} today";
+    if (maxTx != null) {
+      body +=
+          " \nLargest expense: ${maxTx.category} ($currencySymbol${maxTx.amount.toStringAsFixed(0)})";
+    }
+    return body;
+  }
+
+  String getWeeklySummaryBody() {
+    final now = DateTime.now();
+    int daysSinceMonday = now.weekday - DateTime.monday;
+    final weekStart = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).subtract(Duration(days: daysSinceMonday));
+    final weekEnd = weekStart.add(const Duration(days: 7));
+
+    final weekResult = getFilteredResults(
+      TransactionFilter(startDate: weekStart, endDate: weekEnd),
+    );
+    final totalSpent = weekResult.totalExpense;
+    final currencySymbol = settingsProvider.currencySymbol;
+
+    TransactionModel? maxTx;
+    for (final tx in weekResult.transactions) {
+      if (tx.type == 'expense' && (maxTx == null || tx.amount > maxTx.amount)) {
+        maxTx = tx;
+      }
+    }
+
+    String body =
+        "You've spent $currencySymbol${totalSpent.toStringAsFixed(0)} this week";
+    if (maxTx != null) {
+      body +=
+          " \nLargest expense: ${maxTx.category} ($currencySymbol${maxTx.amount.toStringAsFixed(0)})";
+    }
+    return body;
+  }
+
+  String getMonthlySummaryBody() {
+    final now = DateTime.now();
+    final monthStart = DateTime(now.year, now.month, 1);
+
+    int nextMonth = now.month + 1;
+    int year = now.year;
+    if (nextMonth > 12) {
+      nextMonth = 1;
+      year += 1;
+    }
+    final monthEnd = DateTime(year, nextMonth, 1);
+
+    final monthResult = getFilteredResults(
+      TransactionFilter(startDate: monthStart, endDate: monthEnd),
+    );
+    final totalSpent = monthResult.totalExpense;
+    final currencySymbol = settingsProvider.currencySymbol;
+
+    TransactionModel? maxTx;
+    for (final tx in monthResult.transactions) {
+      if (tx.type == 'expense' && (maxTx == null || tx.amount > maxTx.amount)) {
+        maxTx = tx;
+      }
+    }
+
+    String body =
+        "You've spent $currencySymbol${totalSpent.toStringAsFixed(0)} this month";
+    if (maxTx != null) {
+      body +=
+          " \nLargest expense: ${maxTx.category} ($currencySymbol${maxTx.amount.toStringAsFixed(0)})";
+    }
+    return body;
+  }
+
+  Future<void> triggerDebugSummary(String type, {DateTime? customTime}) async {
+    String title = "";
+    String body = "";
+    int id = 0;
+
+    switch (type) {
+      case 'daily':
+        title = "Debug Daily Summary";
+        body = getDailySummaryBody();
+        id = 100;
+        break;
+      case 'weekly':
+        title = "Debug Weekly Summary";
+        body = getWeeklySummaryBody();
+        id = 101;
+        break;
+      case 'monthly':
+        title = "Debug Monthly Summary";
+        body = getMonthlySummaryBody();
+        id = 102;
+        break;
+    }
+
+    if (customTime != null) {
+      await NotificationService().scheduleNotification(
+        id: id,
+        title: title,
+        body: body,
+        scheduledDate: customTime,
+      );
+    } else {
+      await NotificationService().showNotification(
+        id: id,
+        title: title,
+        body: body,
+      );
+    }
+  }
 
   // (Pasting the rest for completeness)
   Future<void> addTransaction(TransactionModel transaction) async {
@@ -705,7 +958,7 @@ class TransactionProvider with ChangeNotifier, WidgetsBindingObserver {
       final inRange =
           (filter.startDate == null ||
               !t.timestamp.isBefore(filter.startDate!)) &&
-          (filter.endDate == null || t.timestamp.isBefore(filter.endDate!));
+          (filter.endDate == null || !t.timestamp.isAfter(filter.endDate!));
       if (!inRange) return false;
       // Filter out transfer parts if user wants purely income/expense view?
       // For now, keep as is unless specified.
@@ -759,6 +1012,8 @@ class TransactionProvider with ChangeNotifier, WidgetsBindingObserver {
     final processedLinkedIds = <String>{};
 
     for (final t in filteredList) {
+      if (t.excludeFromBudgets && filter.excludeFromBudgetsFromTotals) continue;
+
       if (t.isTransfer == true && t.linkedTransactionId != null) {
         if (processedLinkedIds.contains(t.transactionId)) continue;
 
@@ -840,6 +1095,7 @@ class TransactionProvider with ChangeNotifier, WidgetsBindingObserver {
   }) {
     return _transactions
         .where((t) {
+          if (t.excludeFromBudgets) return false;
           final inRange =
               !t.timestamp.isBefore(start) && t.timestamp.isBefore(end);
           final typeMatch = type == null || t.type == type;
@@ -862,25 +1118,31 @@ class TransactionProvider with ChangeNotifier, WidgetsBindingObserver {
   }
 
   double get todayIncome => _getForDay(DateTime.now(), type: "income");
+
   double get todayExpense => _getForDay(DateTime.now(), type: "expense");
+
   double get yesterdayIncome => _getForDay(
     DateTime.now().subtract(const Duration(days: 1)),
     type: "income",
   );
+
   double get yesterdayExpense => _getForDay(
     DateTime.now().subtract(const Duration(days: 1)),
     type: "expense",
   );
+
   double get thisWeekIncome => _getForRange(
     _startOfWeek(DateTime.now()),
     _endOfDay(DateTime.now()),
     type: "income",
   );
+
   double get thisWeekExpense => _getForRange(
     _startOfWeek(DateTime.now()),
     _endOfDay(DateTime.now()),
     type: "expense",
   );
+
   double get lastWeekIncome {
     final lastWeekStart = _startOfWeek(
       DateTime.now(),
@@ -902,21 +1164,19 @@ class TransactionProvider with ChangeNotifier, WidgetsBindingObserver {
   }
 
   double get thisMonthIncome {
-    final range = BudgetCycleHelper.getCycleRange(
-      targetMonth: DateTime.now().month,
-      targetYear: DateTime.now().year,
-      mode: settingsProvider.budgetCycleMode,
-      startDay: settingsProvider.budgetCycleStartDay,
+    final range = BudgetCycleHelper.currentCycleRange(
+      DateTime.now(),
+      settingsProvider.budgetCycleMode,
+      settingsProvider.budgetCycleStartDay,
     );
     return _getForRange(range.start, range.end, type: "income");
   }
 
   double get thisMonthExpense {
-    final range = BudgetCycleHelper.getCycleRange(
-      targetMonth: DateTime.now().month,
-      targetYear: DateTime.now().year,
-      mode: settingsProvider.budgetCycleMode,
-      startDay: settingsProvider.budgetCycleStartDay,
+    final range = BudgetCycleHelper.currentCycleRange(
+      DateTime.now(),
+      settingsProvider.budgetCycleMode,
+      settingsProvider.budgetCycleStartDay,
     );
     return _getForRange(range.start, range.end, type: "expense");
   }
@@ -929,11 +1189,12 @@ class TransactionProvider with ChangeNotifier, WidgetsBindingObserver {
       prevMonth = 12;
       prevYear--;
     }
-    final range = BudgetCycleHelper.getCycleRange(
-      targetMonth: prevMonth,
-      targetYear: prevYear,
-      mode: settingsProvider.budgetCycleMode,
-      startDay: settingsProvider.budgetCycleStartDay,
+    // Convert to arbitrary date in the middle of that calendar month to get its cycle
+    final prevDate = DateTime(prevYear, prevMonth, 15);
+    final range = BudgetCycleHelper.currentCycleRange(
+      prevDate,
+      settingsProvider.budgetCycleMode,
+      settingsProvider.budgetCycleStartDay,
     );
     return _getForRange(range.start, range.end, type: "income");
   }
@@ -946,11 +1207,11 @@ class TransactionProvider with ChangeNotifier, WidgetsBindingObserver {
       prevMonth = 12;
       prevYear--;
     }
-    final range = BudgetCycleHelper.getCycleRange(
-      targetMonth: prevMonth,
-      targetYear: prevYear,
-      mode: settingsProvider.budgetCycleMode,
-      startDay: settingsProvider.budgetCycleStartDay,
+    final prevDate = DateTime(prevYear, prevMonth, 15);
+    final range = BudgetCycleHelper.currentCycleRange(
+      prevDate,
+      settingsProvider.budgetCycleMode,
+      settingsProvider.budgetCycleStartDay,
     );
     return _getForRange(range.start, range.end, type: "expense");
   }
@@ -967,8 +1228,10 @@ class TransactionProvider with ChangeNotifier, WidgetsBindingObserver {
 
   DateTime _startOfWeek(DateTime date) =>
       date.subtract(Duration(days: date.weekday - 1));
+
   DateTime _endOfDay(DateTime date) =>
       DateTime(date.year, date.month, date.day).add(const Duration(days: 1));
+
   double getCreditDue(String accountId) {
     final accountTransactions = _transactions.where(
       (tx) => tx.accountId == accountId,

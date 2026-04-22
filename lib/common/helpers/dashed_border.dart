@@ -31,7 +31,7 @@ class DashedBorder extends StatelessWidget {
         gap: gap,
         borderRadius: borderRadius,
       ),
-      child: Padding(padding: padding, child: child),
+      child: Padding(padding: padding, child: child)
     );
   }
 }
@@ -65,7 +65,7 @@ class _DashedBorderPainter extends CustomPainter {
       topLeft: borderRadius.topLeft,
       topRight: borderRadius.topRight,
       bottomLeft: borderRadius.bottomLeft,
-      bottomRight: borderRadius.bottomRight,
+      bottomRight: borderRadius.bottomRight
     );
 
     final Path path = Path()..addRRect(rRect);

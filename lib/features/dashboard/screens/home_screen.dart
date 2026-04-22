@@ -17,22 +17,22 @@ import 'package:wallzy/features/dashboard/widgets/home_widgets_section.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/app_drawer.dart';
 import 'package:wallzy/features/dashboard/models/radial_menu_item_model.dart';
-import 'package:wallzy/features/subscription/models/due_subscription.dart';
-import 'package:wallzy/features/folders/models/tag.dart';
+import 'package:wallzy/features/recurring_payment/models/due_recurring_payment.dart';
+import 'package:wallzy/features/folders/models/folder.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
 import 'package:wallzy/features/transaction/provider/meta_provider.dart';
 import 'package:wallzy/features/transaction/screens/all_transactions_screen.dart';
 import 'package:wallzy/features/transaction/screens/pending_sms_screen.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
 import 'package:wallzy/features/transaction/widgets/add_edit_transaction_widgets/transaction_widgets.dart';
-import 'package:wallzy/features/transaction/widgets/transaction_detail_screen.dart';
+import 'package:wallzy/features/transaction/widgets/transaction_details_screen/transaction_detail_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:wallzy/features/dashboard/provider/home_widgets_provider.dart';
 import 'package:wallzy/features/transaction/screens/add_edit_transaction_screen.dart';
 import 'package:wallzy/features/people/screens/add_debt_loan_screen.dart';
-import 'package:wallzy/features/subscription/screens/add_subscription_screen.dart';
+import 'package:wallzy/features/recurring_payment/screens/add_recurring_payment_screen.dart';
 import 'package:wallzy/features/accounts/screens/add_edit_account_screen.dart';
 import 'package:uuid/uuid.dart';
 import 'package:wallzy/features/categories/services/category_matcher.dart';
@@ -46,8 +46,6 @@ import 'package:wallzy/features/dashboard/widgets/net_worth_widget.dart';
 import 'package:wallzy/common/widgets/smart_stack_widget.dart';
 import 'package:wallzy/features/dashboard/widgets/recent_activity_widget.dart';
 import 'package:wallzy/features/dashboard/widgets/glass_radial_menu.dart';
-import 'package:intl/intl.dart';
-import 'package:wallzy/features/summary/screens/timed_summary_screen.dart';
 import 'package:wallzy/features/dashboard/widgets/event_folder_widget.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -291,7 +289,7 @@ class _HomeScreenState extends State<HomeScreen>
     final transactionProvider = Provider.of<TransactionProvider>(context);
 
     final recentTransactions = transactionProvider.transactions
-        .take(8)
+        .take(5)
         .toList();
 
     return BiometricGuard(
@@ -388,122 +386,138 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
 
                 // 2.5 SUMMARY BANNER
-                // Reactive Check: Show if not dismissed AND data exists (OR Test Mode)
-                SliverToBoxAdapter(
-                  child: Builder(
-                    builder: (context) {
-                      // 1. Check Prev Month Date
-                      if (_prevMonthDate == null)
-                        return const SizedBox.shrink();
+                //! Uncomment during prod
+                // SliverToBoxAdapter(
+                //   child: Builder(
+                //     builder: (context) {
+                //       // 1. Check Prev Month Date
+                //       if (_prevMonthDate == null)
+                //         return const SizedBox.shrink();
 
-                      // 2. Check Visibility (Logic + Test Flag)
-                      final bool isTestMode = TimedSummaryScreen.allowTestMode;
-                      final bool isDismissed = _isSummaryDismissed == true;
+                //       // 2. Check Visibility (Logic + Test Flag)
+                //       final bool isTestMode = TimedSummaryScreen.allowTestMode;
+                //       final bool isDismissed = _isSummaryDismissed == true;
 
-                      if (!isTestMode && isDismissed) {
-                        return const SizedBox.shrink();
-                      }
+                //       if (!isTestMode && isDismissed) {
+                //         return const SizedBox.shrink();
+                //       }
 
-                      if (!isTestMode) {
-                        final hasData = transactionProvider.transactions.any(
-                          (tx) =>
-                              tx.timestamp.year == _prevMonthDate!.year &&
-                              tx.timestamp.month == _prevMonthDate!.month,
-                        );
-                        if (!hasData) return const SizedBox.shrink();
-                      }
+                //       if (!isTestMode) {
+                //         final hasData = transactionProvider.transactions.any(
+                //           (tx) =>
+                //               tx.timestamp.year == _prevMonthDate!.year &&
+                //               tx.timestamp.month == _prevMonthDate!.month,
+                //         );
+                //         if (!hasData) return const SizedBox.shrink();
+                //       }
 
-                      return Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          16.0,
-                          0.0,
-                          16.0,
-                          16.0,
-                        ),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(50),
-                            border: Border.all(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.primary.withValues(alpha: 0.5),
-                              width: 2,
-                            ),
-                          ),
-                          child: Material(
-                            color: Colors.transparent,
-                            borderRadius: BorderRadius.circular(50),
-                            child: InkWell(
-                              onTap: () async {
-                                // Dismiss logic
-                                final prefs =
-                                    await SharedPreferences.getInstance();
-                                final key =
-                                    'summary_dismissed_${_prevMonthDate!.year}_${_prevMonthDate!.month}';
-                                await prefs.setBool(key, true);
+                //       return Padding(
+                //         padding: const EdgeInsets.fromLTRB(
+                //           16.0,
+                //           0.0,
+                //           16.0,
+                //           16.0,
+                //         ),
+                //         child: Container(
+                //           decoration: BoxDecoration(
+                //             borderRadius: BorderRadius.circular(50),
+                //             border: Border.all(
+                //               color: Theme.of(
+                //                 context,
+                //               ).colorScheme.primary.withValues(alpha: 0.5),
+                //               width: 2,
+                //             ),
+                //           ),
+                //           child: Material(
+                //             color: Colors.transparent,
+                //             borderRadius: BorderRadius.circular(50),
+                //             child: InkWell(
+                //               onTap: () async {
+                //                 // Dismiss logic
+                //                 final prefs =
+                //                     await SharedPreferences.getInstance();
+                //                 final key =
+                //                     'summary_dismissed_${_prevMonthDate!.year}_${_prevMonthDate!.month}';
+                //                 await prefs.setBool(key, true);
 
-                                if (mounted) {
-                                  setState(() {
-                                    _isSummaryDismissed = true;
-                                  });
+                //                 if (mounted) {
+                //                   setState(() {
+                //                     _isSummaryDismissed = true;
+                //                   });
 
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => TimedSummaryScreen(
-                                        initialDate: _prevMonthDate,
-                                      ),
-                                    ),
-                                  );
-                                }
-                              },
-                              borderRadius: BorderRadius.circular(50),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20.0,
-                                  vertical: 14.0,
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.insights,
-                                      size: 20,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(
-                                        "View summary for ${DateFormat('MMMM').format(_prevMonthDate!)}",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 14,
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.onSurface,
-                                        ),
-                                      ),
-                                    ),
-                                    Icon(
-                                      Icons.arrow_forward_ios,
-                                      size: 14,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.outline,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
+                //                   Navigator.push(
+                //                     context,
+                //                     MaterialPageRoute(
+                //                       builder: (_) => TimedSummaryScreen(
+                //                         initialDate: _prevMonthDate,
+                //                       ),
+                //                     ),
+                //                   );
+                //                 }
+                //               },
+                //               borderRadius: BorderRadius.circular(50),
+                //               child: Padding(
+                //                 padding: const EdgeInsets.symmetric(
+                //                   horizontal: 20.0,
+                //                   vertical: 14.0,
+                //                 ),
+                //                 child: Row(
+                //                   children: [
+                //                     Icon(
+                //                       Icons.insights,
+                //                       size: 20,
+                //                       color: Theme.of(
+                //                         context,
+                //                       ).colorScheme.primary,
+                //                     ),
+                //                     const SizedBox(width: 12),
+                //                     Expanded(
+                //                       child: Text(
+                //                         "View summary for ${DateFormat('MMMM').format(_prevMonthDate!)}",
+                //                         style: TextStyle(
+                //                           fontWeight: FontWeight.w700,
+                //                           fontSize: 14,
+                //                           color: Theme.of(
+                //                             context,
+                //                           ).colorScheme.onSurface,
+                //                         ),
+                //                       ),
+                //                     ),
+                //                     Icon(
+                //                       Icons.arrow_forward_ios,
+                //                       size: 14,
+                //                       color: Theme.of(
+                //                         context,
+                //                       ).colorScheme.outline,
+                //                     ),
+                //                   ],
+                //                 ),
+                //               ),
+                //             ),
+                //           ),
+                //         ),
+                //       );
+                //     },
+                //   ),
+                // ),
+                // const SliverToBoxAdapter(child: SizedBox(height: 16)),
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(16, 2, 16, 20),
+                    child: HomeWidgetsSection(),
                   ),
                 ),
 
-                // 3. ANALYTICS POD
+                // 4. RECENT ACTIVITY
+                SliverToBoxAdapter(
+                  child: RecentActivityWidget(
+                    transactions: recentTransactions,
+                    onTap: (tx) => _showTransactionDetails(context, tx),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
                 if (transactionProvider.transactions.isNotEmpty)
                   SliverToBoxAdapter(
                     child: Padding(
@@ -526,23 +540,7 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
                   ),
 
-                const SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
-                    child: HomeWidgetsSection(),
-                  ),
-                ),
-
-                const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-                // 4. RECENT ACTIVITY
-                SliverToBoxAdapter(
-                  child: RecentActivityWidget(
-                    transactions: recentTransactions,
-                    onTap: (tx) => _showTransactionDetails(context, tx),
-                  ),
-                ),
-
+                // const SliverToBoxAdapter(child: SizedBox(height: 100)),
                 const SliverToBoxAdapter(child: FooterGraphic()),
               ],
             ),

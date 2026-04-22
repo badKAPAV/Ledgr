@@ -3,7 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:wallzy/features/folders/models/tag.dart';
+import 'package:wallzy/common/switch/custom_switch.dart';
+import 'package:wallzy/features/folders/models/folder.dart';
 import 'package:wallzy/features/transaction/provider/meta_provider.dart';
 
 class EventModeSettingsCard extends StatefulWidget {
@@ -209,7 +210,7 @@ class _EventModeSettingsCardState extends State<EventModeSettingsCard> {
                               ? isAutoAdd
                                     ? "Transactions are auto added 🎉"
                                     : "Enable auto add to track"
-                              : "Make the most out of your folders",
+                              : "Set an event for this folder",
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: isEventMode
                                 ? activeColor
@@ -225,7 +226,7 @@ class _EventModeSettingsCardState extends State<EventModeSettingsCard> {
                 ),
                 Transform.scale(
                   scale: 0.9,
-                  child: Switch.adaptive(
+                  child: LedgrSwitch(
                     value: isEventMode,
                     // Use lighten only in dark mode, otherwise use raw activeColor
                     activeThumbColor: isDarkMode
@@ -418,7 +419,7 @@ class _EventModeSettingsCardState extends State<EventModeSettingsCard> {
                                   ],
                                 ),
                               ),
-                              Switch.adaptive(
+                              LedgrSwitch(
                                 value: isAutoAdd,
                                 activeThumbColor: isDarkMode
                                     ? lighten(activeColor)

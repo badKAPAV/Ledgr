@@ -176,7 +176,7 @@ class _LinkTransactionModalSheetState extends State<LinkTransactionModalSheet> {
                   ),
           ),
         ],
-      ),
+      )
     );
   }
 }

@@ -6,7 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:wallzy/core/services/notification_service.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -17,8 +17,8 @@ import 'package:wallzy/features/dashboard/provider/home_widgets_provider.dart';
 import 'package:wallzy/features/feedback/provider/feedback_provider.dart';
 import 'package:wallzy/features/feedback/provider/sms_feedback_provider.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
-import 'package:wallzy/features/subscription/provider/subscription_provider.dart';
-import 'package:wallzy/features/subscription/services/subscription_service.dart';
+import 'package:wallzy/features/recurring_payment/provider/recurring_payment_provider.dart';
+import 'package:wallzy/features/recurring_payment/services/recurring_payment_service.dart';
 import 'package:wallzy/features/people/provider/people_provider.dart';
 import 'package:wallzy/features/goals/provider/goals_provider.dart';
 import 'package:wallzy/features/planning/provider/budget_provider.dart';
@@ -34,6 +34,8 @@ import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wallzy/features/transaction/services/quick_save_service.dart';
+import 'package:wallzy/features/revenuecat/services/revenuecat_service.dart';
+import 'package:wallzy/features/revenuecat/provider/revenuecat_provider.dart';
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
@@ -56,12 +58,11 @@ void main() async {
     persistenceEnabled: true,
   );
 
+  // Initialize RevenueCat
+  await RevenueCatService().initialize();
+
   // Initialize notifications
-  await FlutterLocalNotificationsPlugin().initialize(
-    const InitializationSettings(
-      android: AndroidInitializationSettings('ic_stat_ledgr'),
-    ),
-  );
+  await NotificationService().initialize();
 
   // Initialize Timezone
   tz.initializeTimeZones();
@@ -131,6 +132,12 @@ void main() async {
         ChangeNotifierProvider(create: (_) => SmsFeedbackProvider()),
         ChangeNotifierProvider(create: (_) => HomeWidgetsProvider()),
         ChangeNotifierProvider(create: (_) => AppLockProvider()),
+        ChangeNotifierProxyProvider<AuthProvider, RevenueCatProvider>(
+          create: (context) => RevenueCatProvider(
+            authProvider: Provider.of<AuthProvider>(context, listen: false),
+          ),
+          update: (_, auth, previous) => previous!..updateAuthProvider(auth),
+        ),
         ChangeNotifierProxyProvider<AuthProvider, AccountProvider>(
           create: (_) => AccountProvider(),
           update: (_, auth, previousAccountProvider) {

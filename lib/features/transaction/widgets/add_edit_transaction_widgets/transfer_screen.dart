@@ -80,7 +80,7 @@ class TransferScreenState extends State<TransferScreen> {
       accountId: _fromAccount!.id,
       purchaseType: _fromAccount!.accountType == 'credit' ? 'credit' : 'debit',
       transferGroupId: transferGroupId,
-      currency: currencyCode,
+      currency: currencyCode
     );
 
     final isCreditRepayment = _toAccount?.accountType == 'credit';
@@ -98,7 +98,7 @@ class TransferScreenState extends State<TransferScreen> {
       accountId: _toAccount!.id,
       purchaseType: 'debit',
       transferGroupId: transferGroupId,
-      currency: currencyCode,
+      currency: currencyCode
     );
 
     await txProvider.addTransfer(fromTransaction, toTransaction);
@@ -120,7 +120,7 @@ class TransferScreenState extends State<TransferScreen> {
   void _showAccountPicker(bool isFromAccount) {
     final accountProvider = Provider.of<AccountProvider>(
       context,
-      listen: false,
+      listen: false
     );
     final accounts = accountProvider.accounts;
     showCustomAccountModal(context, accounts, (acc) {
@@ -147,7 +147,7 @@ class TransferScreenState extends State<TransferScreen> {
       context: context,
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
-      initialDate: _selectedDate,
+      initialDate: _selectedDate
     );
     if (picked != null) {
       setState(() => _selectedDate = picked);
@@ -265,7 +265,7 @@ class TransferScreenState extends State<TransferScreen> {
             ),
           ),
         ],
-      ),
+      )
     );
   }
 }

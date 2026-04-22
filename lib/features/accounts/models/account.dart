@@ -32,7 +32,7 @@ class Account {
       bankName: '',
       accountNumber: '',
       accountHolderName: '',
-      userId: '',
+      userId: ''
     );
   }
 
@@ -58,7 +58,7 @@ class Account {
       userId: userId ?? this.userId,
       accountType: accountType ?? this.accountType,
       creditLimit: creditLimit ?? this.creditLimit,
-      billingCycleDay: billingCycleDay ?? this.billingCycleDay,
+      billingCycleDay: billingCycleDay ?? this.billingCycleDay
     );
   }
 
@@ -78,7 +78,7 @@ class Account {
       userId: userId,
       accountType: data['accountType'] ?? 'debit',
       creditLimit: data['creditLimit']?.toDouble() ?? 0.0,
-      billingCycleDay: data['billingCycleDay']?.toInt() ?? 1,
+      billingCycleDay: data['billingCycleDay']?.toInt() ?? 1
     );
   }
 
@@ -94,7 +94,7 @@ class Account {
       userId: map['userId'] ?? '',
       accountType: map['accountType'] ?? 'debit',
       creditLimit: map['creditLimit']?.toDouble() ?? 0.0,
-      billingCycleDay: map['billingCycleDay']?.toInt() ?? 1,
+      billingCycleDay: map['billingCycleDay']?.toInt() ?? 1
     );
   }
 

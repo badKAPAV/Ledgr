@@ -11,7 +11,7 @@ class CategoryMatcher {
     await prefs.reload();
 
     final List<String>? categoriesJson = prefs.getStringList(
-      'cached_category_map',
+      'cached_category_map'
     );
 
     if (categoriesJson != null) {

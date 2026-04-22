@@ -36,7 +36,7 @@ class AuthTextField extends StatelessWidget {
         // CHANGED: Using a theme-aware color for the hint text
         hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
         suffixIcon: suffixIcon, // ADDED: Displays the passed-in icon
-      ),
+      )
     );
   }
 }

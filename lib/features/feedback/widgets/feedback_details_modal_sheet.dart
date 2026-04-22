@@ -122,7 +122,7 @@ class FeedbackDetailsModalSheet extends StatelessWidget {
             const SizedBox(height: 24),
           ],
         ],
-      ),
+      )
     );
   }
 }
@@ -163,7 +163,7 @@ class _DetailSection extends StatelessWidget {
             child: Text(content, style: theme.textTheme.bodyMedium),
           ),
         ],
-      ),
+      )
     );
   }
 }

@@ -195,7 +195,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
           SliverToBoxAdapter(child: const SizedBox(height: 100)),
         ],
-      ),
+      )
     );
   }
 }
@@ -260,7 +260,7 @@ class _FeedbackActionTile extends StatelessWidget {
             ],
           ),
         ),
-      ),
+      )
     );
   }
 }
@@ -409,7 +409,7 @@ class _FeedbackListTile extends StatelessWidget {
           ],
         ),
         trailing: const Icon(Icons.chevron_right_rounded),
-      ),
+      )
     );
   }
 }

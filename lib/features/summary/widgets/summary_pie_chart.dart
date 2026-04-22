@@ -126,7 +126,7 @@ class _SummaryPieChartState extends State<SummaryPieChart> {
             ],
           ),
         ),
-      ],
+      ]
     );
   }
 

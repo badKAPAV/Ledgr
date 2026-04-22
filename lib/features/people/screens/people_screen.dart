@@ -169,7 +169,7 @@ class _PeopleScreenState extends State<PeopleScreen>
         children: const [DebtsLoansView(), PaymentsView()],
       ),
       floatingActionButton: _buildGlassFab(context),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat
     );
   }
 
@@ -222,7 +222,7 @@ class _PeopleScreenState extends State<PeopleScreen>
             ),
           ),
         ),
-      ),
+      )
     );
   }
 }

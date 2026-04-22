@@ -82,7 +82,7 @@ class GoalIconPickerSheet extends StatelessWidget {
             ),
           ),
         ],
-      ),
+      )
     );
   }
 }

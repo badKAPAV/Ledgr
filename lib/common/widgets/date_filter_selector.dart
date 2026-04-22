@@ -253,7 +253,7 @@ class _DateNavigationControlState extends State<DateNavigationControl> {
             ),
           ),
         ],
-      ),
+      )
     );
   }
 }
@@ -291,7 +291,7 @@ class _SeparateButtonsGroup extends StatelessWidget {
           color: theme.primaryContainer,
           iconColor: theme.onPrimaryContainer,
         ),
-      ],
+      ]
     );
   }
 }
@@ -324,7 +324,7 @@ class _CircleButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(50),
         ),
         child: Icon(icon, size: 26, color: iconColor),
-      ),
+      )
     );
   }
 }
@@ -441,7 +441,7 @@ class _DateText extends StatelessWidget {
             ],
           ],
         ),
-      ),
+      )
     );
   }
 }
@@ -521,7 +521,7 @@ class _DateFilterModalState extends State<DateFilterModal> {
       if (initialOffset < 0) initialOffset = 0;
     }
     _monthScrollController = ScrollController(
-      initialScrollOffset: initialOffset,
+      initialScrollOffset: initialOffset
     );
 
     _fetchStats(_tempYear);
@@ -765,7 +765,7 @@ class _DateFilterModalState extends State<DateFilterModal> {
             ),
           ),
         ],
-      ),
+      )
     );
   }
 
@@ -787,7 +787,7 @@ class _DateFilterModalState extends State<DateFilterModal> {
             ),
           ),
         ],
-      ),
+      )
     );
   }
 
@@ -1042,7 +1042,7 @@ class _SplitAxisGraphItem extends StatelessWidget {
             ),
           ),
         ],
-      ),
+      )
     );
   }
 }
@@ -1096,7 +1096,7 @@ class _GraphTooltip extends StatelessWidget {
           ),
           maxLines: 1,
         ),
-      ),
+      )
     );
   }
 }

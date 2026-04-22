@@ -32,7 +32,7 @@ class Goal {
       createdAt: data['createdAt'] != null
           ? DateTime.parse(data['createdAt'])
           : DateTime.now(),
-      iconKey: data['iconKey'],
+      iconKey: data['iconKey']
     );
   }
 
@@ -64,7 +64,7 @@ class Goal {
       targetDate: targetDate ?? this.targetDate,
       accountsList: accountsList ?? this.accountsList,
       createdAt: createdAt ?? this.createdAt,
-      iconKey: iconKey ?? this.iconKey,
+      iconKey: iconKey ?? this.iconKey
     );
   }
 }

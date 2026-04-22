@@ -70,7 +70,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen>
       vsync: this,
       initialIndex: _isEditing
           ? (widget.transaction!.type == 'expense' ? 0 : 1)
-          : widget.initialMode.index,
+          : widget.initialMode.index
     );
   }
 
@@ -312,7 +312,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen>
             );
           },
         ),
-      ),
+      )
     );
   }
 }

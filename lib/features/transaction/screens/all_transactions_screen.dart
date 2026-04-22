@@ -81,6 +81,7 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen>
         //   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         // ),
         actions: [
+          const SizedBox(width: 8),
           IconButton.filledTonal(
             onPressed: () {
               Navigator.of(context).push(

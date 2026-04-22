@@ -131,7 +131,7 @@ class SmsFeedbackDetailsModalSheet extends StatelessWidget {
             ],
           ],
         ),
-      ),
+      )
     );
   }
 
@@ -162,7 +162,7 @@ class SmsFeedbackDetailsModalSheet extends StatelessWidget {
             ),
           ),
         ],
-      ),
+      )
     );
   }
 }
@@ -203,7 +203,7 @@ class _DetailSection extends StatelessWidget {
             child: Text(content, style: theme.textTheme.bodyMedium),
           ),
         ],
-      ),
+      )
     );
   }
 }

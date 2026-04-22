@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:wallzy/core/models/user.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:wallzy/features/revenuecat/services/revenuecat_service.dart';
 
 class AuthProvider with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -32,6 +33,13 @@ class AuthProvider with ChangeNotifier {
   bool _isNewUser = false;
   bool get isNewUser => _isNewUser;
 
+  // Landing Screen Flags
+  bool _hasSeenLanding = false;
+  bool get hasSeenLanding => _hasSeenLanding;
+
+  // TEST FLAG: set to false for production
+  final bool _showLandingEveryTime = true;
+
   AuthProvider() {
     _auth.authStateChanges().listen(_onAuthStateChanged);
   }
@@ -43,7 +51,12 @@ class AuthProvider with ChangeNotifier {
       _user = null;
       _isNewUser = false;
       await prefs.remove('last_user_id');
+
+      final hasSeen = prefs.getBool('has_seen_landing') ?? false;
+      _hasSeenLanding = hasSeen && !_showLandingEveryTime;
+
       _isAuthCheckLoading = false;
+      await RevenueCatService().logOut();
       notifyListeners();
       return;
     }
@@ -132,6 +145,9 @@ class AuthProvider with ChangeNotifier {
 
     // Save ID for background utility
     await prefs.setString('last_user_id', firebaseUser.uid);
+
+    // Log into RevenueCat securely using the mapped Firebase UID
+    await RevenueCatService().logIn(firebaseUser.uid);
 
     // Artificial delay to ensure LoadingScreen animations (fade in + move up)
     // have enough time to play out gracefully before we switch to the app.
@@ -496,7 +512,6 @@ class AuthProvider with ChangeNotifier {
       // 4. Clear the image cache.
       await DefaultCacheManager().emptyCache();
 
-      // Clear local prefs for magic link and budget
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('emailLink');
       await prefs.remove('local_monthly_budget');
@@ -509,6 +524,13 @@ class AuthProvider with ChangeNotifier {
     await _auth.signOut();
     _isNewUser = false;
     _user = null;
+    notifyListeners();
+  }
+
+  Future<void> markLandingSeen() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('has_seen_landing', true);
+    _hasSeenLanding = true;
     notifyListeners();
   }
 }

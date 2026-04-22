@@ -29,7 +29,7 @@ class _NetWorthWidgetState extends State<NetWorthWidget> {
 
     // --- LOGIC SECTION (UNCHANGED) ---
     final currentBalance = accountProvider.getTotalAvailableCash(
-      txProvider.transactions,
+      txProvider.transactions
     );
 
     final now = DateTime.now();
@@ -228,7 +228,7 @@ class _NetWorthWidgetState extends State<NetWorthWidget> {
             ),
           ),
         ],
-      ),
+      )
     );
   }
 }

@@ -310,11 +310,11 @@ class _ImageCropperScreenState extends State<ImageCropperScreen> {
     // Output size matches the crop pixel size
     final ui.Image croppedImage = await picture.toImage(
       cropW.toInt(),
-      cropH.toInt(),
+      cropH.toInt()
     );
 
     final byteData = await croppedImage.toByteData(
-      format: ui.ImageByteFormat.png,
+      format: ui.ImageByteFormat.png
     );
     if (mounted) Navigator.pop(context, byteData?.buffer.asUint8List());
   }
@@ -406,7 +406,7 @@ class _ImageCropperScreenState extends State<ImageCropperScreen> {
           // 4. Bottom Controls
           _buildBottomControls(),
         ],
-      ),
+      )
     );
   }
 
@@ -486,7 +486,7 @@ class _ImageCropperScreenState extends State<ImageCropperScreen> {
             ],
           ),
         ],
-      ),
+      )
     );
   }
 }
@@ -546,7 +546,7 @@ class _OverlayPainter extends CustomPainter {
     final overlayPath = Path.combine(
       PathOperation.difference,
       backgroundPath,
-      cutoutPath,
+      cutoutPath
     );
     canvas.drawPath(overlayPath, paint);
 
@@ -606,7 +606,7 @@ class _OverlayPainter extends CustomPainter {
         ..moveTo(cropRect.left, cropRect.top + cornerSize)
         ..lineTo(cropRect.left, cropRect.top)
         ..lineTo(cropRect.left + cornerSize, cropRect.top),
-      handlePaint,
+      handlePaint
     );
     // Top Right
     canvas.drawPath(
@@ -614,7 +614,7 @@ class _OverlayPainter extends CustomPainter {
         ..moveTo(cropRect.right - cornerSize, cropRect.top)
         ..lineTo(cropRect.right, cropRect.top)
         ..lineTo(cropRect.right, cropRect.top + cornerSize),
-      handlePaint,
+      handlePaint
     );
     // Bottom Left
     canvas.drawPath(
@@ -622,7 +622,7 @@ class _OverlayPainter extends CustomPainter {
         ..moveTo(cropRect.left, cropRect.bottom - cornerSize)
         ..lineTo(cropRect.left, cropRect.bottom)
         ..lineTo(cropRect.left + cornerSize, cropRect.bottom),
-      handlePaint,
+      handlePaint
     );
     // Bottom Right
     canvas.drawPath(
@@ -630,7 +630,7 @@ class _OverlayPainter extends CustomPainter {
         ..moveTo(cropRect.right - cornerSize, cropRect.bottom)
         ..lineTo(cropRect.right, cropRect.bottom)
         ..lineTo(cropRect.right, cropRect.bottom - cornerSize),
-      handlePaint,
+      handlePaint
     );
   }
 

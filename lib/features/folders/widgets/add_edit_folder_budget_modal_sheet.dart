@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
-import 'package:wallzy/features/folders/models/tag.dart';
-import 'package:wallzy/features/folders/services/tag_info.dart';
+import 'package:wallzy/features/folders/models/folder.dart';
+import 'package:wallzy/features/folders/services/folder_info.dart';
 import 'package:wallzy/features/transaction/provider/meta_provider.dart';
 
 class AddEditFolderBudgetModalSheet extends StatefulWidget {

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:wallzy/common/widgets/animated_gauge_chart.dart';
 import 'package:wallzy/core/themes/theme.dart';
+import 'package:wallzy/core/utils/budget_cycle_helper.dart';
 import 'package:wallzy/features/people/models/person.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
@@ -95,19 +96,17 @@ class _PaymentsAnalysisScreenState extends State<PaymentsAnalysisScreen> {
 
   DateTimeRange _getFilterRange() {
     if (_selectedMonth != null) {
-      final firstDay = DateTime(_selectedYear, _selectedMonth!, 1);
-      final lastDay = (_selectedMonth == 12)
-          ? DateTime(_selectedYear + 1, 1, 1).subtract(const Duration(days: 1))
-          : DateTime(
-              _selectedYear,
-              _selectedMonth! + 1,
-              1,
-            ).subtract(const Duration(days: 1));
-      return DateTimeRange(start: firstDay, end: lastDay);
+      final settings = Provider.of<SettingsProvider>(context, listen: false);
+      return BudgetCycleHelper.getCycleRange(
+        targetMonth: _selectedMonth!,
+        targetYear: _selectedYear,
+        mode: settings.budgetCycleMode,
+        startDay: settings.budgetCycleStartDay,
+      );
     } else {
       return DateTimeRange(
         start: DateTime(_selectedYear, 1, 1),
-        end: DateTime(_selectedYear, 12, 31),
+        end: DateTime(_selectedYear, 12, 31, 23, 59, 59),
       );
     }
   }
@@ -186,7 +185,7 @@ class _PaymentsAnalysisScreenState extends State<PaymentsAnalysisScreen> {
               txDate.isAfter(
                 range.start.subtract(const Duration(microseconds: 1)),
               ) &&
-              txDate.isBefore(range.end.add(const Duration(days: 1)));
+              !txDate.isAfter(range.end);
         }).toList();
 
         final personSummaries = _calculatePersonSummaries(peopleTransactions);

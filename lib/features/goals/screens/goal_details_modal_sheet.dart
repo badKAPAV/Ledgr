@@ -320,7 +320,7 @@ class GoalDetailsModalSheet extends StatelessWidget {
             ),
           ),
         );
-      },
+      }
     );
   }
 }
@@ -376,7 +376,7 @@ class _DetailBox extends StatelessWidget {
             ),
           ),
         ],
-      ),
+      )
     );
   }
 }
@@ -435,7 +435,7 @@ class _InfoCard extends StatelessWidget {
               ),
             ),
         ],
-      ),
+      )
     );
   }
 }
@@ -488,7 +488,7 @@ class _ActionBox extends StatelessWidget {
             ),
           ],
         ),
-      ),
+      )
     );
   }
 }

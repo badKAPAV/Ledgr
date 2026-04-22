@@ -36,7 +36,7 @@ class ModernAlertDialog extends StatelessWidget {
         icon: icon,
         actions: actions,
         iconColor: iconColor,
-      ),
+      )
     );
   }
 
@@ -140,7 +140,7 @@ class ModernAlertDialog extends StatelessWidget {
             ],
           ),
         ),
-      ),
+      )
     );
   }
 }

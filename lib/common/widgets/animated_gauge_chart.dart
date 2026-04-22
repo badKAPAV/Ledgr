@@ -53,12 +53,12 @@ class _AnimatedGaugeChartState extends State<AnimatedGaugeChart>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 1200)
     );
 
     _animation = CurvedAnimation(
       parent: _controller,
-      curve: Curves.easeOutCubic,
+      curve: Curves.easeOutCubic
     );
 
     _controller.forward();
@@ -109,7 +109,7 @@ class _AnimatedGaugeChartState extends State<AnimatedGaugeChart>
             strokeWidth: widget.strokeWidth,
           ),
         );
-      },
+      }
     );
   }
 }
@@ -144,7 +144,7 @@ class GaugeChartPainter extends CustomPainter {
       255,
       (r + 100) % 256,
       (g + 100) % 256,
-      (b + 100) % 256,
+      (b + 100) % 256
     );
   }
 
@@ -169,7 +169,7 @@ class GaugeChartPainter extends CustomPainter {
       startRad,
       sweepRad,
       false,
-      bgPaint,
+      bgPaint
     );
 
     if (totalAmount <= 0 || items.isEmpty) return;

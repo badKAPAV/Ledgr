@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:wallzy/features/people/models/person.dart';
-import 'package:wallzy/features/folders/models/tag.dart';
+import 'package:wallzy/features/folders/models/folder.dart';
 
 class TransactionModel {
   final String transactionId;
@@ -25,6 +25,7 @@ class TransactionModel {
   final String? receiptUrl;
   final bool? isTransfer;
   final String? linkedTransactionId;
+  final bool excludeFromBudgets;
 
   TransactionModel({
     this.people,
@@ -47,6 +48,7 @@ class TransactionModel {
     this.receiptUrl,
     this.isTransfer,
     this.linkedTransactionId,
+    this.excludeFromBudgets = false,
   });
 
   factory TransactionModel.fromMap(Map<String, dynamic> data) {
@@ -89,6 +91,7 @@ class TransactionModel {
       receiptUrl: data['receiptUrl'],
       isTransfer: data['isTransfer'],
       linkedTransactionId: data['linkedTransactionId'],
+      excludeFromBudgets: data['excludeFromBudgets'] ?? false,
     );
   }
 
@@ -114,6 +117,7 @@ class TransactionModel {
       'receiptUrl': receiptUrl,
       'isTransfer': isTransfer,
       'linkedTransactionId': linkedTransactionId,
+      'excludeFromBudgets': excludeFromBudgets,
     };
   }
 }
@@ -140,6 +144,7 @@ extension TransactionCopyWith on TransactionModel {
     ValueGetter<String?>? receiptUrl,
     bool? isTransfer,
     ValueGetter<String?>? linkedTransactionId,
+    bool? excludeFromBudgets,
   }) {
     return TransactionModel(
       people: people ?? this.people,
@@ -166,6 +171,7 @@ extension TransactionCopyWith on TransactionModel {
       linkedTransactionId: linkedTransactionId != null
           ? linkedTransactionId()
           : this.linkedTransactionId,
+      excludeFromBudgets: excludeFromBudgets ?? this.excludeFromBudgets,
     );
   }
 }

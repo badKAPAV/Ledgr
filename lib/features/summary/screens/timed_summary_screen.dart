@@ -4,7 +4,7 @@ import 'package:wallzy/core/utils/budget_cycle_helper.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/features/summary/widgets/summary_content_view.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
-import 'package:wallzy/features/transaction/widgets/transaction_detail_screen.dart';
+import 'package:wallzy/features/transaction/widgets/transaction_details_screen/transaction_detail_screen.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 class TimedSummaryScreen extends StatefulWidget {
@@ -45,11 +45,10 @@ class _TimedSummaryScreenState extends State<TimedSummaryScreen> {
       extendBodyBehindAppBar: true,
       body: Consumer2<TransactionProvider, SettingsProvider>(
         builder: (context, txProvider, settingsProvider, child) {
-          final budgetCycleRange = BudgetCycleHelper.getCycleRange(
-            targetMonth: _currentDate.month,
-            targetYear: _currentDate.year,
-            mode: settingsProvider.budgetCycleMode,
-            startDay: settingsProvider.budgetCycleStartDay,
+          final budgetCycleRange = BudgetCycleHelper.currentCycleRange(
+            _currentDate,
+            settingsProvider.budgetCycleMode,
+            settingsProvider.budgetCycleStartDay,
           );
 
           final monthlyTransactions = txProvider.transactions.where((tx) {

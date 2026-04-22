@@ -49,7 +49,7 @@ class _CurrencyConverterModalState extends State<CurrencyConverterModal> {
     _amountController = TextEditingController(
       text: widget.initialAmount != null
           ? widget.initialAmount.toString()
-          : '1.00',
+          : '1.00'
     );
 
     _fromCurrency = widget.initialFromCurrency;
@@ -200,7 +200,7 @@ class _CurrencyConverterModalState extends State<CurrencyConverterModal> {
           initialCurrencyCode: isFrom ? _fromCurrency : _toCurrency,
           initialIsoCodeNum: isFrom ? _fromIsoCodeNum : _toIsoCodeNum,
         ),
-      ),
+      )
     );
 
     if (result != null && result is Map) {
@@ -525,7 +525,7 @@ class _CurrencyConverterModalState extends State<CurrencyConverterModal> {
             ],
           ),
         ),
-      ),
+      )
     );
   }
 }
@@ -576,7 +576,7 @@ class _CurrencyDropdown extends StatelessWidget {
             Icon(Icons.keyboard_arrow_down_rounded, color: textColor, size: 20),
           ],
         ),
-      ),
+      )
     );
   }
 }

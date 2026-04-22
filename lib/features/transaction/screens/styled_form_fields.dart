@@ -63,7 +63,7 @@ class _StyledTextFieldState extends State<StyledTextField> {
             vertical: 12,
           ),
         ),
-      ),
+      )
     );
   }
 }
@@ -122,7 +122,7 @@ class StyledPickerField extends StatelessWidget {
             Icon(Icons.arrow_drop_down, color: colorScheme.onSurfaceVariant),
           ],
         ),
-      ),
+      )
     );
   }
 }

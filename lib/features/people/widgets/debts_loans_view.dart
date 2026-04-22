@@ -65,22 +65,22 @@ class _DebtsLoansViewState extends State<DebtsLoansView> {
         ),
 
         // 3. List Header
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
-            child: Text(
-              _selectedType == 'youOwe'
-                  ? 'PEOPLE YOU OWE'
-                  : 'PEOPLE WHO OWE YOU',
-              style: theme.textTheme.headlineMedium?.copyWith(
-                fontSize: 14,
-                fontWeight: FontWeight.normal,
-                letterSpacing: 1.5,
-                color: theme.colorScheme.secondary,
-              ),
-            ),
-          ),
-        ),
+        // SliverToBoxAdapter(
+        //   child: Padding(
+        //     padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+        //     child: Text(
+        //       _selectedType == 'youOwe'
+        //           ? 'PEOPLE YOU OWE'
+        //           : 'PEOPLE WHO OWE YOU',
+        //       style: theme.textTheme.headlineMedium?.copyWith(
+        //         fontSize: 14,
+        //         fontWeight: FontWeight.normal,
+        //         letterSpacing: 1.5,
+        //         color: theme.colorScheme.secondary,
+        //       ),
+        //     ),
+        //   ),
+        // ),
 
         // 4. List
         if (currentList.isEmpty)

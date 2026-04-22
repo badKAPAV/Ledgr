@@ -36,7 +36,7 @@ class SmsFeedbackModel {
       paymentMethod: map['paymentMethod'] ?? '',
       taggedData: Map<String, dynamic>.from(map['taggedData'] ?? {}),
       status: map['status'] ?? 'pending',
-      timestamp: (map['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      timestamp: (map['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now()
     );
   }
 

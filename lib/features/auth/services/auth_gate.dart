@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:wallzy/features/auth/provider/auth_provider.dart';
 import 'package:wallzy/features/auth/screens/auth_create_account_screen.dart';
 import 'package:wallzy/features/auth/screens/auth_email_screen.dart';
+import 'package:wallzy/features/auth/screens/landing_screen.dart';
 import 'package:wallzy/features/dashboard/screens/home_screen.dart';
 import 'package:wallzy/features/dashboard/widgets/loading_screen.dart';
 
@@ -30,8 +31,13 @@ class AuthGate extends StatelessWidget {
             child = HomeScreen(key: currentKey);
           }
         } else {
-          currentKey = const ValueKey('auth_email');
-          child = AuthEmailScreen(key: currentKey);
+          if (!authProvider.hasSeenLanding) {
+            currentKey = const ValueKey('landing_screen');
+            child = LandingScreen(key: currentKey);
+          } else {
+            currentKey = const ValueKey('auth_email');
+            child = AuthEmailScreen(key: currentKey);
+          }
         }
 
         // 2. Animate the transition
@@ -84,7 +90,7 @@ class AuthGate extends StatelessWidget {
           },
           child: child,
         );
-      },
+      }
     );
   }
 }

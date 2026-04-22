@@ -169,7 +169,7 @@ class HowToUseScreen extends StatelessWidget {
             ),
           ],
         ),
-      ),
+      )
     );
   }
 }
@@ -254,7 +254,7 @@ class _TipCard extends StatelessWidget {
             ],
           ),
         );
-      },
+      }
     );
   }
 
@@ -333,7 +333,7 @@ class _TipCard extends StatelessWidget {
             ),
           ),
         ),
-      ),
+      )
     );
   }
 }
@@ -416,7 +416,7 @@ class _GuideTile extends StatelessWidget {
             ],
           ),
         ),
-      ),
+      )
     );
   }
 }

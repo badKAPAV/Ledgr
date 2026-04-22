@@ -39,7 +39,7 @@ class AppLockProvider extends ChangeNotifier {
     final success = await _authenticateInternal(
       enable
           ? 'Verify your identity to enable App Lock'
-          : 'Verify your identity to disable App Lock',
+          : 'Verify your identity to disable App Lock'
     );
     if (!success) return false;
 
@@ -108,6 +108,6 @@ class AppLockProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     }
-    return _authenticateInternal('Unlock Ledgr to view your dashboard');
+    return _authenticateInternal('Use your biometrics to unlock Ledgr');
   }
 }

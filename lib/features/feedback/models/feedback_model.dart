@@ -46,7 +46,7 @@ class FeedbackModel {
       stepsToReproduce: map['stepsToReproduce'] ?? '',
       imageUrls: List<String>.from(map['imageUrls'] ?? []),
       status: map['status'] ?? 'pending',
-      timestamp: (map['timestamp'] as Timestamp).toDate(),
+      timestamp: (map['timestamp'] as Timestamp).toDate()
     );
   }
 }
