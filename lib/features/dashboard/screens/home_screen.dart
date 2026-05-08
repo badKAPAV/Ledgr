@@ -8,9 +8,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
-import 'package:wallzy/common/app_lock/app_lock_biometric_guard_wrapper.dart';
+import 'package:wallzy/common/snackbar/ledgr_snackbar.dart';
 import 'package:wallzy/common/widgets/footer_graphic.dart';
 import 'package:wallzy/common/widgets/messages_permission_banner.dart';
+import 'package:wallzy/core/navigation/slide_up_route.dart';
 import 'package:wallzy/features/auth/provider/auth_provider.dart';
 import 'package:wallzy/features/accounts/provider/account_provider.dart';
 import 'package:wallzy/features/dashboard/widgets/home_widgets_section.dart';
@@ -47,6 +48,12 @@ import 'package:wallzy/common/widgets/smart_stack_widget.dart';
 import 'package:wallzy/features/dashboard/widgets/recent_activity_widget.dart';
 import 'package:wallzy/features/dashboard/widgets/glass_radial_menu.dart';
 import 'package:wallzy/features/dashboard/widgets/event_folder_widget.dart';
+import 'package:wallzy/core/utils/ledgr_max/paywall/paywall_features.dart';
+import 'package:wallzy/features/goals/screens/add_edit_goal_screen.dart';
+import 'package:wallzy/features/goals/provider/goals_provider.dart';
+import 'package:wallzy/features/folders/widgets/add_edit_folder_sheet.dart';
+import 'package:wallzy/features/categories/screens/add_edit_category_modal_sheet.dart';
+import 'package:wallzy/features/recurring_payment/provider/recurring_payment_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -177,61 +184,41 @@ class _HomeScreenState extends State<HomeScreen>
     context.read<SettingsProvider>().setOfflineStatus(true);
 
     if (showSnackbar) {
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(26),
-          ),
-          content: Row(
-            children: [
-              HugeIcon(
-                icon: HugeIcons.strokeRoundedWifiDisconnected01,
-                strokeWidth: 2,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                "Switching to offline mode",
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-            ],
-          ),
-          backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 3),
+      LedgrSnackbar.show(
+        context: context,
+        content: Row(
+          children: [
+            HugeIcon(
+              icon: HugeIcons.strokeRoundedWifiDisconnected01,
+              strokeWidth: 2,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+            const SizedBox(width: 12),
+            Text("Switching to offline mode"),
+          ],
         ),
+        duration: const Duration(seconds: 3),
       );
     }
   }
 
   void _showBackOnlineSnackbar() {
-    final theme = Theme.of(context).colorScheme;
-
     if (!mounted) return;
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Back online!", style: TextStyle(color: theme.onSurface)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
-        backgroundColor: theme.surfaceContainer,
-        behavior: SnackBarBehavior.floating,
-        action: SnackBarAction(
-          label: "Reload",
-          textColor: theme.onSurface,
-          backgroundColor: theme.surfaceContainerHigh,
-          onPressed: () async {
-            await FirebaseFirestore.instance.enableNetwork();
-            if (mounted) {
-              context.read<SettingsProvider>().setOfflineStatus(false);
-              ScaffoldMessenger.of(context).hideCurrentSnackBar();
-            }
-          },
-        ),
-        duration: const Duration(days: 1),
+    LedgrSnackbar.show(
+      context: context,
+      content: Text("Back online!"),
+      action: SnackBarAction(
+        label: "Reload",
+        onPressed: () async {
+          await FirebaseFirestore.instance.enableNetwork();
+          if (mounted) {
+            context.read<SettingsProvider>().setOfflineStatus(false);
+          }
+        },
       ),
+      duration: const Duration(
+        seconds: 5,
+      ), // Changed from days: 1 to 5s for LedgrSnackbar
     );
   }
 
@@ -277,8 +264,9 @@ class _HomeScreenState extends State<HomeScreen>
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("All pending transactions ignored")),
+        LedgrSnackbar.show(
+          context: context,
+          content: const Text("All pending transactions ignored"),
         );
       }
     }
@@ -292,76 +280,60 @@ class _HomeScreenState extends State<HomeScreen>
         .take(5)
         .toList();
 
-    return BiometricGuard(
-      child: Scaffold(
-        key: const ValueKey('main_dashboard'),
-        drawer: _isProcessingSms ? null : const AppDrawer(isRoot: true),
-        body: Stack(
-          children: [
-            CustomScrollView(
-              controller: _scrollController,
-              physics: const BouncingScrollPhysics(),
-              slivers: [
-                // 1. HERO HEADER
-                HomeSliverAppBar(selectedTimeframe: _selectedTimeframe),
+    return Scaffold(
+      key: const ValueKey('main_dashboard'),
+      drawer: _isProcessingSms ? null : const AppDrawer(isRoot: true),
+      body: Stack(
+        children: [
+          CustomScrollView(
+            controller: _scrollController,
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              // 1. HERO HEADER
+              HomeSliverAppBar(selectedTimeframe: _selectedTimeframe),
 
-                // 2. ACTION DECK
-                const SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: MessagesPermissionBanner(),
-                  ),
+              // 2. ACTION DECK
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  child: MessagesPermissionBanner(),
                 ),
-                if (_pendingSmsTransactions.isNotEmpty ||
-                    _dueSubscriptions.isNotEmpty)
-                  SliverToBoxAdapter(
-                    child: ActionDeckWidget(
-                      pendingSmsTransactions: _pendingSmsTransactions,
-                      dueSubscriptions: _dueSubscriptions,
-                      onPendingSmsTap: _navigateToTransactionFromData,
-                      onPendingSmsDismiss: (tx) async {
-                        await _platform.invokeMethod(
-                          'removePendingTransaction',
-                          {'id': tx['id']},
+              ),
+              if (_pendingSmsTransactions.isNotEmpty ||
+                  _dueSubscriptions.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: ActionDeckWidget(
+                    pendingSmsTransactions: _pendingSmsTransactions,
+                    dueSubscriptions: _dueSubscriptions,
+                    onPendingSmsTap: _navigateToTransactionFromData,
+                    onPendingSmsDismiss: (tx) async {
+                      await _platform.invokeMethod('removePendingTransaction', {
+                        'id': tx['id'],
+                      });
+                      setState(() {
+                        _pendingSmsTransactions.removeWhere(
+                          (e) => e['id'] == tx['id'],
                         );
-                        setState(() {
-                          _pendingSmsTransactions.removeWhere(
-                            (e) => e['id'] == tx['id'],
-                          );
-                        });
-                      },
-                      onDueSubscriptionTap:
-                          _navigateToAddSubscriptionTransaction,
-                      onDueSubscriptionDismiss: (sub) {
-                        setState(() {
-                          _dueSubscriptions.remove(sub);
-                        });
-                        _saveDueSubscriptions();
-                      },
-                      onIgnoreAll: _handleDismissAllPending,
-                      onShowAllTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => PendingSmsScreen(
-                              transactions: _pendingSmsTransactions,
-                              onAdd: (tx) async {
-                                final result =
-                                    await _navigateToTransactionFromData(tx);
-                                if (result == true) {
-                                  _platform.invokeMethod(
-                                    'removePendingTransaction',
-                                    {'id': tx['id']},
-                                  );
-                                  setState(() {
-                                    _pendingSmsTransactions.removeWhere(
-                                      (e) => e['id'] == tx['id'],
-                                    );
-                                  });
-                                }
-                                return result == true;
-                              },
-                              onDismiss: (tx) {
+                      });
+                    },
+                    onDueSubscriptionTap: _navigateToAddSubscriptionTransaction,
+                    onDueSubscriptionDismiss: (sub) {
+                      setState(() {
+                        _dueSubscriptions.remove(sub);
+                      });
+                      _saveDueSubscriptions();
+                    },
+                    onIgnoreAll: _handleDismissAllPending,
+                    onShowAllTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PendingSmsScreen(
+                            transactions: _pendingSmsTransactions,
+                            onAdd: (tx) async {
+                              final result =
+                                  await _navigateToTransactionFromData(tx);
+                              if (result == true) {
                                 _platform.invokeMethod(
                                   'removePendingTransaction',
                                   {'id': tx['id']},
@@ -371,192 +343,209 @@ class _HomeScreenState extends State<HomeScreen>
                                     (e) => e['id'] == tx['id'],
                                   );
                                 });
-                              },
-                              onUndo: (tx) {
-                                _platform.invokeMethod('newTransaction', tx);
-                                setState(() {
-                                  _pendingSmsTransactions.insert(0, tx);
-                                });
-                              },
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-
-                // 2.5 SUMMARY BANNER
-                //! Uncomment during prod
-                // SliverToBoxAdapter(
-                //   child: Builder(
-                //     builder: (context) {
-                //       // 1. Check Prev Month Date
-                //       if (_prevMonthDate == null)
-                //         return const SizedBox.shrink();
-
-                //       // 2. Check Visibility (Logic + Test Flag)
-                //       final bool isTestMode = TimedSummaryScreen.allowTestMode;
-                //       final bool isDismissed = _isSummaryDismissed == true;
-
-                //       if (!isTestMode && isDismissed) {
-                //         return const SizedBox.shrink();
-                //       }
-
-                //       if (!isTestMode) {
-                //         final hasData = transactionProvider.transactions.any(
-                //           (tx) =>
-                //               tx.timestamp.year == _prevMonthDate!.year &&
-                //               tx.timestamp.month == _prevMonthDate!.month,
-                //         );
-                //         if (!hasData) return const SizedBox.shrink();
-                //       }
-
-                //       return Padding(
-                //         padding: const EdgeInsets.fromLTRB(
-                //           16.0,
-                //           0.0,
-                //           16.0,
-                //           16.0,
-                //         ),
-                //         child: Container(
-                //           decoration: BoxDecoration(
-                //             borderRadius: BorderRadius.circular(50),
-                //             border: Border.all(
-                //               color: Theme.of(
-                //                 context,
-                //               ).colorScheme.primary.withValues(alpha: 0.5),
-                //               width: 2,
-                //             ),
-                //           ),
-                //           child: Material(
-                //             color: Colors.transparent,
-                //             borderRadius: BorderRadius.circular(50),
-                //             child: InkWell(
-                //               onTap: () async {
-                //                 // Dismiss logic
-                //                 final prefs =
-                //                     await SharedPreferences.getInstance();
-                //                 final key =
-                //                     'summary_dismissed_${_prevMonthDate!.year}_${_prevMonthDate!.month}';
-                //                 await prefs.setBool(key, true);
-
-                //                 if (mounted) {
-                //                   setState(() {
-                //                     _isSummaryDismissed = true;
-                //                   });
-
-                //                   Navigator.push(
-                //                     context,
-                //                     MaterialPageRoute(
-                //                       builder: (_) => TimedSummaryScreen(
-                //                         initialDate: _prevMonthDate,
-                //                       ),
-                //                     ),
-                //                   );
-                //                 }
-                //               },
-                //               borderRadius: BorderRadius.circular(50),
-                //               child: Padding(
-                //                 padding: const EdgeInsets.symmetric(
-                //                   horizontal: 20.0,
-                //                   vertical: 14.0,
-                //                 ),
-                //                 child: Row(
-                //                   children: [
-                //                     Icon(
-                //                       Icons.insights,
-                //                       size: 20,
-                //                       color: Theme.of(
-                //                         context,
-                //                       ).colorScheme.primary,
-                //                     ),
-                //                     const SizedBox(width: 12),
-                //                     Expanded(
-                //                       child: Text(
-                //                         "View summary for ${DateFormat('MMMM').format(_prevMonthDate!)}",
-                //                         style: TextStyle(
-                //                           fontWeight: FontWeight.w700,
-                //                           fontSize: 14,
-                //                           color: Theme.of(
-                //                             context,
-                //                           ).colorScheme.onSurface,
-                //                         ),
-                //                       ),
-                //                     ),
-                //                     Icon(
-                //                       Icons.arrow_forward_ios,
-                //                       size: 14,
-                //                       color: Theme.of(
-                //                         context,
-                //                       ).colorScheme.outline,
-                //                     ),
-                //                   ],
-                //                 ),
-                //               ),
-                //             ),
-                //           ),
-                //         ),
-                //       );
-                //     },
-                //   ),
-                // ),
-                // const SliverToBoxAdapter(child: SizedBox(height: 16)),
-                const SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(16, 2, 16, 20),
-                    child: HomeWidgetsSection(),
-                  ),
-                ),
-
-                // 4. RECENT ACTIVITY
-                SliverToBoxAdapter(
-                  child: RecentActivityWidget(
-                    transactions: recentTransactions,
-                    onTap: (tx) => _showTransactionDetails(context, tx),
-                  ),
-                ),
-
-                const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-                if (transactionProvider.transactions.isNotEmpty)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 0),
-                      child: SmartStackWidget(
-                        height: 240,
-                        children: [
-                          AnalyticsWidget(
-                            selectedTimeframe: _selectedTimeframe,
-                            onTimeframeChanged: (val) {
+                              }
+                              return result == true;
+                            },
+                            onDismiss: (tx) {
+                              _platform.invokeMethod(
+                                'removePendingTransaction',
+                                {'id': tx['id']},
+                              );
                               setState(() {
-                                _selectedTimeframe = val;
+                                _pendingSmsTransactions.removeWhere(
+                                  (e) => e['id'] == tx['id'],
+                                );
+                              });
+                            },
+                            onUndo: (tx) {
+                              _platform.invokeMethod('newTransaction', tx);
+                              setState(() {
+                                _pendingSmsTransactions.insert(0, tx);
                               });
                             },
                           ),
-                          NetWorthWidget(),
-                          EventFolderWidget(),
-                        ],
-                      ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+              // 2.5 SUMMARY BANNER
+              //! Uncomment during prod
+              // SliverToBoxAdapter(
+              //   child: Builder(
+              //     builder: (context) {
+              //       // 1. Check Prev Month Date
+              //       if (_prevMonthDate == null)
+              //         return const SizedBox.shrink();
+
+              //       // 2. Check Visibility (Logic + Test Flag)
+              //       final bool isTestMode = TimedSummaryScreen.allowTestMode;
+              //       final bool isDismissed = _isSummaryDismissed == true;
+
+              //       if (!isTestMode && isDismissed) {
+              //         return const SizedBox.shrink();
+              //       }
+
+              //       if (!isTestMode) {
+              //         final hasData = transactionProvider.transactions.any(
+              //           (tx) =>
+              //               tx.timestamp.year == _prevMonthDate!.year &&
+              //               tx.timestamp.month == _prevMonthDate!.month,
+              //         );
+              //         if (!hasData) return const SizedBox.shrink();
+              //       }
+
+              //       return Padding(
+              //         padding: const EdgeInsets.fromLTRB(
+              //           16.0,
+              //           0.0,
+              //           16.0,
+              //           16.0,
+              //         ),
+              //         child: Container(
+              //           decoration: BoxDecoration(
+              //             borderRadius: BorderRadius.circular(50),
+              //             border: Border.all(
+              //               color: Theme.of(
+              //                 context,
+              //               ).colorScheme.primary.withValues(alpha: 0.5),
+              //               width: 2,
+              //             ),
+              //           ),
+              //           child: Material(
+              //             color: Colors.transparent,
+              //             borderRadius: BorderRadius.circular(50),
+              //             child: InkWell(
+              //               onTap: () async {
+              //                 // Dismiss logic
+              //                 final prefs =
+              //                     await SharedPreferences.getInstance();
+              //                 final key =
+              //                     'summary_dismissed_${_prevMonthDate!.year}_${_prevMonthDate!.month}';
+              //                 await prefs.setBool(key, true);
+
+              //                 if (mounted) {
+              //                   setState(() {
+              //                     _isSummaryDismissed = true;
+              //                   });
+
+              //                   Navigator.push(
+              //                     context,
+              //                     MaterialPageRoute(
+              //                       builder: (_) => TimedSummaryScreen(
+              //                         initialDate: _prevMonthDate,
+              //                       ),
+              //                     ),
+              //                   );
+              //                 }
+              //               },
+              //               borderRadius: BorderRadius.circular(50),
+              //               child: Padding(
+              //                 padding: const EdgeInsets.symmetric(
+              //                   horizontal: 20.0,
+              //                   vertical: 14.0,
+              //                 ),
+              //                 child: Row(
+              //                   children: [
+              //                     Icon(
+              //                       Icons.insights,
+              //                       size: 20,
+              //                       color: Theme.of(
+              //                         context,
+              //                       ).colorScheme.primary,
+              //                     ),
+              //                     const SizedBox(width: 12),
+              //                     Expanded(
+              //                       child: Text(
+              //                         "View summary for ${DateFormat('MMMM').format(_prevMonthDate!)}",
+              //                         style: TextStyle(
+              //                           fontWeight: FontWeight.w700,
+              //                           fontSize: 14,
+              //                           color: Theme.of(
+              //                             context,
+              //                           ).colorScheme.onSurface,
+              //                         ),
+              //                       ),
+              //                     ),
+              //                     Icon(
+              //                       Icons.arrow_forward_ios,
+              //                       size: 14,
+              //                       color: Theme.of(
+              //                         context,
+              //                       ).colorScheme.outline,
+              //                     ),
+              //                   ],
+              //                 ),
+              //               ),
+              //             ),
+              //           ),
+              //         ),
+              //       );
+              //     },
+              //   ),
+              // ),
+              // const SliverToBoxAdapter(child: SizedBox(height: 16)),
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(16, 2, 16, 20),
+                  child: HomeWidgetsSection(),
+                ),
+              ),
+
+              // 4. RECENT ACTIVITY
+              SliverToBoxAdapter(
+                child: RecentActivityWidget(
+                  transactions: recentTransactions,
+                  onTap: (tx) => _showTransactionDetails(context, tx),
+                ),
+              ),
+
+              const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+              if (transactionProvider.transactions.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 0),
+                    child: SmartStackWidget(
+                      height: 240,
+                      children: [
+                        AnalyticsWidget(
+                          selectedTimeframe: _selectedTimeframe,
+                          onTimeframeChanged: (val) {
+                            setState(() {
+                              _selectedTimeframe = val;
+                            });
+                          },
+                        ),
+                        NetWorthWidget(),
+                        EventFolderWidget(),
+                      ],
                     ),
                   ),
+                ),
 
-                // const SliverToBoxAdapter(child: SizedBox(height: 100)),
-                const SliverToBoxAdapter(child: FooterGraphic()),
-              ],
-            ),
-            Positioned(
-              bottom: 50, // Margin from the bottom
-              left: 0,
-              right: 0,
-              child: Center(child: _buildGlassFab()),
-            ),
-          ],
-        ),
+              // const SliverToBoxAdapter(child: SizedBox(height: 100)),
+              const SliverToBoxAdapter(child: FooterGraphic()),
+            ],
+          ),
+          Positioned(
+            bottom: 50, // Margin from the bottom
+            left: 0,
+            right: 0,
+            child: Center(child: _buildGlassFab()),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildGlassFab() {
+    final accountProvider = context.watch<AccountProvider>();
+    final metaProvider = context.watch<MetaProvider>();
+    final goalsProvider = context.watch<GoalsProvider>();
+    final recurringProvider = context.watch<SubscriptionProvider>();
+
     return GlassRadialMenu(
       isFabExtended: _isFabExtended,
       onFabTap: _navigateToAddTransactionScreen,
@@ -566,15 +555,17 @@ class _HomeScreenState extends State<HomeScreen>
           label: 'TRANSACTION',
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => const AddEditTransactionScreen()),
+            SlideUpRoute(page: const AddEditTransactionScreen()),
           ),
         ),
         RadialMenuItem(
           icon: HugeIcons.strokeRoundedRotate02,
           label: 'RECURRING',
+          feature: PaywallFeature.recurringPayments,
+          currentCount: recurringProvider.subscriptions.length,
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => const AddSubscriptionScreen()),
+            SlideUpRoute(page: const AddSubscriptionScreen()),
           ),
         ),
         RadialMenuItem(
@@ -582,15 +573,45 @@ class _HomeScreenState extends State<HomeScreen>
           label: 'DEBT/LOAN',
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => const AddDebtLoanScreen()),
+            SlideUpRoute(page: const AddDebtLoanScreen()),
           ),
         ),
         RadialMenuItem(
           icon: HugeIcons.strokeRoundedWalletAdd02,
           label: 'ACCOUNT',
+          feature: PaywallFeature.userAccounts,
+          currentCount: accountProvider.accounts.length,
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => const AddEditAccountScreen()),
+            SlideUpRoute(page: const AddEditAccountScreen()),
+          ),
+        ),
+        RadialMenuItem(
+          icon: HugeIcons.strokeRoundedTarget02,
+          label: 'GOAL',
+          feature: PaywallFeature.goals,
+          currentCount: goalsProvider.goals.length,
+          onTap: () => Navigator.push(
+            context,
+            SlideUpRoute(page: const AddEditGoalScreen()),
+          ),
+        ),
+        RadialMenuItem(
+          icon: HugeIcons.strokeRoundedFolderAdd,
+          label: 'FOLDER',
+          feature: PaywallFeature.folders,
+          currentCount: metaProvider.tags.length,
+          onTap: () => AddEditFolderSheet.show(context),
+        ),
+        RadialMenuItem(
+          icon: HugeIcons.strokeRoundedPackageOpen,
+          label: 'CATEGORY',
+          feature: PaywallFeature.customCategories,
+          onTap: () => showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (context) => const AddEditCategoryModalSheet(),
           ),
         ),
       ],
@@ -721,25 +742,22 @@ class _HomeScreenState extends State<HomeScreen>
     _autoRecordTotal.value = _pendingSmsTransactions.length;
     _autoRecordProgress.value = 0;
 
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: ValueListenableBuilder<int>(
-          valueListenable: _autoRecordProgress,
-          builder: (context, progress, _) {
-            final total = _autoRecordTotal.value;
-            return Text(
-              "Recording transactions... $progress / $total",
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onInverseSurface,
-              ),
-            );
-          },
-        ),
-        duration: const Duration(days: 1),
-        backgroundColor: Theme.of(context).colorScheme.inverseSurface,
-        behavior: SnackBarBehavior.floating,
+    LedgrSnackbar.show(
+      context: context,
+      content: ValueListenableBuilder<int>(
+        valueListenable: _autoRecordProgress,
+        builder: (context, progress, _) {
+          final total = _autoRecordTotal.value;
+          return Text(
+            "Recording transactions... $progress / $total",
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onInverseSurface,
+            ),
+          );
+        },
       ),
+      duration: const Duration(seconds: 10), // Reduced from days: 1
+      backgroundColor: Theme.of(context).colorScheme.inverseSurface,
     );
 
     final txProvider = Provider.of<TransactionProvider>(context, listen: false);
@@ -846,7 +864,6 @@ class _HomeScreenState extends State<HomeScreen>
     }
 
     if (!mounted) return;
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
     if (savedCount > 0) {
       setState(() {
@@ -854,34 +871,22 @@ class _HomeScreenState extends State<HomeScreen>
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              "Auto-recorded $savedCount transactions",
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onPrimaryContainer,
-              ),
-            ),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            action: SnackBarAction(
-              label: 'View',
-              onPressed: () {
-                if (mounted) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          const AllTransactionsScreen(initialTabIndex: 0),
-                    ),
-                  );
-                }
-              },
-            ),
+        LedgrSnackbar.show(
+          context: context,
+          content: Text("Auto-recorded $savedCount transactions"),
+          action: SnackBarAction(
+            label: 'View',
+            onPressed: () {
+              if (mounted) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        const AllTransactionsScreen(initialTabIndex: 0),
+                  ),
+                );
+              }
+            },
           ),
         );
       }
@@ -1031,7 +1036,7 @@ class _HomeScreenState extends State<HomeScreen>
   void _navigateToAddTransactionScreen() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const AddEditTransactionScreen()),
+      SlideUpRoute(page: const AddEditTransactionScreen()),
     );
   }
 

@@ -4,6 +4,7 @@ import 'package:wallzy/core/themes/theme.dart';
 import 'package:wallzy/features/people/models/person.dart';
 import 'package:wallzy/features/people/provider/people_provider.dart';
 import 'package:wallzy/features/people/widgets/person_picker_sheet.dart';
+import 'package:wallzy/common/snackbar/ledgr_snackbar.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 
 class AddDebtLoanScreen extends StatefulWidget {
@@ -95,7 +96,7 @@ class _AddDebtLoanScreenState extends State<AddDebtLoanScreen>
           _DebtLoanForm(isDebt: true, initialPerson: widget.initialPerson),
           _DebtLoanForm(isDebt: false, initialPerson: widget.initialPerson),
         ],
-      )
+      ),
     );
   }
 }
@@ -116,7 +117,7 @@ class _TabLabel extends StatelessWidget {
           subtitle,
           style: const TextStyle(fontSize: 9, fontWeight: FontWeight.normal),
         ),
-      ]
+      ],
     );
   }
 }
@@ -150,9 +151,10 @@ class _DebtLoanFormState extends State<_DebtLoanForm> {
   void _save() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedPerson == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please select a person.')));
+      LedgrSnackbar.show(
+        context: context,
+        content: const Text('Please select a person.'),
+      );
       return;
     }
 
@@ -183,9 +185,7 @@ class _DebtLoanFormState extends State<_DebtLoanForm> {
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        LedgrSnackbar.show(context: context, content: Text('Error: $e'));
         setState(() => _isSaving = false);
       }
     }
@@ -210,7 +210,7 @@ class _DebtLoanFormState extends State<_DebtLoanForm> {
             });
           },
         ),
-      )
+      ),
     );
   }
 
@@ -316,7 +316,7 @@ class _DebtLoanFormState extends State<_DebtLoanForm> {
             ),
           ),
         ],
-      )
+      ),
     );
   }
 }
@@ -376,7 +376,7 @@ class _AmountInputHero extends StatelessWidget {
             ),
           ],
         ),
-      ]
+      ],
     );
   }
 }
@@ -501,7 +501,7 @@ class _FunkyPickerTile extends StatelessWidget {
             ),
           ],
         ),
-      )
+      ),
     );
   }
 }

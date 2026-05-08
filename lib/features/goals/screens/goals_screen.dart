@@ -4,6 +4,9 @@ import 'package:intl/intl.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:wallzy/common/helpers/fading_divider.dart';
 import 'package:wallzy/common/widgets/empty_report_placeholder.dart';
+import 'package:wallzy/core/navigation/slide_up_route.dart';
+import 'package:wallzy/core/utils/ledgr_max/paywall/paywall_features.dart';
+import 'package:wallzy/core/utils/ledgr_max/paywall/paywall_interceptor.dart';
 import 'package:wallzy/features/goals/provider/goals_provider.dart';
 import 'package:wallzy/features/accounts/provider/account_provider.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
@@ -26,7 +29,11 @@ class _GoalsScreenState extends State<GoalsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      floatingActionButton: _buildGlassFab(context),
+      floatingActionButton: Consumer<GoalsProvider>(
+        builder: (context, goalsProvider, child) {
+          return _buildGlassFab(context, goalsProvider);
+        },
+      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       body: Consumer3<GoalsProvider, AccountProvider, TransactionProvider>(
         builder: (context, goalsProvider, accountProvider, txProvider, child) {
@@ -137,7 +144,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
     );
   }
 
-  Widget _buildGlassFab(BuildContext context) {
+  Widget _buildGlassFab(BuildContext context, GoalsProvider goalsProvider) {
     return Container(
       height: 56,
       decoration: BoxDecoration(
@@ -155,9 +162,16 @@ class _GoalsScreenState extends State<GoalsScreen> {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const AddEditGoalScreen()),
+            PaywallInterceptor.execute(
+              context: context,
+              feature: PaywallFeature.goals,
+              onAllowed: () {
+                Navigator.push(
+                  context,
+                  SlideUpRoute(page: const AddEditGoalScreen()),
+                );
+              },
+              currentCount: goalsProvider.goals.length,
             );
           },
           borderRadius: BorderRadius.circular(30),

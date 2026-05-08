@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class LedgrSwitch extends StatelessWidget {
   /// Whether this switch is on or off.
@@ -83,22 +85,25 @@ class LedgrSwitch extends StatelessWidget {
     final padding = 4.0;
     final thumbSize = height - (padding * 2);
     final actualTrackRadius = trackRadius ?? height / 2.5;
-    final actualThumbRadius = thumbRadius ?? 10.0; // Slightly rounded square
+    final actualThumbRadius = thumbRadius ?? 10.0;
 
     // Default icons matching the user's images
-    final defaultActiveIcon = Icon(
-      Icons.check_rounded,
+    final defaultActiveIcon = HugeIcon(
+      icon: HugeIcons.strokeRoundedTick02,
       color: actualActiveTrackColor,
       size: thumbSize * 0.75,
+      strokeWidth: 3,
     );
-    final defaultInactiveIcon = Icon(
-      Icons.close_rounded,
+    final defaultInactiveIcon = HugeIcon(
+      icon: HugeIcons.strokeRoundedCancel01,
       color: actualInactiveTrackColor,
       size: thumbSize * 0.75,
+      strokeWidth: 3,
     );
 
     return GestureDetector(
       onTap: () {
+        HapticFeedback.lightImpact();
         if (onChanged != null) {
           onChanged!(!value);
         }

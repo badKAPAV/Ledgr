@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:wallzy/common/snackbar/ledgr_snackbar.dart';
 
 class DataTile extends StatelessWidget {
   final String label;
@@ -56,11 +57,10 @@ class DataTile extends StatelessWidget {
                 InkWell(
                   onTap: () {
                     Clipboard.setData(ClipboardData(text: value));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Copied to clipboard'),
-                        duration: Duration(seconds: 1),
-                      ),
+                    LedgrSnackbar.show(
+                      context: context,
+                      content: const Text('Copied to clipboard'),
+                      duration: const Duration(seconds: 1),
                     );
                   },
                   borderRadius: BorderRadius.circular(12),
@@ -96,7 +96,7 @@ class DataTile extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ],
-      )
+      ),
     );
   }
 }
@@ -163,7 +163,7 @@ class ActionBox extends StatelessWidget {
             ],
           ),
         ),
-      )
+      ),
     );
   }
 }

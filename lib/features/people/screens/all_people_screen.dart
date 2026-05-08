@@ -7,12 +7,13 @@ import 'package:flutter_contacts/flutter_contacts.dart' as fc;
 import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
 import 'package:wallzy/common/widgets/empty_report_placeholder.dart';
+import 'package:wallzy/common/snackbar/ledgr_snackbar.dart';
 import 'package:wallzy/core/themes/theme.dart';
 import 'package:wallzy/features/people/models/person.dart';
 import 'package:wallzy/features/people/provider/people_provider.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
-import 'package:wallzy/features/people/screens/person_transactions_screen.dart';
+import 'package:wallzy/features/transaction/screens/transactions_screen.dart';
 
 class AllPeopleScreen extends StatefulWidget {
   const AllPeopleScreen({super.key});
@@ -58,8 +59,9 @@ class _AllPeopleScreenState extends State<AllPeopleScreen> {
         );
 
         if (exists) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('"${contact.displayName}" already exists.')),
+          LedgrSnackbar.show(
+            context: context,
+            content: Text('"${contact.displayName}" already exists.'),
           );
         } else {
           final newPerson = Person(
@@ -70,23 +72,21 @@ class _AllPeopleScreenState extends State<AllPeopleScreen> {
                 : null,
           );
           await peopleProvider.addPerson(newPerson);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Added "${contact.displayName}" to your people.'),
-            ),
+          LedgrSnackbar.show(
+            content: Text('Added "${contact.displayName}" to your people.'),
           );
         }
       }
     } else if (status.isDenied) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Contact permission denied.')),
-        );
+        if (mounted) {
+          LedgrSnackbar.show(content: const Text('Contact permission denied.'));
+        }
       }
     } else if (status.isPermanentlyDenied) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+        if (mounted) {
+          LedgrSnackbar.show(
             content: const Text(
               'Contact permission permanently denied. Please enable from settings.',
             ),
@@ -94,8 +94,8 @@ class _AllPeopleScreenState extends State<AllPeopleScreen> {
               label: 'Settings',
               onPressed: openAppSettings,
             ),
-          ),
-        );
+          );
+        }
       }
     }
   }
@@ -253,7 +253,7 @@ class _AllPeopleScreenState extends State<AllPeopleScreen> {
                   ),
           ),
         ],
-      )
+      ),
     );
   }
 }
@@ -276,7 +276,7 @@ class _PersonListTile extends StatelessWidget {
     final theme = Theme.of(context);
     final currencyFormat = NumberFormat.compactCurrency(
       symbol: currencySymbol,
-      decimalDigits: 0
+      decimalDigits: 0,
     );
 
     return Card(
@@ -291,10 +291,13 @@ class _PersonListTile extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => PersonTransactionsScreen(
-                person: person,
-                transactionType: 'expense', // Default to expense
-                initialSelectedDate: DateTime.now(),
+              builder: (_) => TransactionsScreen(
+                args: TransactionsScreenArgs(
+                  type: TransactionScreenType.person,
+                  person: person,
+                  transactionType: 'expense', // Default to expense
+                  initialSelectedDate: DateTime.now(),
+                ),
               ),
             ),
           );
@@ -399,7 +402,7 @@ class _PersonListTile extends StatelessWidget {
             ],
           ),
         ),
-      )
+      ),
     );
   }
 }

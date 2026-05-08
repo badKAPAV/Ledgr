@@ -17,6 +17,9 @@ class AppLockProvider extends ChangeNotifier {
   bool get isAuthenticated => _isAuthenticated;
   bool get isInitialized => _isInitialized;
 
+  // Expose this so the Guard knows if the prompt is currently open
+  bool get isAuthenticating => _isAuthenticating;
+
   AppLockProvider() {
     _init();
   }
@@ -39,7 +42,7 @@ class AppLockProvider extends ChangeNotifier {
     final success = await _authenticateInternal(
       enable
           ? 'Verify your identity to enable App Lock'
-          : 'Verify your identity to disable App Lock'
+          : 'Verify your identity to disable App Lock',
     );
     if (!success) return false;
 
@@ -57,6 +60,8 @@ class AppLockProvider extends ChangeNotifier {
   void lockApp() {
     if (_isLockEnabled) {
       _isAuthenticated = false;
+      // Reset this to prevent button deadlocks after long backgrounding
+      _isAuthenticating = false;
       notifyListeners();
     }
   }

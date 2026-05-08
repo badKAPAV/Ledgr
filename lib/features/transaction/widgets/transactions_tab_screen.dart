@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:wallzy/common/helpers/fading_divider.dart';
+import 'package:wallzy/common/info_modal_sheet_widget/info_sheet_widget.dart';
 import 'package:wallzy/common/progress_bar/segmented_progress_bar.dart';
 import 'package:wallzy/core/themes/theme.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
@@ -244,7 +245,7 @@ class _NetFlowDashboard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(24, 6, 24, 16),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(32),
@@ -256,12 +257,21 @@ class _NetFlowDashboard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                "NET BALANCE",
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.outline,
-                  letterSpacing: 1.5,
-                ),
+              Row(
+                children: [
+                  Text(
+                    "NET BALANCE",
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.outline,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  const SizedBox(width: 0),
+                  InfoSheetWidget(
+                    text: "Expenses here doesn't include Credit spends.",
+                    buttonText: 'Got it',
+                  ),
+                ],
               ),
               Text(
                 currencyFormat.format(result.balance),
@@ -275,7 +285,7 @@ class _NetFlowDashboard extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 0),
 
           // 2. Segmented Progress Bar (Comparison)
           SegmentedProgressBar(

@@ -8,6 +8,7 @@ import 'package:wallzy/features/currency_convert/screens/currency_convert_screen
 import 'package:wallzy/features/feedback/screens/feedback_screen.dart';
 import 'package:wallzy/features/planning/screens/planning_screen.dart';
 import 'package:wallzy/features/settings/screens/settings_screen.dart';
+import 'package:wallzy/common/snackbar/ledgr_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -69,19 +70,9 @@ class _AppDrawerState extends State<AppDrawer> {
             context,
             listen: false,
           ).setOfflineStatus(false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text(
-                "Back online!",
-                style: TextStyle(color: Colors.white),
-              ),
-              backgroundColor: Colors.green.shade600,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              margin: const EdgeInsets.all(12),
-            ),
+          LedgrSnackbar.show(
+            context: context,
+            content: const Text("Back online!"),
           );
         }
       }

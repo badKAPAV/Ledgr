@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:wallzy/common/helpers/fading_divider.dart';
+import 'package:wallzy/core/utils/ledgr_max/paywall/paywall_features.dart';
+import 'package:wallzy/core/utils/ledgr_max/paywall/paywall_interceptor.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/features/transaction/provider/meta_provider.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
@@ -15,6 +17,7 @@ import 'package:wallzy/common/icon_picker/icons.dart';
 
 import 'package:wallzy/app_drawer.dart';
 import 'package:wallzy/features/folders/widgets/folder_warning_widget.dart';
+import 'package:wallzy/features/folders/widgets/add_edit_folder_sheet.dart';
 
 class TagsScreen extends StatefulWidget {
   const TagsScreen({super.key});
@@ -462,7 +465,16 @@ class _TagsScreenState extends State<TagsScreen> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => _showCreateTagSheet(context),
+          onTap: () {
+            PaywallInterceptor.execute(
+              context: context,
+              feature: PaywallFeature.folders,
+              onAllowed: () {
+                AddEditFolderSheet.show(context);
+              },
+              currentCount: context.read<MetaProvider>().tags.length,
+            );
+          },
           borderRadius: BorderRadius.circular(30),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
@@ -493,311 +505,7 @@ class _TagsScreenState extends State<TagsScreen> {
     );
   }
 
-  void _showCreateTagSheet(BuildContext context) {
-    final TextEditingController nameController = TextEditingController();
-    Color? selectedColor; // null means no color
-    String selectedIconKey = 'folder';
 
-    final theme = Theme.of(context);
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setModalState) {
-          return Container(
-            padding: EdgeInsets.fromLTRB(
-              0,
-              24,
-              0,
-              MediaQuery.of(context).viewInsets.bottom + 32,
-            ),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(32),
-              ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Row(
-                    children: [
-                      Text(
-                        "Create New Folder",
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        icon: const Icon(Icons.close_rounded),
-                        style: IconButton.styleFrom(
-                          backgroundColor: theme
-                              .colorScheme
-                              .surfaceContainerHighest
-                              .withValues(alpha: 0.5),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
-
-                // Name Input
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: TextField(
-                    controller: nameController,
-                    autofocus: true,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                    decoration: InputDecoration(
-                      labelText: "Folder Name",
-                      hintText: "e.g. Office Commute, London 2026",
-                      filled: true,
-                      fillColor: theme.colorScheme.surfaceContainerHighest
-                          .withValues(alpha: 0.4),
-                      prefixIcon: Icon(
-                        Icons.label_outline_rounded,
-                        color: theme.colorScheme.primary,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide.none,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide(
-                          color: theme.colorScheme.primary,
-                          width: 2,
-                        ),
-                      ),
-                      floatingLabelStyle: TextStyle(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Icon Picker
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Row(
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Folder Icon",
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "Choose an icon for this folder",
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const Spacer(),
-                      GestureDetector(
-                        onTap: () {
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (ctx) => GoalIconPickerSheet(
-                              selectedIconKey: selectedIconKey,
-                              onIconSelected: (key) {
-                                setModalState(() => selectedIconKey = key);
-                              },
-                            ),
-                          );
-                        },
-                        child: Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surfaceContainerHighest
-                                .withValues(alpha: 0.4),
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: theme.colorScheme.outlineVariant
-                                  .withValues(alpha: 0.5),
-                              width: 1,
-                            ),
-                          ),
-                          child: Center(
-                            child: HugeIcon(
-                              icon: GoalIconRegistry.getFolderIcon(
-                                selectedIconKey,
-                              ),
-                              size: 22,
-                              color: theme.colorScheme.primary,
-                              strokeWidth: 2,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
-
-                // Color Picker
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Text(
-                    "Folder Color",
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  height: 60,
-                  child: ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _tagColors.length + 1,
-                    separatorBuilder: (_, __) => const SizedBox(width: 12),
-                    itemBuilder: (context, index) {
-                      final Color? color = index == 0
-                          ? null
-                          : _tagColors[index - 1];
-                      final isSelected = color == selectedColor;
-                      return GestureDetector(
-                        onTap: () {
-                          setModalState(() {
-                            selectedColor = color;
-                          });
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          width: 52,
-                          height: 52,
-                          decoration: BoxDecoration(
-                            color:
-                                color ??
-                                theme.colorScheme.surfaceContainerHighest
-                                    .withValues(alpha: 0.5),
-                            shape: BoxShape.circle,
-                            border: isSelected
-                                ? Border.all(
-                                    color: theme.colorScheme.primary,
-                                    width: 3,
-                                  )
-                                : color == null
-                                ? Border.all(
-                                    color: theme.colorScheme.outlineVariant
-                                        .withValues(alpha: 0.5),
-                                    width: 1,
-                                  )
-                                : null,
-                            boxShadow: [
-                              if (isSelected && color != null)
-                                BoxShadow(
-                                  color: color.withValues(alpha: 0.3),
-                                  blurRadius: 12,
-                                  spreadRadius: 2,
-                                ),
-                            ],
-                          ),
-                          child: isSelected
-                              ? Icon(
-                                  Icons.check_rounded,
-                                  color: color == null
-                                      ? theme.colorScheme.primary
-                                      : (ThemeData.estimateBrightnessForColor(
-                                                  color,
-                                                ) ==
-                                                Brightness.dark
-                                            ? Colors.white
-                                            : Colors.black),
-                                )
-                              : color == null
-                              ? Icon(
-                                  Icons.not_interested_rounded,
-                                  size: 20,
-                                  color: theme.colorScheme.outline,
-                                )
-                              : null,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-
-                const SizedBox(height: 40),
-
-                // Create Button
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 58,
-                    child: FilledButton(
-                      style: FilledButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(50),
-                        ),
-                        elevation: 0,
-                      ),
-                      onPressed: () async {
-                        final name = nameController.text.trim();
-                        if (name.isEmpty) return;
-
-                        final metaProvider = Provider.of<MetaProvider>(
-                          context,
-                          listen: false,
-                        );
-
-                        await metaProvider.addTag(
-                          name,
-                          color: selectedColor?.value,
-                          iconKey: selectedIconKey,
-                        );
-
-                        if (context.mounted) Navigator.pop(context);
-                      },
-                      child: const Text(
-                        "Create Folder",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
 }
 
 // --- DATA MODEL ---

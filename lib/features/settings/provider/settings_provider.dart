@@ -26,6 +26,7 @@ class SettingsProvider with ChangeNotifier {
   // Notification Settings
   bool _enableMonthlyLimitAlert = false;
   bool _enableDailyLimitAlert = false;
+  bool _enableCategoryLimitAlert = false;
   bool _enableDailySummary = false;
   bool _enableWeeklySummary = false;
   bool _enableMonthlySummary = false;
@@ -34,6 +35,7 @@ class SettingsProvider with ChangeNotifier {
 
   bool get enableMonthlyLimitAlert => _enableMonthlyLimitAlert;
   bool get enableDailyLimitAlert => _enableDailyLimitAlert;
+  bool get enableCategoryLimitAlert => _enableCategoryLimitAlert;
   bool get enableDailySummary => _enableDailySummary;
   bool get enableWeeklySummary => _enableWeeklySummary;
   bool get enableMonthlySummary => _enableMonthlySummary;
@@ -71,6 +73,7 @@ class SettingsProvider with ChangeNotifier {
     // Load Notification Settings
     _enableMonthlyLimitAlert = prefs.getBool('enable_monthly_limit_alert') ?? false;
     _enableDailyLimitAlert = prefs.getBool('enable_daily_limit_alert') ?? false;
+    _enableCategoryLimitAlert = prefs.getBool('enable_category_limit_alert') ?? false;
     _enableDailySummary = prefs.getBool('enable_daily_summary') ?? false;
     _enableWeeklySummary = prefs.getBool('enable_weekly_summary') ?? false;
     _enableMonthlySummary = prefs.getBool('enable_monthly_summary') ?? false;
@@ -154,6 +157,14 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('enable_daily_limit_alert', value);
+  }
+
+  Future<void> setEnableCategoryLimitAlert(bool value) async {
+    if (_enableCategoryLimitAlert == value) return;
+    _enableCategoryLimitAlert = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('enable_category_limit_alert', value);
   }
 
   Future<void> setEnableDailySummary(bool value) async {

@@ -9,7 +9,7 @@ import 'package:wallzy/features/people/models/person.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
-import 'package:wallzy/features/people/screens/person_transactions_screen.dart';
+import 'package:wallzy/features/transaction/screens/transactions_screen.dart';
 import 'package:wallzy/common/widgets/date_filter_selector.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:wallzy/common/widgets/empty_report_placeholder.dart';
@@ -327,12 +327,15 @@ class _PaymentsAnalysisScreenState extends State<PaymentsAnalysisScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => PersonTransactionsScreen(
-                            person: summary.person,
-                            transactionType: summary.type,
-                            initialSelectedDate: DateTime(
-                              _selectedYear,
-                              _selectedMonth ?? DateTime.now().month,
+                          builder: (_) => TransactionsScreen(
+                            args: TransactionsScreenArgs(
+                              type: TransactionScreenType.person,
+                              person: summary.person,
+                              transactionType: summary.type,
+                              initialSelectedDate: DateTime(
+                                _selectedYear,
+                                _selectedMonth ?? DateTime.now().month,
+                              ),
                             ),
                           ),
                         ),

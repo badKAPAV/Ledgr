@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:wallzy/common/helpers/image_cropper/image_cropper_screen.dart';
 import 'dart:typed_data';
 import 'package:wallzy/features/auth/provider/auth_provider.dart';
+import 'package:wallzy/common/snackbar/ledgr_snackbar.dart';
 import 'package:wallzy/features/feedback/provider/feedback_provider.dart';
 
 class AddFeedbackScreen extends StatefulWidget {
@@ -45,11 +46,10 @@ class _AddFeedbackScreenState extends State<AddFeedbackScreen> {
     if (_stepControllers.isNotEmpty &&
         _stepControllers.last.text.trim().isEmpty) {
       HapticFeedback.lightImpact();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please fill the empty step first"),
-          duration: Duration(seconds: 1),
-        ),
+      LedgrSnackbar.show(
+        context: context,
+        content: const Text("Please fill the empty step first"),
+        duration: const Duration(seconds: 1),
       );
       return;
     }
@@ -86,7 +86,7 @@ class _AddFeedbackScreenState extends State<AddFeedbackScreen> {
           initialAspectRatio: CropAspectRatio.free,
           lockAspectRatio: false,
         ),
-      )
+      ),
     );
 
     if (croppedBytes != null && mounted) {
@@ -128,9 +128,7 @@ class _AddFeedbackScreenState extends State<AddFeedbackScreen> {
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Error: $e")));
+        LedgrSnackbar.show(context: context, content: Text("Error: $e"));
       }
     }
   }
@@ -441,7 +439,7 @@ class _AddFeedbackScreenState extends State<AddFeedbackScreen> {
                   ],
                 ),
               ),
-            )
+            ),
     );
   }
 }

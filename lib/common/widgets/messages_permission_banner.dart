@@ -25,6 +25,34 @@ class MessagesPermissionBanner extends StatefulWidget {
     }
   }
 
+  static Future<void> openListenerSettings(BuildContext context) async {
+    try {
+      Navigator.of(context).pop();
+      await _platform.invokeMethod('openNotificationListenerSettings');
+    } catch (e) {
+      debugPrint("Error opening settings: $e");
+    }
+  }
+
+  static Future<void> openAppInfo(BuildContext context) async {
+    try {
+      Navigator.of(context).pop();
+      await _platform.invokeMethod('openAppInfo');
+    } catch (e) {
+      debugPrint("Error opening app info: $e");
+    }
+  }
+
+  static void showInstructions(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => _PremiumInstructionDialog(
+        onOpenSettings: () => openListenerSettings(context),
+        onOpenAppInfo: () => openAppInfo(context),
+      ),
+    );
+  }
+
   @override
   State<MessagesPermissionBanner> createState() =>
       _MessagesPermissionBannerState();
@@ -72,36 +100,6 @@ class _MessagesPermissionBannerState extends State<MessagesPermissionBanner>
     }
   }
 
-  Future<void> _openListenerSettings() async {
-    try {
-      Navigator.of(context).pop();
-      await MessagesPermissionBanner._platform.invokeMethod(
-        'openNotificationListenerSettings',
-      );
-    } catch (e) {
-      debugPrint("Error opening settings: $e");
-    }
-  }
-
-  Future<void> _openAppInfo() async {
-    try {
-      Navigator.of(context).pop();
-      await MessagesPermissionBanner._platform.invokeMethod('openAppInfo');
-    } catch (e) {
-      debugPrint("Error opening app info: $e");
-    }
-  }
-
-  void _showInstructionDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => _PremiumInstructionDialog(
-        onOpenSettings: _openListenerSettings,
-        onOpenAppInfo: _openAppInfo,
-      )
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_hasPermission) return const SizedBox.shrink();
@@ -123,7 +121,7 @@ class _MessagesPermissionBannerState extends State<MessagesPermissionBanner>
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: _showInstructionDialog,
+            onTap: () => MessagesPermissionBanner.showInstructions(context),
             borderRadius: BorderRadius.circular(12),
             child: Padding(
               padding: const EdgeInsets.symmetric(
@@ -189,7 +187,7 @@ class _MessagesPermissionBannerState extends State<MessagesPermissionBanner>
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: _showInstructionDialog,
+          onTap: () => MessagesPermissionBanner.showInstructions(context),
           borderRadius: BorderRadius.circular(24),
           child: Padding(
             padding: const EdgeInsets.all(12.0),
@@ -243,7 +241,7 @@ class _MessagesPermissionBannerState extends State<MessagesPermissionBanner>
             ),
           ),
         ),
-      )
+      ),
     );
   }
 }

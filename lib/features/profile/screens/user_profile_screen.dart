@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:wallzy/common/helpers/image_cropper/image_cropper_screen.dart';
+import 'package:wallzy/common/snackbar/ledgr_snackbar.dart';
 import 'dart:typed_data';
 import 'package:wallzy/features/auth/provider/auth_provider.dart';
 
@@ -111,7 +112,7 @@ class _UserProfileScreenState extends State<UserProfileScreen>
             ],
           ),
         ),
-      )
+      ),
     );
   }
 
@@ -150,9 +151,7 @@ class _UserProfileScreenState extends State<UserProfileScreen>
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to pick image: $e')));
+        LedgrSnackbar.show(content: Text('Failed to pick image: $e'));
       }
     }
   }
@@ -169,23 +168,14 @@ class _UserProfileScreenState extends State<UserProfileScreen>
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Profile updated successfully!'),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Theme.of(context).colorScheme.primary,
-          ),
+        LedgrSnackbar.show(
+          content: const Text('Profile updated successfully!'),
         );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed: $e'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        LedgrSnackbar.show(content: Text('Failed: $e'));
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -239,17 +229,15 @@ class _UserProfileScreenState extends State<UserProfileScreen>
             child: const Text('Update'),
           ),
         ],
-      )
+      ),
     );
   }
 
   Future<void> _changePassword(BuildContext context) async {
     if (_newPasswordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Passwords do not match"),
-          backgroundColor: Colors.red,
-        ),
+      LedgrSnackbar.show(
+        context: context,
+        content: const Text("Passwords do not match"),
       );
       return;
     }
@@ -262,19 +250,14 @@ class _UserProfileScreenState extends State<UserProfileScreen>
         listen: false,
       ).updatePassword(_passwordController.text, _newPasswordController.text);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Password updated successfully.')),
+        LedgrSnackbar.show(
+          content: const Text('Password updated successfully.'),
         );
       }
     } catch (e) {
       Navigator.pop(context);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        LedgrSnackbar.show(content: Text('Error: $e'));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -548,7 +531,7 @@ class _UserProfileScreenState extends State<UserProfileScreen>
               ),
           ],
         ),
-      )
+      ),
     );
   }
 
@@ -596,17 +579,15 @@ class _UserProfileScreenState extends State<UserProfileScreen>
             child: const Text('Set Password'),
           ),
         ],
-      )
+      ),
     );
   }
 
   Future<void> _setPassword(BuildContext context) async {
     if (_newPasswordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Passwords do not match"),
-          backgroundColor: Colors.red,
-        ),
+      LedgrSnackbar.show(
+        context: context,
+        content: const Text("Passwords do not match"),
       );
       return;
     }
@@ -623,19 +604,12 @@ class _UserProfileScreenState extends State<UserProfileScreen>
         listen: false,
       ).setPassword(_newPasswordController.text);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Password set successfully!')),
-        );
+        LedgrSnackbar.show(content: const Text('Password set successfully!'));
       }
     } catch (e) {
       Navigator.pop(context);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        LedgrSnackbar.show(content: Text('Error: $e'));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -660,7 +634,7 @@ class _SectionHeader extends StatelessWidget {
           fontWeight: FontWeight.bold,
           letterSpacing: 1.2,
         ),
-      )
+      ),
     );
   }
 }
@@ -712,7 +686,7 @@ class _ModernTextField extends StatelessWidget {
           border: InputBorder.none,
           contentPadding: const EdgeInsets.all(20),
         ),
-      )
+      ),
     );
   }
 }
@@ -741,7 +715,7 @@ class _DialogTextField extends StatelessWidget {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         filled: true,
         fillColor: Theme.of(context).colorScheme.surface,
-      )
+      ),
     );
   }
 }
@@ -776,7 +750,7 @@ class _ImageSourceOption extends StatelessWidget {
             Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
           ],
         ),
-      )
+      ),
     );
   }
 }

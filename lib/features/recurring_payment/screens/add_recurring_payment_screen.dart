@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:wallzy/common/icon_picker/icons.dart';
+import 'package:wallzy/common/snackbar/ledgr_snackbar.dart';
 import 'package:wallzy/features/categories/provider/category_provider.dart';
 import 'package:wallzy/features/categories/models/category.dart';
 
@@ -298,16 +299,12 @@ class _AddSubscriptionScreenState extends State<AddSubscriptionScreen> {
         _amountController.text.isEmpty ||
         _selectedCategory == null ||
         _selectedPaymentMethod == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please fill all fields')));
+      LedgrSnackbar.show(content: Text('Please fill all fields'));
       return;
     }
 
     if (_selectedAccount == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please select an account')));
+      LedgrSnackbar.show(content: Text('Please select an account'));
       return;
     }
 
@@ -373,9 +370,7 @@ class _AddSubscriptionScreenState extends State<AddSubscriptionScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error saving: $e')));
+        LedgrSnackbar.show(content: Text('Error saving: $e'));
       }
     }
   }

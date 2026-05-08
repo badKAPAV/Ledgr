@@ -7,6 +7,7 @@ import 'package:wallzy/features/auth/provider/auth_provider.dart'
     as auth_provider;
 import 'package:wallzy/features/auth/widgets/auth_widgets.dart';
 import 'package:wallzy/core/helpers/auth_error_handler.dart';
+import 'package:wallzy/common/snackbar/ledgr_snackbar.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -23,7 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _passwordReset() {
     // [Keep existing logic, just styling the dialog later if needed]
     final emailController = TextEditingController(
-      text: _emailController.text.trim()
+      text: _emailController.text.trim(),
     );
     showDialog<String?>(
       context: context,
@@ -32,9 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     ).then((message) {
       if (message != null && mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
+        LedgrSnackbar.show(context: context, content: Text(message));
       }
     });
   }
@@ -47,30 +46,24 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = _passwordController.text.trim();
 
     if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text("Please enter your email address"),
-          backgroundColor: Theme.of(context).colorScheme.error,
-          behavior: SnackBarBehavior.floating,
-        ),
+      LedgrSnackbar.show(
+        context: context,
+        content: const Text("Please enter your email address"),
       );
       return;
     }
 
     if (password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text("Please enter your password"),
-          backgroundColor: Theme.of(context).colorScheme.error,
-          behavior: SnackBarBehavior.floating,
-        ),
+      LedgrSnackbar.show(
+        context: context,
+        content: const Text("Please enter your password"),
       );
       return;
     }
 
     final authProvider = Provider.of<auth_provider.AuthProvider>(
       context,
-      listen: false
+      listen: false,
     );
     try {
       await authProvider.signIn(email, password);
@@ -79,12 +72,9 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AuthErrorHandler.getUserFriendlyMessage(e)),
-          backgroundColor: Theme.of(context).colorScheme.error,
-          behavior: SnackBarBehavior.floating,
-        ),
+      LedgrSnackbar.show(
+        context: context,
+        content: Text(AuthErrorHandler.getUserFriendlyMessage(e)),
       );
     }
   }
@@ -248,7 +238,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ],
-      )
+      ),
     );
   }
 }
@@ -321,7 +311,7 @@ class _PasswordResetDialogContentState
           onPressed: _sendResetLink,
           child: const Text('Send Link'),
         ),
-      ]
+      ],
     );
   }
 }

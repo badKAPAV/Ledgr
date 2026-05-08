@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 
@@ -9,9 +10,9 @@ class RevenueCatService {
   factory RevenueCatService() => _instance;
   RevenueCatService._internal();
 
-  // The API key provided for testing
-  static const String _apiKey = 'test_aNGdnUNtEsYSIcseOHnkMucBCJz';
-  
+  // Revenuecat Prod API key
+  static const String _apiKey = 'goog_GdmJuGrdruhcQIKiDZdwTIjZLFj';
+
   // Entitlement ID
   static const String entitlementId = 'Ledgr Max';
 
@@ -23,7 +24,7 @@ class RevenueCatService {
 
     try {
       await Purchases.setLogLevel(kDebugMode ? LogLevel.debug : LogLevel.info);
-      
+
       PurchasesConfiguration configuration;
       // Using the single API key provided. In production, consider splitting
       // keys based on Platform.isIOS / Platform.isAndroid.
@@ -96,7 +97,8 @@ class RevenueCatService {
         entitlementId,
         displayCloseButton: true,
       );
-      return paywallResult == PaywallResult.purchased || paywallResult == PaywallResult.restored;
+      return paywallResult == PaywallResult.purchased ||
+          paywallResult == PaywallResult.restored;
     } catch (e) {
       debugPrint("Error presenting conditional paywall: $e");
       return false;
@@ -110,7 +112,8 @@ class RevenueCatService {
       final paywallResult = await RevenueCatUI.presentPaywall(
         displayCloseButton: true,
       );
-      return paywallResult == PaywallResult.purchased || paywallResult == PaywallResult.restored;
+      return paywallResult == PaywallResult.purchased ||
+          paywallResult == PaywallResult.restored;
     } catch (e) {
       debugPrint("Error presenting paywall: $e");
       return false;
@@ -129,5 +132,31 @@ class RevenueCatService {
 
   bool _hasProEntitlement(CustomerInfo customerInfo) {
     return customerInfo.entitlements.all[entitlementId]?.isActive == true;
+  }
+
+  Future<Offerings?> getOfferings() async {
+    if (!_isConfigured) return null;
+    try {
+      return await Purchases.getOfferings();
+    } catch (e) {
+      debugPrint("Error fetching offerings: $e");
+      return null;
+    }
+  }
+
+  Future<bool> purchasePackage(Package package) async {
+    if (!_isConfigured) return false;
+    try {
+      final customerInfo = await Purchases.purchase(
+        PurchaseParams.package(package),
+      );
+      return _hasProEntitlement(customerInfo.customerInfo);
+    } catch (e) {
+      var errorCode = PurchasesErrorHelper.getErrorCode(e as PlatformException);
+      if (errorCode != PurchasesErrorCode.purchaseCancelledError) {
+        debugPrint("Error purchasing package: $e");
+      }
+      return false;
+    }
   }
 }

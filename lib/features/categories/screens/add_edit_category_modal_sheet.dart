@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
+import 'package:wallzy/common/helpers/fading_divider.dart';
 import 'package:wallzy/features/categories/models/category.dart';
 import 'package:wallzy/features/categories/provider/category_provider.dart';
 import 'package:wallzy/common/icon_picker/icons.dart';
@@ -9,6 +10,7 @@ import 'package:wallzy/common/icon_picker/icon_picker_sheet.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
 import 'package:wallzy/features/transaction/widgets/add_edit_transaction_widgets/transaction_widgets.dart';
 import 'package:wallzy/common/switch/custom_switch.dart';
+import 'package:wallzy/common/snackbar/ledgr_snackbar.dart';
 
 class AddEditCategoryModalSheet extends StatefulWidget {
   final CategoryModel? category;
@@ -22,8 +24,8 @@ class AddEditCategoryModalSheet extends StatefulWidget {
 
 class _AddEditCategoryModalSheetState extends State<AddEditCategoryModalSheet> {
   final _formKey = GlobalKey<FormState>();
+  late TextEditingController _nameController;
 
-  late String _name;
   late TransactionMode _mode;
   late String _iconKey;
   late List<String> _keywords;
@@ -37,11 +39,17 @@ class _AddEditCategoryModalSheetState extends State<AddEditCategoryModalSheet> {
   @override
   void initState() {
     super.initState();
-    _name = widget.category?.name ?? '';
+    _nameController = TextEditingController(text: widget.category?.name ?? '');
     _mode = widget.category?.mode ?? TransactionMode.expense;
     _iconKey = widget.category?.iconKey ?? 'target';
     _keywords = List.from(widget.category?.keywords ?? []);
     _isDefault = widget.category?.isDefault ?? false;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
   }
 
   // --- NEW KEYWORD LOGIC ---
@@ -65,7 +73,7 @@ class _AddEditCategoryModalSheetState extends State<AddEditCategoryModalSheet> {
             _keywords.add(newKeyword);
           });
         },
-      )
+      ),
     );
   }
 
@@ -75,6 +83,7 @@ class _AddEditCategoryModalSheetState extends State<AddEditCategoryModalSheet> {
 
     setState(() => _isLoading = true);
     final provider = Provider.of<CategoryProvider>(context, listen: false);
+    final name = _nameController.text.trim();
 
     try {
       if (isSystemCategory) {
@@ -88,7 +97,7 @@ class _AddEditCategoryModalSheetState extends State<AddEditCategoryModalSheet> {
       } else if (!isEditing) {
         // New Custom Category
         await provider.addCategory(
-          name: _name,
+          name: name,
           mode: _mode,
           iconKey: _iconKey,
           keywords: _keywords,
@@ -97,7 +106,7 @@ class _AddEditCategoryModalSheetState extends State<AddEditCategoryModalSheet> {
       } else {
         // Edit Custom Category
         final updatedCategory = widget.category!.copyWith(
-          name: _name,
+          name: name,
           mode: _mode,
           iconKey: _iconKey,
           keywords: _keywords,
@@ -110,9 +119,10 @@ class _AddEditCategoryModalSheetState extends State<AddEditCategoryModalSheet> {
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Error saving category: $e")));
+        LedgrSnackbar.show(
+          context: context,
+          content: Text("Error saving category: $e"),
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -171,8 +181,9 @@ class _AddEditCategoryModalSheetState extends State<AddEditCategoryModalSheet> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error checking transactions: $e")),
+        LedgrSnackbar.show(
+          context: context,
+          content: Text("Error checking transactions: $e"),
         );
         setState(() => _isLoading = false);
       }
@@ -185,10 +196,12 @@ class _AddEditCategoryModalSheetState extends State<AddEditCategoryModalSheet> {
       await provider.deleteCategory(widget.category!.id);
       if (mounted) Navigator.pop(context);
     } catch (e) {
-      if (mounted)
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Error deleting category: $e")));
+      if (mounted) {
+        LedgrSnackbar.show(
+          context: context,
+          content: Text("Error deleting category: $e"),
+        );
+      }
     }
   }
 
@@ -282,7 +295,7 @@ class _AddEditCategoryModalSheetState extends State<AddEditCategoryModalSheet> {
             );
           },
         );
-      }
+      },
     );
   }
 
@@ -296,7 +309,7 @@ class _AddEditCategoryModalSheetState extends State<AddEditCategoryModalSheet> {
       builder: (context) => GoalIconPickerSheet(
         selectedIconKey: _iconKey,
         onIconSelected: (key) => setState(() => _iconKey = key),
-      )
+      ),
     );
   }
 
@@ -306,277 +319,292 @@ class _AddEditCategoryModalSheetState extends State<AddEditCategoryModalSheet> {
     final colors = theme.colorScheme;
 
     return Container(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
+      padding: EdgeInsets.fromLTRB(
+        24,
+        20,
+        24,
+        MediaQuery.of(context).viewInsets.bottom + 32,
       ),
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // --- Handle & Header ---
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 24),
-                  decoration: BoxDecoration(
-                    color: colors.outlineVariant.withOpacity(0.4),
-                    borderRadius: BorderRadius.circular(2),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // --- Header Row ---
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  isEditing
+                      ? (isSystemCategory ? 'SYSTEM CATEGORY' : 'EDIT CATEGORY')
+                      : 'NEW CATEGORY',
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    letterSpacing: 1.2,
+                    fontWeight: FontWeight.bold,
+                    color: colors.outline,
                   ),
                 ),
+                IconButton.filledTonal(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close_rounded, size: 20),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // --- Animated Segmented Control (Compact) ---
+            Center(
+              child: SizedBox(
+                width: 240, // More compact width
+                child: _AnimatedModeSelector(
+                  currentMode: _mode,
+                  isDisabled: isSystemCategory,
+                  onModeChanged: (newMode) {
+                    if (isSystemCategory) return;
+                    HapticFeedback.selectionClick();
+                    setState(() => _mode = newMode);
+                  },
+                ),
               ),
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+            const SizedBox(height: 28),
+
+            // --- Icon & Name Row (Like Folder Sheet) ---
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                GestureDetector(
+                  onTap: _showIconPicker,
+                  child: SizedBox(
+                    width: 54,
+                    height: 54,
+                    child: Stack(
+                      alignment: .center,
                       children: [
-                        Text(
-                          isEditing
-                              ? (isSystemCategory
-                                    ? 'SYSTEM CATEGORY'
-                                    : 'EDIT CATEGORY')
-                              : 'NEW CATEGORY',
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontSize: 16,
-                            fontWeight: FontWeight.normal,
-                            letterSpacing: 1,
-                          ),
-                        ),
-                        if (isSystemCategory) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            "Name and icon cannot be edited",
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: colors.outline,
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: colors.primaryContainer.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: colors.primary.withOpacity(0.5),
+                              width: 2,
                             ),
                           ),
-                        ],
+                          child: Center(
+                            child: HugeIcon(
+                              icon: GoalIconRegistry.getIcon(_iconKey),
+                              size: 24,
+                              color: colors.primary,
+                              strokeWidth: 2,
+                            ),
+                          ),
+                        ),
+                        if (!isSystemCategory)
+                          Positioned(
+                            right: 0,
+                            bottom: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: colors.primary,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Icon(
+                                Icons.edit_rounded,
+                                size: 12,
+                                color: Colors.white,
+                              ),
+                            ),
+                          )
+                        else
+                          Positioned(
+                            right: 0,
+                            bottom: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: colors.outlineVariant,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Icon(
+                                Icons.lock_rounded,
+                                size: 10,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),
-                  if (isSystemCategory)
-                    Icon(
-                      Icons.lock_outline_rounded,
-                      color: colors.outlineVariant,
-                    ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // --- Animated Segmented Control ---
-              _AnimatedModeSelector(
-                currentMode: _mode,
-                isDisabled: isSystemCategory,
-                onModeChanged: (newMode) {
-                  if (isSystemCategory) return;
-                  HapticFeedback.selectionClick();
-                  setState(() => _mode = newMode);
-                },
-              ),
-              const SizedBox(height: 24),
-
-              // --- Icon & Name Single Input ---
-              TextFormField(
-                initialValue: _name,
-                readOnly: isSystemCategory,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: isSystemCategory ? colors.outline : colors.onSurface,
                 ),
-                decoration: InputDecoration(
-                  labelText: 'Category Name',
-                  filled: true,
-                  fillColor: isSystemCategory
-                      ? colors.surfaceContainerHighest.withOpacity(0.5)
-                      : colors.surfaceContainerHighest,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.fromLTRB(16, 20, 8, 20),
-                  suffixIcon: Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: GestureDetector(
-                      onTap: _showIconPicker,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: isSystemCategory
-                              ? Colors.transparent
-                              : colors.surface,
-                          borderRadius: BorderRadius.circular(10),
-                          border: isSystemCategory
-                              ? null
-                              : Border.all(
-                                  color: colors.outlineVariant.withOpacity(0.5),
-                                ),
-                        ),
-                        child: HugeIcon(
-                          icon: GoalIconRegistry.getIcon(_iconKey),
-                          color: isSystemCategory
-                              ? colors.outline
-                              : colors.primary,
-                          size: 24,
-                          strokeWidth: 2,
-                        ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: TextFormField(
+                    controller: _nameController,
+                    readOnly: isSystemCategory,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: isSystemCategory
+                          ? colors.outline
+                          : colors.onSurface,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: "eg. Groceries",
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      hintStyle: TextStyle(
+                        fontFamily: 'geologica',
+                        color: colors.outlineVariant,
                       ),
                     ),
+                    validator: (value) {
+                      if (!isSystemCategory &&
+                          (value == null || value.trim().isEmpty))
+                        return 'Please enter a name';
+                      return null;
+                    },
                   ),
                 ),
-                validator: (value) {
-                  if (!isSystemCategory &&
-                      (value == null || value.trim().isEmpty))
-                    return 'Please enter a name';
-                  return null;
-                },
-                onSaved: (value) => _name = value?.trim() ?? _name,
-              ),
-              const SizedBox(height: 24),
+              ],
+            ),
+            const SizedBox(height: 32),
 
-              // --- KEYWORDS PILLS UI ---
-              Text(
-                "Auto-Match Keywords",
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: colors.onSurfaceVariant,
-                  fontWeight: FontWeight.bold,
+            // --- KEYWORDS SECTION ---
+            Row(
+              children: [
+                Text(
+                  "AUTO-MATCH KEYWORDS",
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: colors.outline,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.1,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: FadingDivider(
+                    thickness: 2,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.secondary.withValues(alpha: 0.5),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
 
-              // Keywords Wrap with integrated Add Pill
-              Wrap(
-                spacing: 8.0,
-                runSpacing: 8.0,
-                children: [
-                  ..._keywords.map((keyword) {
-                    return Container(
-                      padding: const EdgeInsets.only(
-                        left: 12,
-                        right: 8,
-                        top: 6,
-                        bottom: 6,
+            Wrap(
+              spacing: 8.0,
+              runSpacing: 8.0,
+              children: [
+                ..._keywords.map((keyword) {
+                  return Container(
+                    padding: const EdgeInsets.only(
+                      left: 12,
+                      right: 8,
+                      top: 6,
+                      bottom: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colors.primaryContainer.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(50),
+                      border: Border.all(
+                        color: colors.primary.withOpacity(0.2),
                       ),
-                      decoration: BoxDecoration(
-                        color: colors.primaryContainer.withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(50),
-                        border: Border.all(
-                          color: colors.primary.withOpacity(0.2),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            keyword,
-                            style: theme.textTheme.labelMedium?.copyWith(
-                              color: colors.onPrimaryContainer,
-                              fontWeight: FontWeight.w600,
-                            ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          keyword,
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            color: colors.onPrimaryContainer,
+                            fontWeight: FontWeight.w600,
                           ),
-                          const SizedBox(width: 4),
-                          GestureDetector(
-                            onTap: () => _removeKeyword(keyword),
-                            child: Icon(
-                              Icons.close_rounded,
-                              size: 14,
-                              color: colors.onPrimaryContainer,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
-
-                  // The 'Add' Pill
-                  GestureDetector(
-                    onTap: _showAddKeywordSheet,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: colors.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(50),
-                        border: Border.all(
-                          color: colors.outlineVariant.withOpacity(0.5),
                         ),
+                        const SizedBox(width: 4),
+                        GestureDetector(
+                          onTap: () => _removeKeyword(keyword),
+                          child: Icon(
+                            Icons.close_rounded,
+                            size: 14,
+                            color: colors.onPrimaryContainer,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+                GestureDetector(
+                  onTap: _showAddKeywordSheet,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colors.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(50),
+                      border: Border.all(
+                        color: colors.outlineVariant.withOpacity(0.5),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.add_rounded,
-                            size: 16,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.add_rounded,
+                          size: 16,
+                          color: colors.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _keywords.isEmpty ? "Add Keyword" : "Add",
+                          style: theme.textTheme.labelMedium?.copyWith(
                             color: colors.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            _keywords.isEmpty ? "Add Keyword" : "Add",
-                            style: theme.textTheme.labelMedium?.copyWith(
-                              color: colors.onSurfaceVariant,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 32),
-
-              // --- Unboxed Default Toggle ---
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text(
-                  'Set as Default',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-                subtitle: Text(
-                  'Auto-selected for ${_mode.name}s',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colors.onSurfaceVariant,
-                  ),
-                ),
-                trailing: LedgrSwitch(
-                  value: _isDefault,
-                  activeTrackColor: colors.primary,
-                  onChanged: (value) {
-                    if (widget.category?.isDefault == true && value == false) {
-                      HapticFeedback.heavyImpact();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            "A default category cannot be turned off. To replace it, set another category as default.",
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                      );
-                      return;
-                    }
-                    HapticFeedback.lightImpact();
-                    setState(() => _isDefault = value);
-                  },
+                      ],
+                    ),
+                  ),
                 ),
-                onTap: () {
-                  final value = !_isDefault;
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            // --- Default Toggle ---
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text(
+                'Set as Default',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              subtitle: Text(
+                'Auto-selected for ${_mode.name}s',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+              trailing: LedgrSwitch(
+                value: _isDefault,
+                activeTrackColor: colors.primary,
+                onChanged: (value) {
                   if (widget.category?.isDefault == true && value == false) {
                     HapticFeedback.heavyImpact();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          "A default category cannot be turned off. To replace it, set another category as default.",
-                        ),
+                    LedgrSnackbar.show(
+                      context: context,
+                      content: const Text(
+                        "A default category cannot be turned off. To replace it, set another category as default.",
                       ),
                     );
                     return;
@@ -585,67 +613,79 @@ class _AddEditCategoryModalSheetState extends State<AddEditCategoryModalSheet> {
                   setState(() => _isDefault = value);
                 },
               ),
-              const SizedBox(height: 32),
-
-              // --- ACTION BUTTONS ---
-              Row(
-                children: [
-                  if (isEditing && !isSystemCategory)
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: _isLoading ? null : _delete,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: colors.error,
-                          side: BorderSide(
-                            color: colors.error.withOpacity(0.5),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(50),
-                          ),
-                        ),
-                        child: const Text(
-                          'Delete',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
+              onTap: () {
+                final value = !_isDefault;
+                if (widget.category?.isDefault == true && value == false) {
+                  HapticFeedback.heavyImpact();
+                  LedgrSnackbar.show(
+                    context: context,
+                    content: const Text(
+                      "A default category cannot be turned off. To replace it, set another category as default.",
                     ),
-                  if (isEditing && !isSystemCategory) const SizedBox(width: 16),
+                  );
+                  return;
+                }
+                HapticFeedback.lightImpact();
+                setState(() => _isDefault = value);
+              },
+            ),
+            const SizedBox(height: 32),
 
+            // --- ACTION BUTTONS ---
+            Row(
+              children: [
+                if (isEditing && !isSystemCategory)
                   Expanded(
-                    flex: 2,
-                    child: FilledButton(
-                      onPressed: _isLoading ? null : _save,
-                      style: FilledButton.styleFrom(
+                    child: OutlinedButton(
+                      onPressed: _isLoading ? null : _delete,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: colors.error,
+                        side: BorderSide(color: colors.error.withOpacity(0.5)),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(50),
                         ),
                       ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Text(
-                              isEditing ? 'Save Changes' : 'Create Category',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
+                      child: const Text(
+                        'Delete',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
-                ],
-              ),
-            ],
-          ),
+                if (isEditing && !isSystemCategory) const SizedBox(width: 16),
+                Expanded(
+                  flex: 2,
+                  child: FilledButton(
+                    onPressed: _isLoading ? null : _save,
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(50),
+                      ),
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(
+                            isEditing ? 'Save Changes' : 'Create Category',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
-      )
+      ),
     );
   }
 }
@@ -764,7 +804,7 @@ class _AddKeywordSheetState extends State<_AddKeywordSheet> {
           ),
           const SizedBox(height: 24),
         ],
-      )
+      ),
     );
   }
 }
@@ -885,7 +925,7 @@ class _AnimatedModeSelector extends StatelessWidget {
             ],
           );
         },
-      )
+      ),
     );
   }
 }

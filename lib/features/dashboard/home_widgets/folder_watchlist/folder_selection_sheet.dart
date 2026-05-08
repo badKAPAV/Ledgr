@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wallzy/features/dashboard/provider/home_widgets_provider.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:wallzy/common/snackbar/ledgr_snackbar.dart';
 import 'package:wallzy/features/folders/screens/folders_screen.dart';
 import 'package:wallzy/features/transaction/provider/meta_provider.dart';
 import 'package:wallzy/common/icon_picker/icons.dart';
@@ -56,11 +57,10 @@ class _FolderSelectionSheetState extends State<FolderSelectionSheet> {
         if (_selectedIds.length < 3) {
           _selectedIds.add(id);
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("You can only choose up to 3 folders"),
-              duration: Duration(seconds: 1),
-            ),
+          LedgrSnackbar.show(
+            context: context,
+            content: const Text("You can only choose up to 3 folders"),
+            duration: const Duration(seconds: 1),
           );
         }
       }

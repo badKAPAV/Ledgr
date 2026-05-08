@@ -380,43 +380,28 @@ class _EventModeSettingsCardState extends State<EventModeSettingsCard> {
                           ),
                           child: Row(
                             children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.surface,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: HugeIcon(
-                                  icon: HugeIcons.strokeRoundedSparkles,
-                                  color: isAutoAdd
-                                      ? activeColor
-                                      : theme.colorScheme.onSurfaceVariant,
-                                  size: 18,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
+                              // Container(
+                              //   padding: const EdgeInsets.all(8),
+                              //   decoration: BoxDecoration(
+                              //     color: theme.colorScheme.surface,
+                              //     shape: BoxShape.circle,
+                              //   ),
+                              //   child: HugeIcon(
+                              //     icon: HugeIcons.strokeRoundedSparkles,
+                              //     color: isAutoAdd
+                              //         ? activeColor
+                              //         : theme.colorScheme.onSurfaceVariant,
+                              //     size: 18,
+                              //   ),
+                              // ),
+                              // const SizedBox(width: 12),
                               Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "Auto-Add Transactions",
-                                      style: theme.textTheme.bodyMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                    ),
-                                    Text(
-                                      "Txns added to folder when in range",
-                                      style: theme.textTheme.labelSmall
-                                          ?.copyWith(
-                                            color: theme
-                                                .colorScheme
-                                                .onSurfaceVariant,
-                                            fontSize: 10,
-                                          ),
-                                    ),
-                                  ],
+                                child: Text(
+                                  "Auto select folder for new transactions",
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w400,
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ),
                               LedgrSwitch(

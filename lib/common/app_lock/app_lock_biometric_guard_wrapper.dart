@@ -14,6 +14,8 @@ class BiometricGuard extends StatefulWidget {
 
 class _BiometricGuardState extends State<BiometricGuard>
     with WidgetsBindingObserver {
+  bool _wasLockedByBackground = false;
+
   @override
   void initState() {
     super.initState();
@@ -38,14 +40,25 @@ class _BiometricGuardState extends State<BiometricGuard>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final provider = Provider.of<AppLockProvider>(context, listen: false);
 
-    if (state == AppLifecycleState.paused) {
-      // App went to background -> Lock it
-      // Note: We don't authenticate immediately on pause, we just set the flag
+    // CRITICAL FIX: The OS biometric overlay triggers a paused/inactive state.
+    // If we are currently showing the prompt, DO NOT lock the app.
+    if (provider.isAuthenticating) return;
+
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
+      if (provider.isLockEnabled) {
+        _wasLockedByBackground = true;
+      }
       provider.lockApp();
     } else if (state == AppLifecycleState.resumed) {
       // App came back -> If locked, trigger auth
-      if (provider.isLockEnabled && !provider.isAuthenticated) {
-        provider.authenticate();
+      if (provider.isLockEnabled && !provider.isAuthenticated && _wasLockedByBackground) {
+        _wasLockedByBackground = false;
+        // Give the native OS 200ms to fully wake the Activity window
+        // before asking it to draw the biometric overlay.
+        Future.delayed(const Duration(milliseconds: 200), () {
+          if (mounted) provider.authenticate();
+        });
       }
     }
   }
@@ -62,13 +75,19 @@ class _BiometricGuardState extends State<BiometricGuard>
           );
         }
 
-        // If lock is enabled AND not authenticated, show LockScreen
-        // Otherwise show the actual app (child)
-        if (provider.isLockEnabled && !provider.isAuthenticated) {
-          return const LockScreen();
-        }
-        return widget.child;
-      }
+        return Stack(
+          children: [
+            // Always keep the child in the tree so it maintains its state
+            widget.child,
+
+            // If lock is enabled AND not authenticated, cover the app with LockScreen
+            if (provider.isLockEnabled && !provider.isAuthenticated)
+              const Positioned.fill(
+                child: LockScreen(),
+              ),
+          ],
+        );
+      },
     );
   }
 }

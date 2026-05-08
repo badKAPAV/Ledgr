@@ -8,7 +8,7 @@ import 'package:wallzy/common/widgets/empty_report_placeholder.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/features/recurring_payment/models/recurring_payment.dart';
 import 'package:wallzy/features/recurring_payment/provider/recurring_payment_provider.dart';
-import 'package:wallzy/features/recurring_payment/screens/recurring_payment_details_screen.dart';
+import 'package:wallzy/features/transaction/screens/transactions_screen.dart';
 import 'package:wallzy/features/recurring_payment/services/recurring_payment_info.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
 
@@ -177,9 +177,12 @@ class _SubscriptionListTile extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => SubscriptionDetailsScreen(
-                subscription: sub,
-                transactions: txs,
+              builder: (_) => TransactionsScreen(
+                args: TransactionsScreenArgs(
+                  type: TransactionScreenType.subscription,
+                  subscription: sub,
+                  subscriptionTransactions: txs,
+                ),
               ),
             ),
           );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wallzy/features/dashboard/provider/home_widgets_provider.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:wallzy/common/snackbar/ledgr_snackbar.dart';
 import 'package:wallzy/features/goals/provider/goals_provider.dart';
 import 'package:wallzy/features/goals/screens/goals_screen.dart';
 import 'package:wallzy/common/icon_picker/icons.dart';
@@ -50,11 +51,10 @@ class _GoalsSelectionSheetState extends State<GoalsSelectionSheet> {
         if (_selectedIds.length < 3) {
           _selectedIds.add(id);
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("You can only choose up to 3 goals"),
-              duration: Duration(seconds: 1),
-            ),
+          LedgrSnackbar.show(
+            context: context,
+            content: const Text("You can only choose up to 3 goals"),
+            duration: const Duration(seconds: 1),
           );
         }
       }
@@ -289,7 +289,7 @@ class _GoalsSelectionSheetState extends State<GoalsSelectionSheet> {
             ),
           ),
         ],
-      )
+      ),
     );
   }
 }

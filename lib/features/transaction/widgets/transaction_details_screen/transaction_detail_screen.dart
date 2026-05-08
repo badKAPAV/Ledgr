@@ -1,6 +1,4 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +6,8 @@ import 'package:collection/collection.dart';
 import 'package:wallzy/common/switch/custom_switch.dart';
 import 'package:wallzy/common/widgets/custom_alert_dialog.dart';
 import 'package:wallzy/core/themes/theme.dart';
+import 'package:wallzy/core/utils/ledgr_max/paywall/paywall_features.dart';
+import 'package:wallzy/core/utils/ledgr_max/paywall/paywall_interceptor.dart';
 import 'package:wallzy/features/accounts/provider/account_provider.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/features/recurring_payment/provider/recurring_payment_provider.dart';
@@ -19,10 +19,9 @@ import 'package:wallzy/features/transaction/widgets/add_to_folder_modal_sheet.da
 import 'package:wallzy/features/transaction/provider/meta_provider.dart';
 import 'package:wallzy/features/folders/models/folder.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:wallzy/common/helpers/dashed_border.dart';
 import 'package:wallzy/features/transaction/widgets/add_receipt_modal_sheet.dart';
 import 'package:wallzy/features/recurring_payment/models/recurring_payment.dart';
-import 'package:wallzy/features/recurring_payment/screens/recurring_payment_details_screen.dart';
+import 'package:wallzy/features/transaction/screens/transactions_screen.dart';
 import 'package:wallzy/features/transaction/widgets/link_transaction_modal_sheet.dart';
 
 import 'package:wallzy/common/icon_picker/icons.dart';
@@ -197,9 +196,12 @@ class TransactionDetailScreen extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => SubscriptionDetailsScreen(
-          subscription: sub,
-          transactions: subTransactions,
+        builder: (_) => TransactionsScreen(
+          args: TransactionsScreenArgs(
+            type: TransactionScreenType.subscription,
+            subscription: sub,
+            subscriptionTransactions: subTransactions,
+          ),
         ),
       ),
     );
@@ -360,13 +362,34 @@ class TransactionDetailScreen extends StatelessWidget {
                           const SizedBox(height: 14),
 
                           // --- AMOUNT ---
-                          Text(
-                            currencyFormat.format(tx.amount),
-                            style: theme.textTheme.bodyLarge?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: colorScheme.onSurface,
-                              letterSpacing: -1,
-                              fontSize: 34,
+                          Text.rich(
+                            textAlign: .start,
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text:
+                                      "${currencyFormat.format(tx.amount).substring(0, 1)} ",
+                                  style: theme.textTheme.bodyLarge?.copyWith(
+                                    fontWeight: FontWeight.w400,
+                                    color: colorScheme.onSurface.withValues(
+                                      alpha: 0.7,
+                                    ),
+                                    fontSize: 20,
+                                    letterSpacing: -1,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: currencyFormat
+                                      .format(tx.amount)
+                                      .substring(1),
+                                  style: theme.textTheme.bodyLarge?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: colorScheme.onSurface,
+                                    letterSpacing: -1,
+                                    fontSize: 34,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -514,28 +537,37 @@ class TransactionDetailScreen extends StatelessWidget {
                                   isDashed: true,
                                   color: colorScheme.primary,
                                   onTap: () {
-                                    showModalBottomSheet(
+                                    PaywallInterceptor.execute(
                                       context: context,
-                                      isScrollControlled: true,
-                                      backgroundColor: Colors.transparent,
-                                      builder: (_) => AddReceiptModalSheet(
-                                        uploadImmediately: true,
-                                        transactionId: tx.transactionId,
-                                        onComplete: (url, _) async {
-                                          if (url != null) {
-                                            final txProvider =
-                                                Provider.of<
-                                                  TransactionProvider
-                                                >(context, listen: false);
-                                            final updatedTx = tx.copyWith(
-                                              receiptUrl: () => url,
-                                            );
-                                            await txProvider.updateTransaction(
-                                              updatedTx,
-                                            );
-                                          }
-                                        },
-                                      ),
+                                      feature:
+                                          PaywallFeature.transactionReceipt,
+                                      currentCount: 0,
+                                      onAllowed: () {
+                                        showModalBottomSheet(
+                                          context: context,
+                                          isScrollControlled: true,
+                                          backgroundColor: Colors.transparent,
+                                          builder: (_) => AddReceiptModalSheet(
+                                            uploadImmediately: true,
+                                            transactionId: tx.transactionId,
+                                            onComplete: (url, _) async {
+                                              if (url != null) {
+                                                final txProvider =
+                                                    Provider.of<
+                                                      TransactionProvider
+                                                    >(context, listen: false);
+                                                final updatedTx = tx.copyWith(
+                                                  receiptUrl: () => url,
+                                                );
+                                                await txProvider
+                                                    .updateTransaction(
+                                                      updatedTx,
+                                                    );
+                                              }
+                                            },
+                                          ),
+                                        );
+                                      },
                                     );
                                   },
                                 );

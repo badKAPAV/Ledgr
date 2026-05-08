@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:wallzy/features/dashboard/models/radial_menu_item_model.dart';
+import 'package:wallzy/core/utils/ledgr_max/paywall/paywall_interceptor.dart';
 
 class GlassRadialMenu extends StatefulWidget {
   final List<RadialMenuItem> menuItems;
@@ -43,13 +44,13 @@ class _GlassRadialMenuState extends State<GlassRadialMenu>
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
-      reverseDuration: const Duration(milliseconds: 300)
+      reverseDuration: const Duration(milliseconds: 300),
     );
 
     _expandAnimation = CurvedAnimation(
       parent: _controller,
       curve: Curves.easeOutBack,
-      reverseCurve: Curves.easeInQuad
+      reverseCurve: Curves.easeInQuad,
     );
 
     _rotateAnimation = Tween<double>(
@@ -144,14 +145,16 @@ class _GlassRadialMenuState extends State<GlassRadialMenu>
                 link: _layerLink,
                 showWhenUnlinked: false,
                 // Offset to center the menu around the FAB
-                offset: const Offset(-150, -152),
+                offset: const Offset(-170, -172),
                 child: SizedBox(
-                  width: 360,
-                  height: 360,
+                  width: 400,
+                  height: 400,
                   child: AnimatedBuilder(
                     animation: _controller,
                     builder: (context, child) {
-                      final radius = 110.0 * _expandAnimation.value;
+                      final total = widget.menuItems.length;
+                      final baseRadius = total > 5 ? 145.0 : 110.0;
+                      final radius = baseRadius * _expandAnimation.value;
 
                       return Stack(
                         alignment: Alignment.center,
@@ -188,7 +191,7 @@ class _GlassRadialMenuState extends State<GlassRadialMenu>
             ),
           ],
         );
-      }
+      },
     );
   }
 
@@ -197,8 +200,8 @@ class _GlassRadialMenuState extends State<GlassRadialMenu>
     required int total,
     required double radius,
   }) {
-    // Arc Logic: Distribute items over 180 degrees (Pi) centered at top
-    final double spread = total > 1 ? math.pi * 0.8 : 0;
+    // Arc Logic: Distribute items over a wider arc if many items
+    final double spread = total > 5 ? math.pi : (total > 1 ? math.pi * 0.8 : 0);
     final double startAngle = _baseRotation - (spread / 2);
     final double step = total > 1 ? spread / (total - 1) : 0;
     final double itemBaseAngle = startAngle + (step * index);
@@ -215,7 +218,7 @@ class _GlassRadialMenuState extends State<GlassRadialMenu>
 
     final Animation<double> itemScale = CurvedAnimation(
       parent: _controller,
-      curve: Interval(intervalStart, intervalEnd, curve: Curves.easeOutBack)
+      curve: Interval(intervalStart, intervalEnd, curve: Curves.easeOutBack),
     );
 
     return Transform.translate(
@@ -227,7 +230,17 @@ class _GlassRadialMenuState extends State<GlassRadialMenu>
           onTap: () {
             HapticFeedback.lightImpact();
             _closeMenu();
-            widget.menuItems[index].onTap();
+            final item = widget.menuItems[index];
+            if (item.feature != null) {
+              PaywallInterceptor.execute(
+                context: context,
+                feature: item.feature!,
+                onAllowed: item.onTap,
+                currentCount: item.currentCount,
+              );
+            } else {
+              item.onTap();
+            }
           },
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -284,7 +297,7 @@ class _GlassRadialMenuState extends State<GlassRadialMenu>
             ],
           ),
         ),
-      )
+      ),
     );
   }
 
@@ -372,7 +385,7 @@ class _GlassRadialMenuState extends State<GlassRadialMenu>
             ),
           ),
         ),
-      )
+      ),
     );
   }
 
@@ -382,7 +395,7 @@ class _GlassRadialMenuState extends State<GlassRadialMenu>
       link: _layerLink,
       // When menu is open, we can either hide this FAB or leave it.
       // Leaving it prevents layout jumps. The Overlay FAB covers it perfectly.
-      child: _buildFabContent(isOverlay: false)
+      child: _buildFabContent(isOverlay: false),
     );
   }
 }

@@ -258,6 +258,7 @@ class AppTheme {
         isDark ? Brightness.dark : Brightness.light,
         fullColorScheme.surface,
       ),
+
       appBarTheme: AppBarTheme(
         titleSpacing: 0,
         backgroundColor: scaffoldSurface(
@@ -295,6 +296,10 @@ class AppTheme {
           isDark ? Brightness.dark : Brightness.light,
           fullColorScheme.surfaceContainer,
         ),
+        // shape: RoundedRectangleBorder(borderRadius: .circular(24)),
+        // constraints: BoxConstraints(maxWidth: 500),
+        // modalElevation: 4,
+        // elevation: 4,
       ),
     );
   }

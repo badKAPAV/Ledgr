@@ -9,7 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:wallzy/core/models/user.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:wallzy/features/revenuecat/services/revenuecat_service.dart';
+import 'package:wallzy/core/utils/ledgr_max/services/revenuecat_service.dart';
 
 class AuthProvider with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;

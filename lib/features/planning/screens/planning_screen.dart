@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:wallzy/common/snackbar/ledgr_snackbar.dart';
 import 'package:provider/provider.dart';
 import 'package:wallzy/app_drawer.dart';
 import 'package:wallzy/common/tabbar/custom_tab_bar.dart';
@@ -50,16 +51,14 @@ class _PlanningScreenState extends State<PlanningScreen>
       await migrationService.migrateTransactions();
       if (mounted) {
         Navigator.pop(context); // Close loading dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Migration completed successfully!')),
+        LedgrSnackbar.show(
+          content: const Text('Migration completed successfully!'),
         );
       }
     } catch (e) {
       if (mounted) {
         Navigator.pop(context); // Close loading dialog
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Migration failed: $e')));
+        LedgrSnackbar.show(content: Text('Migration failed: $e'));
       }
     }
   }

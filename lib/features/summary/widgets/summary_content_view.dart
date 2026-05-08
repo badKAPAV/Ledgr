@@ -11,7 +11,7 @@ import 'package:wallzy/features/transaction/models/transaction.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
 import 'package:wallzy/features/transaction/screens/all_transactions_screen.dart';
-import 'package:wallzy/features/transaction/screens/category_transactions_screen.dart';
+import 'package:wallzy/features/transaction/screens/transactions_screen.dart';
 
 class SummaryContentView extends StatelessWidget {
   final List<TransactionModel> transactions;
@@ -233,10 +233,13 @@ class SummaryContentView extends StatelessWidget {
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) => CategoryTransactionsScreen(
-                          categoryName: entry.key,
-                          categoryType: 'expense',
-                          initialSelectedDate: monthDate,
+                        builder: (_) => TransactionsScreen(
+                          args: TransactionsScreenArgs(
+                            type: TransactionScreenType.category,
+                            categoryName: entry.key,
+                            categoryType: 'expense',
+                            initialSelectedDate: monthDate,
+                          ),
                         ),
                       ),
                     );

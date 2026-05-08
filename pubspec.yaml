@@ -2,7 +2,7 @@ name: wallzy
 description: "A new Flutter project."
 publish_to: "none"
 
-version: 2.2.1+8 #!BUMP THIS VERSION
+version: 2.2.4+11 #! Version 11 created on May 6, 2026 with name 2.2.4
 
 environment:
   sdk: ^3.10.0
@@ -86,3 +86,7 @@ flutter:
     - family: Momo
       fonts:
         - asset: assets/fonts/MomoTrustDisplay-Regular.ttf
+
+    - family: Geologica
+      fonts:
+        - asset: assets/fonts/Geologica-VariableFont_CRSV,SHRP,slnt,wght.ttf

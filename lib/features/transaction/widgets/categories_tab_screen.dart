@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:wallzy/common/helpers/fading_divider.dart';
+import 'package:wallzy/common/info_modal_sheet_widget/info_sheet_widget.dart';
 
 // --- APP IMPORTS (Adjust paths if necessary) ---
 import 'package:wallzy/core/themes/theme.dart';
@@ -11,7 +12,7 @@ import 'package:wallzy/core/utils/budget_cycle_helper.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
-import 'package:wallzy/features/transaction/screens/category_transactions_screen.dart';
+import 'package:wallzy/features/transaction/screens/transactions_screen.dart';
 import 'package:wallzy/common/widgets/date_filter_selector.dart';
 import 'package:wallzy/common/widgets/empty_report_placeholder.dart';
 import 'package:wallzy/common/widgets/animated_gauge_chart.dart';
@@ -388,13 +389,16 @@ class _CategoriesTabScreenState extends State<CategoriesTabScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => CategoryTransactionsScreen(
-                        categoryName: summary.name,
-                        categoryId: summary.categoryId, // Added
-                        categoryType: summary.type,
-                        initialSelectedDate: DateTime(
-                          _selectedYear,
-                          _selectedMonth ?? DateTime.now().month,
+                      builder: (_) => TransactionsScreen(
+                        args: TransactionsScreenArgs(
+                          type: TransactionScreenType.category,
+                          categoryName: summary.name,
+                          categoryId: summary.categoryId, // Added
+                          categoryType: summary.type,
+                          initialSelectedDate: DateTime(
+                            _selectedYear,
+                            _selectedMonth ?? DateTime.now().month,
+                          ),
                         ),
                       ),
                     ),
@@ -451,116 +455,131 @@ class _ChartDashboardPod extends StatelessWidget {
     // Show top 4 categories in legend
     final topSummaries = summaries.take(4).toList();
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(32),
-      ),
-      child: Column(
-        children: [
-          if (hasData)
-            // Explicitly sized container for the chart
-            // Width = 280, Height = 140 (Half width) for perfect semi-circle
-            SizedBox(
-              height: 140,
-              width: 280,
-              child: Stack(
-                alignment: Alignment.bottomCenter,
-                children: [
-                  AnimatedGaugeChart(
-                    items: summaries
-                        .map(
-                          (s) => GaugeChartItem(
-                            label: s.name,
-                            amount: s.totalAmount,
-                          ),
-                        )
-                        .toList(),
-                    totalAmount: totalAmount,
-                    gapDegrees: 2, // Gap size
-                    useRoundedEdges: false, // Rounded caps
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Container(
+          width: double.infinity,
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainer,
+            borderRadius: BorderRadius.circular(32),
+          ),
+          child: Column(
+            children: [
+              if (hasData)
+                // Explicitly sized container for the chart
+                // Width = 280, Height = 140 (Half width) for perfect semi-circle
+                SizedBox(
+                  height: 140,
+                  width: 280,
+                  child: Stack(
+                    alignment: Alignment.bottomCenter,
+                    children: [
+                      AnimatedGaugeChart(
+                        items: summaries
+                            .map(
+                              (s) => GaugeChartItem(
+                                label: s.name,
+                                amount: s.totalAmount,
+                              ),
+                            )
+                            .toList(),
+                        totalAmount: totalAmount,
+                        gapDegrees: 2, // Gap size
+                        useRoundedEdges: false, // Rounded caps
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              currencyFormat.format(totalAmount),
+                              style: theme.textTheme.displaySmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: theme.colorScheme.onSurface,
+                                fontSize: 32,
+                                height: 1.0,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "Total ${selectedType == 'expense' ? 'Spend' : 'Income'}",
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.outline,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 0),
-                    child: Column(
+                )
+              else
+                SizedBox(
+                  height: 150,
+                  child: Center(
+                    child: Text(
+                      "No Data",
+                      style: TextStyle(color: theme.colorScheme.outline),
+                    ),
+                  ),
+                ),
+
+              const SizedBox(height: 32),
+
+              // Legend (Grid Style)
+              if (hasData)
+                Wrap(
+                  spacing: 16,
+                  runSpacing: 12,
+                  alignment: WrapAlignment.center,
+                  children: topSummaries.map((s) {
+                    return Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          currencyFormat.format(totalAmount),
-                          style: theme.textTheme.displaySmall?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            color: theme.colorScheme.onSurface,
-                            fontSize: 32,
-                            height: 1.0,
+                        Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: _getColorForCategory(s.name),
+                            shape: BoxShape.circle,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(width: 6),
                         Text(
-                          "Total ${selectedType == 'expense' ? 'Spend' : 'Income'}",
-                          style: theme.textTheme.labelSmall?.copyWith(
+                          s.name,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          currencyFormat.format(s.totalAmount),
+                          style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.outline,
-                            letterSpacing: 0.5,
                           ),
                         ),
                       ],
-                    ),
-                  ),
-                ],
-              ),
-            )
-          else
-            SizedBox(
-              height: 150,
-              child: Center(
-                child: Text(
-                  "No Data",
-                  style: TextStyle(color: theme.colorScheme.outline),
+                    );
+                  }).toList(),
                 ),
-              ),
-            ),
-
-          const SizedBox(height: 32),
-
-          // Legend (Grid Style)
-          if (hasData)
-            Wrap(
-              spacing: 16,
-              runSpacing: 12,
-              alignment: WrapAlignment.center,
-              children: topSummaries.map((s) {
-                return Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: _getColorForCategory(s.name),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      s.name,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      currencyFormat.format(s.totalAmount),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.outline,
-                      ),
-                    ),
-                  ],
-                );
-              }).toList(),
-            ),
-        ],
-      ),
+            ],
+          ),
+        ),
+        Positioned(
+          top: 6,
+          right: 24,
+          child: InfoSheetWidget(
+            text:
+                'Includes all expenses - both Credit and Debit. Income/Expenses here are not dependent on the budget cycle.',
+            buttonText: 'Got it',
+          ),
+        ),
+      ],
     );
   }
 }

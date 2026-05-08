@@ -3,11 +3,14 @@ import 'package:flutter/services.dart'; // For HapticFeedback
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:wallzy/common/widgets/animated_gauge_chart.dart';
+import 'package:wallzy/core/navigation/slide_up_route.dart';
 import 'package:wallzy/core/utils/budget_cycle_helper.dart';
+import 'package:wallzy/core/utils/ledgr_max/paywall/paywall_features.dart';
+import 'package:wallzy/core/utils/ledgr_max/paywall/paywall_interceptor.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/features/recurring_payment/screens/add_recurring_payment_screen.dart';
 import 'package:wallzy/features/recurring_payment/screens/all_recurring_payment_screen.dart';
-import 'package:wallzy/features/recurring_payment/screens/recurring_payment_details_screen.dart';
+import 'package:wallzy/features/transaction/screens/transactions_screen.dart';
 
 import 'package:wallzy/features/recurring_payment/models/recurring_payment.dart';
 import 'package:wallzy/features/recurring_payment/provider/recurring_payment_provider.dart';
@@ -211,7 +214,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      floatingActionButton: _buildGlassFab(context),
+      floatingActionButton: _buildGlassFab(context, subProvider),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       body: subProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -427,9 +430,12 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => SubscriptionDetailsScreen(
-                subscription: sub,
-                transactions: subTransactions,
+              builder: (_) => TransactionsScreen(
+                args: TransactionsScreenArgs(
+                  type: TransactionScreenType.subscription,
+                  subscription: sub,
+                  subscriptionTransactions: subTransactions,
+                ),
               ),
             ),
           );
@@ -468,7 +474,10 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
     );
   }
 
-  Widget _buildGlassFab(BuildContext context) {
+  Widget _buildGlassFab(
+    BuildContext context,
+    SubscriptionProvider subProvider,
+  ) {
     return Container(
       height: 56,
       decoration: BoxDecoration(
@@ -487,9 +496,16 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
         child: InkWell(
           onTap: () {
             HapticFeedback.lightImpact();
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const AddSubscriptionScreen()),
+            PaywallInterceptor.execute(
+              context: context,
+              feature: PaywallFeature.recurringPayments,
+              onAllowed: () {
+                Navigator.push(
+                  context,
+                  SlideUpRoute(page: const AddSubscriptionScreen()),
+                );
+              },
+              currentCount: subProvider.subscriptions.length,
             );
           },
           borderRadius: BorderRadius.circular(30),

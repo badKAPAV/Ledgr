@@ -15,6 +15,8 @@ import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
 import 'package:wallzy/common/icon_picker/icons.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:wallzy/features/transaction/widgets/add_edit_transaction_widgets/transaction_widgets.dart';
+import 'package:wallzy/core/utils/ledgr_max/entitlements/entitlements_provider.dart';
+
 
 class BudgetSetupWizard extends StatefulWidget {
   const BudgetSetupWizard({super.key});
@@ -150,11 +152,20 @@ class _BudgetSetupWizardState extends State<BudgetSetupWizard> {
 
   void _nextStep() {
     HapticFeedback.lightImpact();
+    
+    final hasCategoryBudgets = Provider.of<EntitlementsProvider>(context, listen: false).canUseCategoryBudgets;
+
     if (_currentStep == 1) {
+      if (!hasCategoryBudgets) {
+        _finishSetup();
+        return;
+      }
       _prepareAllocation();
     }
 
-    if (_currentStep < 2) {
+    final maxSteps = hasCategoryBudgets ? 2 : 1;
+
+    if (_currentStep < maxSteps) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 600),
         curve: Curves.fastOutSlowIn,
@@ -194,6 +205,8 @@ class _BudgetSetupWizardState extends State<BudgetSetupWizard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final hasCategoryBudgets = Provider.of<EntitlementsProvider>(context).canUseCategoryBudgets;
+    final totalSteps = hasCategoryBudgets ? 2 : 1;
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
@@ -236,13 +249,15 @@ class _BudgetSetupWizardState extends State<BudgetSetupWizard> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   _buildLineStep(1, _currentStep >= 1, theme),
-                                  const SizedBox(width: 8),
-                                  _buildLineStep(2, _currentStep >= 2, theme),
+                                  if (totalSteps > 1) ...[
+                                    const SizedBox(width: 8),
+                                    _buildLineStep(2, _currentStep >= 2, theme),
+                                  ],
                                 ],
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                "STEP $_currentStep OF 2",
+                                "STEP $_currentStep OF $totalSteps",
                                 style: theme.textTheme.headlineMedium?.copyWith(
                                   fontSize: 14,
                                   fontWeight: FontWeight.normal,
@@ -269,8 +284,8 @@ class _BudgetSetupWizardState extends State<BudgetSetupWizard> {
                       physics: const NeverScrollableScrollPhysics(),
                       children: [
                         _buildAnalysisStep(theme),
-                        _buildTargetStep(theme),
-                        _buildAllocationStep(theme),
+                        _buildTargetStep(theme, hasCategoryBudgets),
+                        if (hasCategoryBudgets) _buildAllocationStep(theme),
                       ],
                     ),
                   ),
@@ -403,7 +418,7 @@ class _BudgetSetupWizardState extends State<BudgetSetupWizard> {
   }
 
   // --- STEP 1: Target ---
-  Widget _buildTargetStep(ThemeData theme) {
+  Widget _buildTargetStep(ThemeData theme, bool hasCategoryBudgets) {
     final currencySymbol = Provider.of<SettingsProvider>(
       context,
     ).currencySymbol;
@@ -565,9 +580,9 @@ class _BudgetSetupWizardState extends State<BudgetSetupWizard> {
                     borderRadius: BorderRadius.circular(50),
                   ),
                 ),
-                child: const Text(
-                  "Continue",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                child: Text(
+                  hasCategoryBudgets ? "Continue" : "Activate Budget",
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
             ),

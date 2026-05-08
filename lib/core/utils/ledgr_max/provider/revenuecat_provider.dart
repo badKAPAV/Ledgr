@@ -1,42 +1,62 @@
 import 'package:flutter/foundation.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
-import 'package:wallzy/features/revenuecat/services/revenuecat_service.dart';
+import 'package:wallzy/core/utils/ledgr_max/services/revenuecat_service.dart';
 import 'package:wallzy/features/auth/provider/auth_provider.dart';
 
 class RevenueCatProvider with ChangeNotifier {
   final RevenueCatService _revenueCatService = RevenueCatService();
   AuthProvider authProvider;
 
-  bool _isPro = false;
+  bool _isPro;
   CustomerInfo? _customerInfo;
 
   bool get isPro => _isPro;
   CustomerInfo? get customerInfo => _customerInfo;
 
-  RevenueCatProvider({required this.authProvider}) {
+  Offerings? _offerings;
+  Offerings? get offerings => _offerings;
+  String? _lastSeenUid;
+
+  DateTime? get expirationDate {
+    final entitlement =
+        _customerInfo?.entitlements.all[RevenueCatService.entitlementId];
+    final expStr = entitlement?.expirationDate;
+    if (expStr == null) return null;
+    return DateTime.tryParse(expStr);
+  }
+
+  RevenueCatProvider({required this.authProvider, bool initialIsPro = false})
+    : _isPro = initialIsPro {
     _init();
   }
 
   void updateAuthProvider(AuthProvider newAuthProvider) {
-    // If the user changed, we might want to re-check entitlements
-    if (authProvider.user?.uid != newAuthProvider.user?.uid) {
-      authProvider = newAuthProvider;
-      _checkEntitlements();
-    } else {
-      authProvider = newAuthProvider;
+    authProvider = newAuthProvider;
+    final currentUid = authProvider.user?.uid;
+
+    if (currentUid != null && currentUid != _lastSeenUid) {
+      // 1. User logged in! Tell RevenueCat who they are.
+      _lastSeenUid = currentUid;
+      _revenueCatService.logIn(currentUid).then((_) {
+        // 2. Fetch their specific data
+        _checkEntitlements();
+      });
+    } else if (currentUid == null && _lastSeenUid != null) {
+      // User logged out
+      _lastSeenUid = null;
+      _revenueCatService.logOut();
+      _isPro = false;
+      notifyListeners();
     }
   }
 
   Future<void> _init() async {
-    // Initialize the SDK if not already done
     await _revenueCatService.initialize();
 
-    // Listen to changes in customer info (e.g. from purchases or expiration)
     Purchases.addCustomerInfoUpdateListener((customerInfo) {
       _updateCustomerInfo(customerInfo);
     });
 
-    // Check entitlements immediately
     await _checkEntitlements();
   }
 
@@ -45,6 +65,10 @@ class RevenueCatProvider with ChangeNotifier {
     try {
       final info = await Purchases.getCustomerInfo();
       _updateCustomerInfo(info);
+
+      final offerings = await _revenueCatService.getOfferings();
+      _offerings = offerings;
+      notifyListeners();
     } catch (e) {
       debugPrint("Error fetching customer info for Provider: $e");
     }
@@ -80,6 +104,17 @@ class RevenueCatProvider with ChangeNotifier {
   Future<bool> restorePurchases() async {
     final success = await _revenueCatService.restorePurchases();
     await _checkEntitlements();
+    return success;
+  }
+
+  Future<bool> purchasePackage(Package package) async {
+    final success = await _revenueCatService.purchasePackage(
+      package,
+      // customerInfo!,
+    );
+    if (success) {
+      await _checkEntitlements(); // Refresh local state
+    }
     return success;
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
+import 'package:wallzy/common/snackbar/ledgr_snackbar.dart';
 import 'package:wallzy/common/switch/custom_switch.dart';
 import 'package:wallzy/core/helpers/transaction_category.dart';
 import 'package:wallzy/core/themes/theme.dart';
@@ -31,6 +32,8 @@ import 'package:wallzy/features/transaction/widgets/link_transaction_modal_sheet
 import 'package:wallzy/features/categories/screens/add_edit_category_modal_sheet.dart';
 import 'package:wallzy/features/transaction/widgets/add_receipt_modal_sheet.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:wallzy/core/utils/ledgr_max/paywall/paywall_interceptor.dart';
+import 'package:wallzy/core/utils/ledgr_max/paywall/paywall_features.dart';
 
 class TransactionForm extends StatefulWidget {
   final TransactionMode mode;
@@ -536,21 +539,15 @@ class TransactionFormState extends State<TransactionForm> {
 
   bool _validateCustomFields() {
     if (_selectedCategory == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a category.')),
-      );
+      LedgrSnackbar.show(content: Text('Please select a category.'));
       return false;
     }
     if (_selectedCategory == 'People' && _selectedPerson == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please select a person.')));
+      LedgrSnackbar.show(content: Text('Please select a person.'));
       return false;
     }
     if (_selectedPaymentMethod == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a payment method.')),
-      );
+      LedgrSnackbar.show(content: Text('Please select a payment method.'));
       return false;
     }
     return true;
@@ -589,6 +586,7 @@ class TransactionFormState extends State<TransactionForm> {
     if (_newReceiptData != null) {
       final receiptId = const Uuid().v4();
       try {
+        txProvider.setUploadingImage(true);
         finalReceiptUrl = await ReceiptService().uploadReceipt(
           imageData: _newReceiptData!,
           userId: Provider.of<AuthProvider>(context, listen: false).user!.uid,
@@ -596,10 +594,10 @@ class TransactionFormState extends State<TransactionForm> {
         );
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to upload receipt: $e')),
-          );
+          LedgrSnackbar.show(content: Text('Failed to upload receipt: $e'));
         }
+      } finally {
+        txProvider.setUploadingImage(false);
       }
     }
 
@@ -681,12 +679,16 @@ class TransactionFormState extends State<TransactionForm> {
 
       if (stayOnPage) {
         reset();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            behavior: SnackBarBehavior.floating,
-            content: Text('Transaction saved! Record another.'),
-            duration: Duration(seconds: 2),
-          ),
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   const SnackBar(
+        //     behavior: SnackBarBehavior.floating,
+        //     content: Text('Transaction saved! Record another.'),
+        //     duration: Duration(seconds: 2),
+        //   ),
+        // );
+        LedgrSnackbar.show(
+          context: context,
+          content: Text('Transaction saved! Record another.'),
         );
         return true;
       } else {
@@ -1136,8 +1138,14 @@ class TransactionFormState extends State<TransactionForm> {
                         icon: HugeIcons.strokeRoundedCameraAdd01,
                         label: "Receipt",
                         onTap: () {
-                          setState(() => _showReceipt = true);
-                          _pickReceipt();
+                          PaywallInterceptor.execute(
+                            context: context,
+                            feature: PaywallFeature.transactionReceipt,
+                            onAllowed: () {
+                              setState(() => _showReceipt = true);
+                              _pickReceipt();
+                            },
+                          );
                         },
                       ),
                     if (!_showSubscription &&
@@ -1155,7 +1163,13 @@ class TransactionFormState extends State<TransactionForm> {
                     TransactionActionChip(
                       icon: HugeIcons.strokeRoundedMoneyExchange01,
                       label: "Convert",
-                      onTap: _openCurrencyConverter,
+                      onTap: () {
+                        PaywallInterceptor.execute(
+                          context: context,
+                          feature: PaywallFeature.convertInTransaction,
+                          onAllowed: _openCurrencyConverter,
+                        );
+                      },
                     ),
                     if (!_showLinkedTransaction)
                       TransactionActionChip(
@@ -1424,41 +1438,47 @@ class TransactionFormState extends State<TransactionForm> {
       title: 'SELECT CATEGORY',
       showSearch: true,
       showCreateNew: true,
-      onCreateNew: () async {
-        Navigator.pop(context); // Close the picker list
-        HapticFeedback.selectionClick();
-        await showModalBottomSheet(
+      onCreateNew: () {
+        PaywallInterceptor.execute(
           context: context,
-          isScrollControlled: true,
-          backgroundColor: Colors.transparent,
-          builder: (context) => const AddEditCategoryModalSheet(),
+          feature: PaywallFeature.customCategories,
+          onAllowed: () async {
+            Navigator.pop(context); // Close the picker list
+            HapticFeedback.selectionClick();
+            await showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (context) => const AddEditCategoryModalSheet(),
+            );
+
+            // After the modal closes, if a category was added, we select it
+            if (!mounted) return;
+            final newCatProvider = context.read<CategoryProvider>();
+            final latestCategories = newCatProvider.categories
+                .where((c) => c.mode == widget.mode && !c.isDeleted)
+                .toList();
+
+            if (latestCategories.length > categories.length) {
+              // A new category was added, find and select it
+              // Assuming it's added at the end or we can just sort by created time if available.
+              // For now, we take the one not in the old list.
+              final oldIds = categories.map((c) => c.id).toSet();
+              final newCat = latestCategories.firstWhereOrNull(
+                (c) => !oldIds.contains(c.id),
+              );
+              if (newCat != null) {
+                setState(() {
+                  _selectedCategoryId = newCat.id;
+                  _selectedCategory = newCat.name;
+                  if (newCat.name != 'People') _selectedPerson = null;
+                  _markAsDirty();
+                });
+                if (newCat.name == 'People') _showPeopleModal();
+              }
+            }
+          },
         );
-
-        // After the modal closes, if a category was added, we select it
-        if (!mounted) return;
-        final newCatProvider = context.read<CategoryProvider>();
-        final latestCategories = newCatProvider.categories
-            .where((c) => c.mode == widget.mode && !c.isDeleted)
-            .toList();
-
-        if (latestCategories.length > categories.length) {
-          // A new category was added, find and select it
-          // Assuming it's added at the end or we can just sort by created time if available.
-          // For now, we take the one not in the old list.
-          final oldIds = categories.map((c) => c.id).toSet();
-          final newCat = latestCategories.firstWhereOrNull(
-            (c) => !oldIds.contains(c.id),
-          );
-          if (newCat != null) {
-            setState(() {
-              _selectedCategoryId = newCat.id;
-              _selectedCategory = newCat.name;
-              if (newCat.name != 'People') _selectedPerson = null;
-              _markAsDirty();
-            });
-            if (newCat.name == 'People') _showPeopleModal();
-          }
-        }
       },
       items: categories
           .map(
@@ -1550,14 +1570,26 @@ class TransactionFormState extends State<TransactionForm> {
       title: "Recurring Payments",
       items: subs
           .map(
-            (s) => PickerItem(id: s.id, label: s.name, icon: Icons.autorenew),
+            (s) => PickerItem(
+              id: s.id,
+              label: s.name,
+              icon: HugeIcons.strokeRoundedRotate02,
+            ),
           )
           .toList(),
       showCreateNew: true,
-      onCreateNew: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const AddSubscriptionScreen()),
-      ),
+      onCreateNew: () {
+        final subProvider = context.read<SubscriptionProvider>();
+        PaywallInterceptor.execute(
+          context: context,
+          feature: PaywallFeature.recurringPayments,
+          currentCount: subProvider.subscriptions.length,
+          onAllowed: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AddSubscriptionScreen()),
+          ),
+        );
+      },
       selectedId: _selectedSubscriptionId,
     ).then((id) {
       if (id != null) {

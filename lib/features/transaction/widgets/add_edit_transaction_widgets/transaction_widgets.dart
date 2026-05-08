@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:wallzy/core/utils/ledgr_max/paywall/paywall_features.dart';
+import 'package:wallzy/core/utils/ledgr_max/paywall/paywall_interceptor.dart';
 import 'package:wallzy/features/accounts/models/account.dart';
+import 'package:wallzy/features/accounts/provider/account_provider.dart';
 import 'package:wallzy/features/accounts/screens/add_edit_account_screen.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/features/folders/models/folder.dart';
@@ -653,94 +656,107 @@ class _ModernPickerSheetContentState extends State<_ModernPickerSheetContent> {
                 ],
                 const SizedBox(height: 20),
                 Expanded(
-                  child: GridView.builder(
-                    controller: controller,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          childAspectRatio: 1.1,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                        ),
-                    itemCount: filteredItems.length,
-                    itemBuilder: (_, index) {
-                      final item = filteredItems[index];
-                      final isSelected = item.id == widget.selectedId;
-                      final baseColor =
-                          item.color ?? Theme.of(context).colorScheme.primary;
+                  child: SingleChildScrollView(
+                    controller: controller, // Preserved your scroll controller
+                    child: Wrap(
+                      spacing: 12, // Horizontal spacing between chips
+                      runSpacing: 12, // Vertical spacing between rows
+                      children: filteredItems.map((item) {
+                        final isSelected = item.id == widget.selectedId;
+                        final baseColor =
+                            item.color ?? Theme.of(context).colorScheme.primary;
 
-                      return InkWell(
-                        onTap: () => Navigator.pop(context, item.id),
-                        borderRadius: BorderRadius.circular(20),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? baseColor.withValues(alpha: 0.15)
-                                : Theme.of(
-                                    context,
-                                  ).colorScheme.surfaceContainer,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: isSelected
-                                  ? baseColor
-                                  : Colors.transparent,
-                              width: 2,
+                        return InkWell(
+                          onTap: () => Navigator.pop(context, item.id),
+                          borderRadius: BorderRadius.circular(14),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            // ADDED: Explicit padding since we no longer have childAspectRatio
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 8,
                             ),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? baseColor
-                                      : Theme.of(context).colorScheme.surface,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: HugeIcon(
-                                  icon: item.icon,
-                                  color: isSelected ? Colors.white : baseColor,
-                                  size: 24,
-                                ),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? baseColor.withValues(alpha: 0.15)
+                                  : Theme.of(
+                                      context,
+                                    ).colorScheme.surfaceContainer,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: isSelected
+                                    ? baseColor
+                                    : Colors.transparent,
+                                width: 2,
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                item.label,
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: isSelected
-                                      ? FontWeight.bold
-                                      : FontWeight.w500,
-                                  color: isSelected
-                                      ? baseColor
-                                      : Theme.of(context).colorScheme.onSurface,
-                                ),
-                              ),
-                              if (item.subtitle != null) ...[
-                                const SizedBox(height: 2),
-                                Text(
-                                  item.subtitle!,
-                                  textAlign: TextAlign.center,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 10,
+                            ),
+                            child: Row(
+                              // ADDED: Shrink-wrap the row to the content's exact width
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
                                     color: isSelected
-                                        ? baseColor.withAlpha(204)
-                                        : Theme.of(context).colorScheme.outline,
+                                        ? baseColor
+                                        : Theme.of(context).colorScheme.surface,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: HugeIcon(
+                                    icon: item.icon,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : baseColor,
+                                    size: 20,
                                   ),
                                 ),
+                                const SizedBox(
+                                  width: 8,
+                                ), // Slightly increased for readability
+                                Flexible(
+                                  // Optional: prevents overflow if a single word is wider than screen
+                                  child: Text(
+                                    item.label,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.w500,
+                                      color: isSelected
+                                          ? baseColor
+                                          : Theme.of(
+                                              context,
+                                            ).colorScheme.onSurface,
+                                    ),
+                                  ),
+                                ),
+
+                                //! Subtitle logic preserved
+                                if (item.subtitle != null &&
+                                    item.subtitle != '') ...[
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    "• ${item.subtitle!}",
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: isSelected
+                                          ? baseColor.withAlpha(204)
+                                          : Theme.of(
+                                              context,
+                                            ).colorScheme.outline,
+                                    ),
+                                  ),
+                                ],
                               ],
-                            ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      }).toList(),
+                    ),
                   ),
                 ),
               ],
@@ -763,10 +779,17 @@ void showCustomAccountModal(
     title: 'Select Account',
     showCreateNew: true,
     onCreateNew: () {
-      Navigator.pop(context);
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const AddEditAccountScreen()),
+      PaywallInterceptor.execute(
+        context: context,
+        feature: PaywallFeature.userAccounts,
+        currentCount: context.read<AccountProvider>().accounts.length,
+        onAllowed: () {
+          Navigator.pop(context);
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AddEditAccountScreen()),
+          );
+        },
       );
     },
     items: accounts
@@ -845,13 +868,20 @@ class _FolderPickerSheetState extends State<FolderPickerSheet> {
     Navigator.pop(context);
   }
 
-  void _createAndSelect(String name) async {
-    final newTag = await widget.metaProvider.addTag(name);
-    _toggleSelection(newTag);
-    _searchController.clear();
-    setState(() {
-      _searchQuery = "";
-    });
+  void _createAndSelect(String name) {
+    PaywallInterceptor.execute(
+      context: context,
+      feature: PaywallFeature.folders,
+      currentCount: widget.metaProvider.tags.length,
+      onAllowed: () async {
+        final newTag = await widget.metaProvider.addTag(name);
+        _toggleSelection(newTag);
+        _searchController.clear();
+        setState(() {
+          _searchQuery = "";
+        });
+      },
+    );
   }
 
   @override

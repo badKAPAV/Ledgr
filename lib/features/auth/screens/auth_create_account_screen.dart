@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:wallzy/common/snackbar/ledgr_snackbar.dart';
 import 'package:wallzy/features/auth/provider/auth_provider.dart';
 
 class AuthCreateAccountScreen extends StatefulWidget {
@@ -74,7 +75,7 @@ class _AuthCreateAccountScreenState extends State<AuthCreateAccountScreen> {
           ),
           child: child!,
         );
-      }
+      },
     );
     if (picked != null) {
       setState(() {
@@ -96,13 +97,7 @@ class _AuthCreateAccountScreenState extends State<AuthCreateAccountScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Setup failed: $e'),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        LedgrSnackbar.show(context: context, content: Text('Setup failed: $e'));
       }
     }
   }
@@ -111,33 +106,20 @@ class _AuthCreateAccountScreenState extends State<AuthCreateAccountScreen> {
     if (didPop) return;
 
     HapticFeedback.heavyImpact();
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              Icons.info_outline,
-              size: 20,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                "Please complete your profile to continue",
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-            ),
-          ],
-        ),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 2),
-      )
+    LedgrSnackbar.show(
+      context: context,
+      content: Row(
+        children: [
+          Icon(
+            Icons.info_outline,
+            size: 20,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Text("Please complete your profile to continue")),
+        ],
+      ),
+      duration: const Duration(seconds: 2),
     );
   }
 
@@ -414,7 +396,7 @@ class _AuthCreateAccountScreenState extends State<AuthCreateAccountScreen> {
                             foregroundColor: colorScheme.onPrimary,
                             elevation: 0,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(18),
+                              borderRadius: BorderRadius.circular(50),
                             ),
                           ),
                           child: authProvider.isLoading
@@ -454,7 +436,7 @@ class _AuthCreateAccountScreenState extends State<AuthCreateAccountScreen> {
             ),
           ],
         ),
-      )
+      ),
     );
   }
 }

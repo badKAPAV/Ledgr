@@ -9,6 +9,7 @@ import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/features/transaction/provider/meta_provider.dart';
 import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
+import 'package:wallzy/common/snackbar/ledgr_snackbar.dart';
 import 'package:wallzy/features/folders/models/folder.dart';
 
 class AddEditAccountScreen extends StatefulWidget {
@@ -190,9 +191,7 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen>
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        LedgrSnackbar.show(context: context, content: Text('Error: $e'));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

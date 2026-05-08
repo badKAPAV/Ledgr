@@ -3,7 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:wallzy/common/snackbar/ledgr_snackbar.dart';
 import 'package:wallzy/common/widgets/empty_report_placeholder.dart';
+import 'package:wallzy/core/utils/ledgr_max/paywall/paywall_features.dart';
+import 'package:wallzy/core/utils/ledgr_max/paywall/paywall_interceptor.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/features/auth/provider/auth_provider.dart';
 import 'package:wallzy/features/accounts/provider/account_provider.dart';
@@ -221,25 +224,16 @@ class _PendingSmsScreenState extends State<PendingSmsScreen> {
     _autoRecordTotal.value = _transactions.length;
     _autoRecordProgress.value = 0;
 
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: ValueListenableBuilder<int>(
-          valueListenable: _autoRecordProgress,
-          builder: (context, progress, _) {
-            final total = _autoRecordTotal.value;
-            return Text(
-              "Recording transactions... $progress / $total",
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onInverseSurface,
-              ),
-            );
-          },
-        ),
-        duration: const Duration(days: 1),
-        backgroundColor: Theme.of(context).colorScheme.inverseSurface,
-        behavior: SnackBarBehavior.floating,
+    LedgrSnackbar.dismiss();
+    LedgrSnackbar.show(
+      content: ValueListenableBuilder<int>(
+        valueListenable: _autoRecordProgress,
+        builder: (context, progress, _) {
+          final total = _autoRecordTotal.value;
+          return Text("Recording transactions... $progress / $total");
+        },
       ),
+      duration: const Duration(days: 1),
     );
 
     final txProvider = Provider.of<TransactionProvider>(context, listen: false);
@@ -360,24 +354,11 @@ class _PendingSmsScreenState extends State<PendingSmsScreen> {
       _isRecordingAll = false;
     });
 
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    LedgrSnackbar.dismiss();
 
     if (savedCount > 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            "Auto-recorded $savedCount transactions",
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onPrimaryContainer,
-            ),
-          ),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
+      LedgrSnackbar.show(
+        content: Text("Auto-recorded $savedCount transactions"),
       );
     }
   }
@@ -386,21 +367,17 @@ class _PendingSmsScreenState extends State<PendingSmsScreen> {
     required String message,
     required VoidCallback onUndo,
   }) {
-    ScaffoldMessenger.of(context).clearSnackBars();
+    LedgrSnackbar.dismiss();
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 4),
-        action: SnackBarAction(
-          label: 'UNDO',
-          textColor: Theme.of(context).colorScheme.inversePrimary,
-          onPressed: () {
-            HapticFeedback.lightImpact();
-            onUndo();
-          },
-        ),
+    LedgrSnackbar.show(
+      content: Text(message),
+      duration: const Duration(seconds: 4),
+      action: SnackBarAction(
+        label: 'UNDO',
+        onPressed: () {
+          HapticFeedback.lightImpact();
+          onUndo();
+        },
       ),
     );
   }
@@ -444,7 +421,11 @@ class _PendingSmsScreenState extends State<PendingSmsScreen> {
                 ),
               ),
               child: TextButton.icon(
-                onPressed: _handleAutoRecordAll,
+                onPressed: () => PaywallInterceptor.execute(
+                  context: context,
+                  feature: PaywallFeature.autosave,
+                  onAllowed: () => _handleAutoRecordAll(),
+                ),
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   minimumSize: Size.zero,

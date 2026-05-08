@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wallzy/features/auth/provider/auth_provider.dart';
+import 'package:wallzy/common/snackbar/ledgr_snackbar.dart';
 import 'package:wallzy/features/planning/widgets/active_budget_view.dart';
 import 'package:wallzy/features/planning/widgets/budget_setup_wizard.dart';
 
@@ -29,11 +30,9 @@ class BudgetTabScreen extends StatelessWidget {
                   onPressed: () async {
                     await authProvider.updateMonthlyBudget(0);
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            "Debug: Budget reset. Relaunching Wizard.",
-                          ),
+                      LedgrSnackbar.show(
+                        content: const Text(
+                          "Debug: Budget reset. Relaunching Wizard.",
                         ),
                       );
                     }
@@ -47,7 +46,7 @@ class BudgetTabScreen extends StatelessWidget {
                 )
               : null,
         );
-      }
+      },
     );
   }
 }

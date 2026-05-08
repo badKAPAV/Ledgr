@@ -7,6 +7,7 @@ import 'package:wallzy/features/accounts/provider/account_provider.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:wallzy/common/icon_picker/icon_picker_sheet.dart';
 import 'package:wallzy/common/icon_picker/icons.dart';
+import 'package:wallzy/common/snackbar/ledgr_snackbar.dart';
 
 class AddEditGoalScreen extends StatefulWidget {
   final Goal? goal;
@@ -32,12 +33,12 @@ class _AddEditGoalScreenState extends State<AddEditGoalScreen> {
     super.initState();
     _titleController = TextEditingController(text: widget.goal?.title ?? '');
     _descriptionController = TextEditingController(
-      text: widget.goal?.description ?? ''
+      text: widget.goal?.description ?? '',
     );
     _amountController = TextEditingController(
       text: widget.goal != null
           ? widget.goal!.targetAmount.toStringAsFixed(2)
-          : ''
+          : '',
     );
     if (widget.goal != null) {
       _targetDate = widget.goal!.targetDate;
@@ -56,7 +57,7 @@ class _AddEditGoalScreenState extends State<AddEditGoalScreen> {
         onIconSelected: (key) {
           setState(() => _selectedIconKey = key);
         },
-      )
+      ),
     );
   }
 
@@ -73,7 +74,7 @@ class _AddEditGoalScreenState extends State<AddEditGoalScreen> {
       context: context,
       initialDate: _targetDate,
       firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365 * 10))
+      lastDate: DateTime.now().add(const Duration(days: 365 * 10)),
     );
     if (picked != null) {
       setState(() => _targetDate = picked);
@@ -113,9 +114,7 @@ class _AddEditGoalScreenState extends State<AddEditGoalScreen> {
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        LedgrSnackbar.show(context: context, content: Text('Error: $e'));
       }
     } finally {
       if (mounted) setState(() => _isProcessing = false);
@@ -495,7 +494,7 @@ class _AddEditGoalScreenState extends State<AddEditGoalScreen> {
             const SizedBox(height: 48),
           ],
         ),
-      )
+      ),
     );
   }
 
@@ -545,7 +544,7 @@ class _AddEditGoalScreenState extends State<AddEditGoalScreen> {
           horizontal: 16,
           vertical: 16,
         ),
-      )
+      ),
     );
   }
 }

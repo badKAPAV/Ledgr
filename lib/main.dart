@@ -1,3 +1,4 @@
+import 'package:wallzy/common/app_lock/app_lock_biometric_guard_wrapper.dart';
 import 'package:wallzy/common/app_lock/app_lock_provider.dart';
 import 'package:wallzy/core/services/sms_rule_service.dart';
 import 'package:wallzy/core/themes/theme_provider.dart';
@@ -7,11 +8,13 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:wallzy/core/services/notification_service.dart';
+import 'package:wallzy/common/snackbar/ledgr_snackbar.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:material_color_utilities/material_color_utilities.dart';
 import 'package:provider/provider.dart';
+import 'package:wallzy/core/utils/ledgr_max/entitlements/entitlements_provider.dart';
 import 'package:wallzy/features/accounts/provider/account_provider.dart';
 import 'package:wallzy/features/dashboard/provider/home_widgets_provider.dart';
 import 'package:wallzy/features/feedback/provider/feedback_provider.dart';
@@ -34,8 +37,8 @@ import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wallzy/features/transaction/services/quick_save_service.dart';
-import 'package:wallzy/features/revenuecat/services/revenuecat_service.dart';
-import 'package:wallzy/features/revenuecat/provider/revenuecat_provider.dart';
+import 'package:wallzy/core/utils/ledgr_max/services/revenuecat_service.dart';
+import 'package:wallzy/core/utils/ledgr_max/provider/revenuecat_provider.dart';
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
@@ -49,9 +52,15 @@ void callbackDispatcher() {
   });
 }
 
+final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Read initial Pro status synchronously to prevent paywall flicker
+  final prefs = await SharedPreferences.getInstance();
+  final initialIsPro = prefs.getBool('isProUser') ?? false;
 
   // Enable offline persistence
   FirebaseFirestore.instance.settings = const Settings(
@@ -60,6 +69,12 @@ void main() async {
 
   // Initialize RevenueCat
   await RevenueCatService().initialize();
+
+  //* This is already configured in RevenuecatService class
+  // final currentUser = FirebaseAuth.instance.currentUser;
+  // if (currentUser != null) {
+  //   await Purchases.logIn(currentUser.uid);
+  // }
 
   // Initialize notifications
   await NotificationService().initialize();
@@ -120,6 +135,10 @@ void main() async {
 
   SmsRuleService().syncRules();
 
+  if (kReleaseMode) {
+    debugPrint = (String? message, {int? wrapWidth}) {};
+  }
+
   runApp(
     // Wrap the entire app in MultiProvider at the top level.
     MultiProvider(
@@ -134,9 +153,20 @@ void main() async {
         ChangeNotifierProvider(create: (_) => AppLockProvider()),
         ChangeNotifierProxyProvider<AuthProvider, RevenueCatProvider>(
           create: (context) => RevenueCatProvider(
-            authProvider: Provider.of<AuthProvider>(context, listen: false),
+            authProvider: context.read<AuthProvider>(),
+            initialIsPro: initialIsPro,
           ),
-          update: (_, auth, previous) => previous!..updateAuthProvider(auth),
+          // Every time AuthProvider updates, this triggers the UID sync!
+          update: (context, auth, previous) =>
+              previous!..updateAuthProvider(auth),
+        ),
+
+        // 3. Entitlements (Depends on RevenueCat for the isPro boolean)
+        ChangeNotifierProxyProvider<RevenueCatProvider, EntitlementsProvider>(
+          create: (_) => EntitlementsProvider(),
+          // Every time a purchase happens, this updates the Feature Limits!
+          update: (context, rcProvider, previous) =>
+              previous!..updateProStatus(rcProvider.isPro),
         ),
         ChangeNotifierProxyProvider<AuthProvider, AccountProvider>(
           create: (_) => AccountProvider(),
@@ -146,11 +176,12 @@ void main() async {
             return previousAccountProvider;
           },
         ),
-        // TransactionProvider depends on Auth, Account, and Settings providers.
-        ChangeNotifierProxyProvider3<
+        // TransactionProvider depends on Auth, Account, Settings, and Category providers.
+        ChangeNotifierProxyProvider4<
           AuthProvider,
           AccountProvider,
           SettingsProvider,
+          CategoryProvider,
           TransactionProvider
         >(
           create: (context) => TransactionProvider(
@@ -163,11 +194,17 @@ void main() async {
               context,
               listen: false,
             ),
+            categoryProvider: Provider.of<CategoryProvider>(
+              context,
+              listen: false,
+            ),
           ),
-          update: (context, auth, accounts, settings, previous) => previous!
-            ..updateAuthProvider(auth)
-            ..updateAccountProvider(accounts)
-            ..updateSettingsProvider(settings),
+          update: (context, auth, accounts, settings, categories, previous) =>
+              previous!
+                ..updateAuthProvider(auth)
+                ..updateAccountProvider(accounts)
+                ..updateSettingsProvider(settings)
+                ..updateCategoryProvider(categories),
         ),
         ChangeNotifierProxyProvider<AuthProvider, MetaProvider>(
           create: (context) => MetaProvider(
@@ -251,6 +288,7 @@ class MyApp extends StatelessWidget {
         return Consumer<ThemeProvider>(
           builder: (context, themeProvider, child) {
             return MaterialApp(
+              navigatorKey: appNavigatorKey,
               debugShowCheckedModeBanner: false,
               title: 'Wallzy',
               themeMode: themeProvider.themeMode, // DYNAMIC MODE
@@ -262,6 +300,9 @@ class MyApp extends StatelessWidget {
                 darkColorScheme,
                 corePalette: corePalette,
               ),
+              builder: (context, child) {
+                return BiometricGuard(child: child!);
+              },
               home: const AuthWrapper(),
             );
           },
@@ -334,9 +375,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
         }
 
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(message)));
+          LedgrSnackbar.show(context: context, content: Text(message));
         }
       }
     }

@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:wallzy/common/helpers/image_cropper/image_cropper_screen.dart';
+import 'package:wallzy/common/snackbar/ledgr_snackbar.dart';
 import 'package:wallzy/features/auth/provider/auth_provider.dart';
 import 'package:wallzy/features/transaction/services/receipt_service.dart';
 
@@ -53,9 +54,7 @@ class _AddReceiptModalSheetState extends State<AddReceiptModalSheet> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error picking image: $e')));
+        LedgrSnackbar.show(content: Text('Error picking image: $e'));
       }
     }
   }
@@ -79,9 +78,7 @@ class _AddReceiptModalSheetState extends State<AddReceiptModalSheet> {
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to upload receipt: $e')));
+        LedgrSnackbar.show(content: Text('Failed to upload receipt: $e'));
       }
     } finally {
       if (mounted) setState(() => _isUploading = false);
@@ -120,7 +117,20 @@ class _AddReceiptModalSheetState extends State<AddReceiptModalSheet> {
               const Center(
                 child: Padding(
                   padding: EdgeInsets.all(32.0),
-                  child: CircularProgressIndicator(),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text(
+                        'Uploading image...',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               )
             else ...[
@@ -145,7 +155,7 @@ class _AddReceiptModalSheetState extends State<AddReceiptModalSheet> {
             const SizedBox(height: 16),
           ],
         ),
-      )
+      ),
     );
   }
 }
@@ -211,7 +221,7 @@ class _OptionTile extends StatelessWidget {
             ),
           ),
         ),
-      )
+      ),
     );
   }
 }

@@ -9,6 +9,7 @@ import 'package:wallzy/features/people/widgets/people_list_view.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:wallzy/common/widgets/empty_report_placeholder.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
+import 'package:wallzy/common/snackbar/ledgr_snackbar.dart';
 
 class DebtsLoansView extends StatefulWidget {
   const DebtsLoansView({super.key});
@@ -103,20 +104,14 @@ class _DebtsLoansViewState extends State<DebtsLoansView> {
 
                 peopleProvider.updatePerson(newPerson);
 
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    content: const Text('Debt cleared'),
-                    action: SnackBarAction(
-                      label: 'Undo',
-                      onPressed: () {
-                        peopleProvider.updatePerson(person);
-                      },
-                    ),
+                LedgrSnackbar.show(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  content: const Text('Debt cleared'),
+                  action: SnackBarAction(
+                    label: 'Undo',
+                    onPressed: () {
+                      peopleProvider.updatePerson(person);
+                    },
                   ),
                 );
               },

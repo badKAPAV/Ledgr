@@ -2,8 +2,12 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
+import 'package:wallzy/common/helpers/fading_divider.dart';
 import 'package:wallzy/core/themes/theme.dart';
+import 'package:wallzy/common/snackbar/ledgr_snackbar.dart';
 import 'package:wallzy/core/utils/budget_cycle_helper.dart';
+import 'package:wallzy/core/utils/ledgr_max/paywall/paywall_features.dart';
+import 'package:wallzy/core/utils/ledgr_max/paywall/paywall_interceptor.dart';
 import 'package:wallzy/features/auth/provider/auth_provider.dart';
 import 'package:wallzy/features/categories/provider/category_provider.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
@@ -32,7 +36,7 @@ class _ActiveBudgetViewState extends State<ActiveBudgetView> {
   void _showEditBudgetSheet(BuildContext context, double currentBudget) {
     final theme = Theme.of(context);
     final controller = TextEditingController(
-      text: currentBudget.toStringAsFixed(0)
+      text: currentBudget.toStringAsFixed(0),
     );
     final currencySymbol = context.read<SettingsProvider>().currencySymbol;
 
@@ -110,7 +114,7 @@ class _ActiveBudgetViewState extends State<ActiveBudgetView> {
             ],
           ),
         );
-      }
+      },
     );
   }
 
@@ -131,14 +135,14 @@ class _ActiveBudgetViewState extends State<ActiveBudgetView> {
     final cycle = BudgetCycleHelper.currentCycleRange(
       now,
       settingsProvider.budgetCycleMode,
-      settingsProvider.budgetCycleStartDay
+      settingsProvider.budgetCycleStartDay,
     );
 
     // 2. Calculate Spend
     final double totalSpent = txProvider.getNetTotal(
       start: cycle.start,
       end: cycle.end,
-      type: 'expense'
+      type: 'expense',
     );
 
     // 3. Category Spends
@@ -150,7 +154,7 @@ class _ActiveBudgetViewState extends State<ActiveBudgetView> {
           t.timestamp.isAfter(
             cycle.start.subtract(const Duration(seconds: 1)),
           ) &&
-          t.timestamp.isBefore(cycle.end.add(const Duration(seconds: 1)))
+          t.timestamp.isBefore(cycle.end.add(const Duration(seconds: 1))),
     );
     for (var tx in cycleTxs) {
       if (tx.categoryId != null) {
@@ -179,6 +183,39 @@ class _ActiveBudgetViewState extends State<ActiveBudgetView> {
       if (_isEditing) return true;
       return c.budget != null && c.budget! > 0;
     }).toList();
+
+    void toggleEdit() {
+      if (_isEditing) {
+        // Save Changes
+        for (var entry in _editableBudgets.entries) {
+          final cat = catProvider.categories.firstWhere(
+            (c) => c.id == entry.key,
+          );
+          if (cat.budget != entry.value) {
+            catProvider.editCategory(cat.copyWith(budget: entry.value));
+          }
+        }
+        if (mounted) {
+          LedgrSnackbar.show(content: Text("Budgets updated"));
+          setState(() {
+            _isEditing = false;
+          });
+        }
+      } else {
+        // Enter Edit Mode
+        setState(() {
+          _editableBudgets.clear();
+          // Populate with current budgets
+          final allExpenseCats = catProvider.categories.where(
+            (c) => c.mode == TransactionMode.expense && !c.isDeleted,
+          );
+          for (var c in allExpenseCats) {
+            _editableBudgets[c.id] = c.budget ?? 0.0;
+          }
+          _isEditing = true;
+        });
+      }
+    }
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
@@ -403,82 +440,45 @@ class _ActiveBudgetViewState extends State<ActiveBudgetView> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Row(
-                  mainAxisAlignment: .spaceBetween,
+                  mainAxisAlignment: .start,
                   children: [
                     Text(
                       'BUDGET CATEGORIES',
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontSize: 14,
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.6,
-                        ),
-                        fontWeight: FontWeight.normal,
-                        letterSpacing: 2,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.5,
+                        color: Theme.of(context).colorScheme.secondary,
                       ),
                     ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: FadingDivider(
+                        thickness: 2,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.secondary.withValues(alpha: 0.5),
+                      ),
+                    ),
+                    const SizedBox(width: 2),
                     GestureDetector(
                       onTap: () async {
-                        if (_isEditing) {
-                          // Save Changes
-                          for (var entry in _editableBudgets.entries) {
-                            final cat = catProvider.categories.firstWhere(
-                              (c) => c.id == entry.key,
-                            );
-                            if (cat.budget != entry.value) {
-                              await catProvider.editCategory(
-                                cat.copyWith(budget: entry.value),
-                              );
-                            }
-                          }
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  "Budgets updated",
-                                  style: TextStyle(
-                                    color: theme.colorScheme.onTertiary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                backgroundColor: theme.colorScheme.tertiary,
-                                behavior: SnackBarBehavior.floating,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            );
-                            setState(() {
-                              _isEditing = false;
-                            });
-                          }
-                        } else {
-                          // Enter Edit Mode
-                          setState(() {
-                            _editableBudgets.clear();
-                            // Populate with current budgets
-                            final allExpenseCats = catProvider.categories.where(
-                              (c) =>
-                                  c.mode == TransactionMode.expense &&
-                                  !c.isDeleted,
-                            );
-                            for (var c in allExpenseCats) {
-                              _editableBudgets[c.id] = c.budget ?? 0.0;
-                            }
-                            _isEditing = true;
-                          });
-                        }
+                        PaywallInterceptor.execute(
+                          context: context,
+                          feature: PaywallFeature.categoryBudgets,
+                          onAllowed: () => toggleEdit(),
+                        );
                       },
                       child: AnimatedSwitcher(
                         duration: const Duration(milliseconds: 300),
                         child: Text(
                           _isEditing ? 'SAVE' : 'EDIT',
                           key: ValueKey(_isEditing),
-                          style: theme.textTheme.headlineMedium?.copyWith(
-                            fontSize: 14,
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 2,
-                          ),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.5,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
                         ),
                       ),
                     ),
@@ -705,7 +705,7 @@ class _ActiveBudgetViewState extends State<ActiveBudgetView> {
             ],
           ),
         ),
-      )
+      ),
     );
   }
 }

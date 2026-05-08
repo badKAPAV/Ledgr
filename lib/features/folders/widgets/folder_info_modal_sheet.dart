@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:wallzy/core/utils/ledgr_max/paywall/paywall_features.dart';
+import 'package:wallzy/core/utils/ledgr_max/paywall/paywall_interceptor.dart';
 import 'package:wallzy/features/folders/widgets/event_mode_settings_card.dart';
 import 'package:wallzy/features/folders/widgets/folder_budget_card.dart';
 import 'package:wallzy/features/folders/widgets/add_edit_folder_budget_modal_sheet.dart';
@@ -112,6 +114,9 @@ class _TagInfoModalSheetState extends State<TagInfoModalSheet> {
     Tag currentTag,
   ) {
     final nameController = TextEditingController(text: currentTag.name);
+    Color? selectedColor = currentTag.color != null
+        ? Color(currentTag.color!)
+        : null;
     String selectedIconKey = currentTag.iconKey ?? 'folder';
 
     final theme = Theme.of(context);
@@ -128,191 +133,203 @@ class _TagInfoModalSheetState extends State<TagInfoModalSheet> {
         builder: (context, setModalState) {
           return Container(
             padding: EdgeInsets.fromLTRB(
-              0,
               24,
-              0,
-              MediaQuery.of(context).viewInsets.bottom + 24,
+              20,
+              24,
+              MediaQuery.of(context).viewInsets.bottom + 32,
             ),
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,
               borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(32),
+                top: Radius.circular(28),
               ),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Row(
-                    children: [
-                      Text(
-                        "Edit Folder",
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        icon: const Icon(Icons.close_rounded),
-                        style: IconButton.styleFrom(
-                          backgroundColor: theme
-                              .colorScheme
-                              .surfaceContainerHighest
-                              .withValues(alpha: 0.5),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
-
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: TextField(
-                    controller: nameController,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                    decoration: InputDecoration(
-                      labelText: "Folder Name",
-                      hintText: "e.g. Groceries",
-                      filled: true,
-                      fillColor: theme.colorScheme.surfaceContainerHighest
-                          .withValues(alpha: 0.4),
-                      prefixIcon: Icon(
-                        Icons.label_outline_rounded,
-                        color: theme.colorScheme.primary,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide.none,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide(
-                          color: theme.colorScheme.primary,
-                          width: 2,
-                        ),
-                      ),
-                      floatingLabelStyle: TextStyle(
-                        color: theme.colorScheme.primary,
+                // Header Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "EDIT FOLDER",
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        letterSpacing: 1.2,
                         fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.outline,
                       ),
                     ),
-                  ),
+                    IconButton.filledTonal(
+                      onPressed: () => Navigator.pop(ctx),
+                      icon: const Icon(Icons.close_rounded, size: 20),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 24),
 
-                // Icon Picker
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Row(
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Folder Icon",
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
+                // 1st Row: Icon Picker & Folder Name
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (ctx) => GoalIconPickerSheet(
+                            selectedIconKey: selectedIconKey,
+                            onIconSelected: (key) =>
+                                setModalState(() => selectedIconKey = key),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "Choose an icon for this folder",
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const Spacer(),
-                      GestureDetector(
-                        onTap: () {
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (ctx) => GoalIconPickerSheet(
-                              selectedIconKey: selectedIconKey,
-                              onIconSelected: (key) {
-                                setModalState(() => selectedIconKey = key);
-                              },
-                            ),
-                          );
-                        },
-                        child: Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surfaceContainerHighest
-                                .withValues(alpha: 0.4),
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: theme.colorScheme.outlineVariant
-                                  .withValues(alpha: 0.5),
-                              width: 1,
-                            ),
-                          ),
-                          child: Center(
-                            child: HugeIcon(
-                              icon: GoalIconRegistry.getFolderIcon(
-                                selectedIconKey,
-                              ),
-                              size: 22,
-                              color: theme.colorScheme.primary,
-                              strokeWidth: 2,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
-
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 58,
-                    child: FilledButton(
-                      style: FilledButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(50),
-                        ),
-                        elevation: 0,
-                      ),
-                      onPressed: () async {
-                        final name = nameController.text.trim();
-                        if (name.isNotEmpty) {
-                          final updatedTag = currentTag.copyWith(
-                            name: name,
-                            iconKey: selectedIconKey,
-                          );
-
-                          await metaProvider.updateTag(updatedTag);
-
-                          if (ctx.mounted) Navigator.pop(ctx);
-                        }
+                        );
                       },
-                      child: const Text(
-                        "Save Changes",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                      child: SizedBox(
+                        width: 54,
+                        height: 54,
+                        child: Stack(
+                          alignment: .center,
+                          children: [
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color:
+                                    (selectedColor ??
+                                            theme.colorScheme.primaryContainer)
+                                        .withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color:
+                                      (selectedColor ??
+                                              theme.colorScheme.primary)
+                                          .withValues(alpha: 0.5),
+                                  width: 2,
+                                ),
+                              ),
+                              child: Center(
+                                child: HugeIcon(
+                                  icon: GoalIconRegistry.getFolderIcon(
+                                    selectedIconKey,
+                                  ),
+                                  size: 24,
+                                  color:
+                                      selectedColor ??
+                                      theme.colorScheme.primary,
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              right: 0,
+                              bottom: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: const Icon(
+                                  Icons.edit_rounded,
+                                  size: 12,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: TextField(
+                        controller: nameController,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: "eg. Paris trip",
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          hintStyle: TextStyle(
+                            fontFamily: 'geologica',
+                            color: theme.colorScheme.outlineVariant,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 32),
+
+                // 2nd Row: Folder Colors (Rounded Rectangles)
+                SizedBox(
+                  height: 40,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: Tag.defaultTagColors.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 10),
+                    itemBuilder: (context, index) {
+                      final color = Tag.defaultTagColors[index];
+                      final isSelected = color == selectedColor;
+                      return GestureDetector(
+                        onTap: () => setModalState(() => selectedColor = color),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 250),
+                          width: 60, // Rectangular width
+                          decoration: BoxDecoration(
+                            color: color,
+                            borderRadius: BorderRadius.circular(40),
+                            border: isSelected
+                                ? Border.all(
+                                    color: theme.colorScheme.onSurface,
+                                    width: 3,
+                                  )
+                                : null,
+                          ),
+                          child: isSelected
+                              ? Icon(
+                                  Icons.check,
+                                  color:
+                                      ThemeData.estimateBrightnessForColor(
+                                            color,
+                                          ) ==
+                                          Brightness.dark
+                                      ? Colors.white
+                                      : Colors.black87,
+                                )
+                              : null,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+                const SizedBox(height: 40),
+
+                // Action Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: FilledButton(
+                    onPressed: () async {
+                      final name = nameController.text.trim();
+                      if (name.isNotEmpty) {
+                        final updatedTag = currentTag.copyWith(
+                          name: name,
+                          iconKey: selectedIconKey,
+                          color: selectedColor?.value,
+                        );
+
+                        await metaProvider.updateTag(updatedTag);
+
+                        if (ctx.mounted) Navigator.pop(ctx);
+                      }
+                    },
+                    child: const Text("Update Folder"),
                   ),
                 ),
               ],
@@ -626,7 +643,13 @@ class _SetBudgetPromptSheet extends StatelessWidget {
         ),
       ),
       child: InkWell(
-        onTap: onTap,
+        onTap: () {
+          PaywallInterceptor.execute(
+            context: context,
+            feature: PaywallFeature.folderBudgets,
+            onAllowed: onTap,
+          );
+        },
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

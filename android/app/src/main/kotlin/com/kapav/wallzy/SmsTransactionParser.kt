@@ -265,7 +265,9 @@ object SmsTransactionParser {
             append("")
         }
 
-        val notification = NotificationCompat.Builder(context, channelId)
+        val canUseQuickSave = flutterPrefs.getBoolean("flutter.canUseQuickSave", false)
+
+        val builder = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_stat_ledgr)
             .setContentTitle(title)
             .setContentText(content)
@@ -273,8 +275,12 @@ object SmsTransactionParser {
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .addAction(0, "Edit", pendingIntent)
-            .addAction(0, "Quick Save", getQuickSavePendingIntent(context, notificationId, transactionJson))
-            .build()
+
+        if (canUseQuickSave) {
+            builder.addAction(0, "Quick Save", getQuickSavePendingIntent(context, notificationId, transactionJson))
+        }
+
+        val notification = builder.build()
 
         notificationManager.notify(notificationId, notification)
     }

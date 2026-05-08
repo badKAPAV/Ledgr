@@ -6,6 +6,7 @@ import 'package:android_intent_plus/flag.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
+import 'package:wallzy/common/snackbar/ledgr_snackbar.dart';
 import 'package:wallzy/features/auth/provider/auth_provider.dart';
 import 'package:wallzy/features/auth/screens/login_screen.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -69,9 +70,10 @@ class _AuthEmailScreenState extends State<AuthEmailScreen> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error sending link: $e')));
+        LedgrSnackbar.show(
+          context: context,
+          content: Text('Error sending link: $e'),
+        );
       }
     }
   }
@@ -82,9 +84,10 @@ class _AuthEmailScreenState extends State<AuthEmailScreen> {
       await authProvider.signInWithGoogle();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Google Sign In failed: $e')));
+        LedgrSnackbar.show(
+          context: context,
+          content: Text('Google Sign In failed: $e'),
+        );
       }
     }
   }
@@ -260,7 +263,7 @@ class _AuthEmailScreenState extends State<AuthEmailScreen> {
             ],
           ),
         ],
-      )
+      ),
     );
   }
 
@@ -447,7 +450,7 @@ class _AuthEmailScreenState extends State<AuthEmailScreen> {
             ),
           ],
         ),
-      )
+      ),
     );
   }
 
@@ -570,7 +573,7 @@ class _AuthEmailScreenState extends State<AuthEmailScreen> {
             ).animate().fadeIn(delay: 400.ms),
           ],
         ),
-      )
+      ),
     );
   }
 }

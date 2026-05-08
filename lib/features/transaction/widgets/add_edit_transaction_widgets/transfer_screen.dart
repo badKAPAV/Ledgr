@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
+import 'package:wallzy/common/snackbar/ledgr_snackbar.dart';
 import 'package:wallzy/features/accounts/models/account.dart';
 import 'package:wallzy/features/accounts/provider/account_provider.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
@@ -41,25 +42,37 @@ class TransferScreenState extends State<TransferScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     if (_fromAccount == null || _toAccount == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select both accounts.')),
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   const SnackBar(content: Text('Please select both accounts.')),
+      // );
+      LedgrSnackbar.show(
+        context: context,
+        content: Text('Please select both accounts.'),
       );
       return;
     }
 
     if (_fromAccount!.id == _toAccount!.id) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('From and To accounts cannot be the same.'),
-        ),
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   const SnackBar(
+      //     content: Text('From and To accounts cannot be the same.'),
+      //   ),
+      // );
+      LedgrSnackbar.show(
+        context: context,
+        content: Text('From and To accounts cannot be the same.'),
       );
       return;
     }
 
     final amount = double.tryParse(_amountController.text.trim()) ?? 0.0;
     if (amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid amount.')),
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   const SnackBar(content: Text('Please enter a valid amount.')),
+      // );
+      LedgrSnackbar.show(
+        context: context,
+        content: Text('Please enter a valid amount.'),
       );
       return;
     }
@@ -80,7 +93,7 @@ class TransferScreenState extends State<TransferScreen> {
       accountId: _fromAccount!.id,
       purchaseType: _fromAccount!.accountType == 'credit' ? 'credit' : 'debit',
       transferGroupId: transferGroupId,
-      currency: currencyCode
+      currency: currencyCode,
     );
 
     final isCreditRepayment = _toAccount?.accountType == 'credit';
@@ -98,7 +111,7 @@ class TransferScreenState extends State<TransferScreen> {
       accountId: _toAccount!.id,
       purchaseType: 'debit',
       transferGroupId: transferGroupId,
-      currency: currencyCode
+      currency: currencyCode,
     );
 
     await txProvider.addTransfer(fromTransaction, toTransaction);
@@ -106,11 +119,9 @@ class TransferScreenState extends State<TransferScreen> {
 
     if (stayOnPage) {
       reset();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Transfer saved! Record another.'),
-          duration: Duration(seconds: 2),
-        ),
+      LedgrSnackbar.show(
+        context: context,
+        content: Text('Transfer saved! Record another.'),
       );
     } else {
       Navigator.of(context).pop(true);
@@ -120,7 +131,7 @@ class TransferScreenState extends State<TransferScreen> {
   void _showAccountPicker(bool isFromAccount) {
     final accountProvider = Provider.of<AccountProvider>(
       context,
-      listen: false
+      listen: false,
     );
     final accounts = accountProvider.accounts;
     showCustomAccountModal(context, accounts, (acc) {
@@ -147,7 +158,7 @@ class TransferScreenState extends State<TransferScreen> {
       context: context,
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
-      initialDate: _selectedDate
+      initialDate: _selectedDate,
     );
     if (picked != null) {
       setState(() => _selectedDate = picked);
@@ -265,7 +276,7 @@ class TransferScreenState extends State<TransferScreen> {
             ),
           ),
         ],
-      )
+      ),
     );
   }
 }

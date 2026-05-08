@@ -216,17 +216,33 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen>
                       borderRadius: BorderRadius.circular(50),
                     ),
                   ),
-                  onPressed: txProvider.isSaving
+                  onPressed: (txProvider.isSaving || txProvider.isUploadingImage)
                       ? null
                       : () => _saveTransaction(currencyCode),
-                  child: txProvider.isSaving
-                      ? const SizedBox(
-                          height: 24,
-                          width: 24,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 3,
-                          ),
+                  child: (txProvider.isSaving || txProvider.isUploadingImage)
+                      ? Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 3,
+                              ),
+                            ),
+                            if (txProvider.isUploadingImage) ...[
+                              const SizedBox(width: 12),
+                              const Text(
+                                'Uploading image...',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ]
+                          ],
                         )
                       : Text(
                           'Save Changes',
@@ -257,7 +273,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen>
                         ),
                         padding: EdgeInsets.zero,
                       ),
-                      onPressed: txProvider.isSaving
+                      onPressed: (txProvider.isSaving || txProvider.isUploadingImage)
                           ? null
                           : () => _saveTransaction(
                               currencyCode,
@@ -286,17 +302,33 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen>
                           borderRadius: BorderRadius.circular(50),
                         ),
                       ),
-                      onPressed: txProvider.isSaving
+                      onPressed: (txProvider.isSaving || txProvider.isUploadingImage)
                           ? null
                           : () => _saveTransaction(currencyCode),
-                      child: txProvider.isSaving
-                          ? const SizedBox(
-                              height: 24,
-                              width: 24,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 3,
-                              ),
+                      child: (txProvider.isSaving || txProvider.isUploadingImage)
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const SizedBox(
+                                  height: 24,
+                                  width: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 3,
+                                  ),
+                                ),
+                                if (txProvider.isUploadingImage) ...[
+                                  const SizedBox(width: 12),
+                                  const Text(
+                                    'Uploading image...',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ]
+                              ],
                             )
                           : const Text(
                               'Confirm',

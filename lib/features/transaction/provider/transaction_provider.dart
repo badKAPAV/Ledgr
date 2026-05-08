@@ -14,6 +14,7 @@ import 'package:wallzy/features/people/models/person.dart';
 import 'package:wallzy/features/folders/models/folder.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
 import 'package:wallzy/core/services/notification_service.dart';
+import 'package:wallzy/features/categories/provider/category_provider.dart';
 
 class TransactionFilter {
   final DateTime? startDate;
@@ -132,16 +133,19 @@ class TransactionProvider with ChangeNotifier, WidgetsBindingObserver {
   AuthProvider authProvider;
   AccountProvider accountProvider;
   SettingsProvider settingsProvider;
+  CategoryProvider categoryProvider;
   StreamSubscription? _transactionSubscription;
 
   List<TransactionModel> _transactions = [];
   bool _isLoading = true;
   bool _isSaving = false;
+  bool _isUploadingImage = false;
   String? _error;
 
   List<TransactionModel> get transactions => _transactions;
   bool get isLoading => _isLoading || authProvider.isAuthLoading;
   bool get isSaving => _isSaving;
+  bool get isUploadingImage => _isUploadingImage;
   String? get error => _error;
 
   String? _lastUserId;
@@ -150,6 +154,7 @@ class TransactionProvider with ChangeNotifier, WidgetsBindingObserver {
     required this.authProvider,
     required this.accountProvider,
     required this.settingsProvider,
+    required this.categoryProvider,
   }) {
     _lastUserId = authProvider.user?.uid;
 
@@ -194,6 +199,16 @@ class TransactionProvider with ChangeNotifier, WidgetsBindingObserver {
 
   void updateSettingsProvider(SettingsProvider newSettingsProvider) {
     settingsProvider = newSettingsProvider;
+    notifyListeners();
+  }
+
+  void updateCategoryProvider(CategoryProvider newCategoryProvider) {
+    categoryProvider = newCategoryProvider;
+    notifyListeners();
+  }
+
+  void setUploadingImage(bool value) {
+    _isUploadingImage = value;
     notifyListeners();
   }
 
@@ -528,6 +543,50 @@ class TransactionProvider with ChangeNotifier, WidgetsBindingObserver {
         }
       }
     }
+
+    // --- Category Budget Check ---
+    if (settingsProvider.enableCategoryLimitAlert) {
+      final prefs = await SharedPreferences.getInstance();
+      final cycle = BudgetCycleHelper.currentCycleRange(
+        DateTime.now(),
+        settingsProvider.budgetCycleMode,
+        settingsProvider.budgetCycleStartDay,
+      );
+      final String currencySymbol = settingsProvider.currencySymbol;
+      final cycleKey = "${cycle.start.toIso8601String()}_${cycle.end.toIso8601String()}";
+
+      final monthResult = getFilteredResults(
+        TransactionFilter(startDate: cycle.start, endDate: cycle.end),
+      );
+
+      for (var category in categoryProvider.categories) {
+        if (category.budget != null && category.budget! > 0) {
+          double categorySpent = 0;
+          for (var tx in monthResult.transactions) {
+            if (tx.type == 'expense' && (tx.categoryId == category.id || tx.category == category.name)) {
+              if (!tx.excludeFromBudgets) {
+                categorySpent += tx.amount;
+              }
+            }
+          }
+
+          if (categorySpent >= category.budget!) {
+            String alertKey = 'last_category_alert_${category.id}';
+            String? lastAlertCycle = prefs.getString(alertKey);
+
+            if (lastAlertCycle != cycleKey) {
+              await NotificationService().showLimitAlert(
+                id: category.id.hashCode,
+                title: "${category.name} Budget Exceeded!",
+                body: "You've spent $currencySymbol${categorySpent.toStringAsFixed(0)} on ${category.name} this cycle. (Limit: $currencySymbol${category.budget!.toStringAsFixed(0)})",
+              );
+              await prefs.setString(alertKey, cycleKey);
+            }
+          }
+        }
+      }
+    }
+    // -----------------------------
 
     // 3. Reschedule Summary (Daily)
     if (settingsProvider.enableDailySummary) {

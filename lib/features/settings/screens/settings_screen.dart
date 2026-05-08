@@ -5,19 +5,20 @@ import 'package:flutter/services.dart'; // For Haptics
 import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import 'package:wallzy/common/app_lock/app_lock_provider.dart';
+import 'package:wallzy/common/snackbar/ledgr_snackbar.dart';
 import 'package:wallzy/common/widgets/custom_alert_dialog.dart';
 import 'package:wallzy/core/themes/theme_provider.dart';
+import 'package:wallzy/core/utils/ledgr_max/paywall/paywall_features.dart';
+import 'package:wallzy/core/utils/ledgr_max/paywall/paywall_interceptor.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/features/auth/provider/auth_provider.dart';
 import 'package:wallzy/common/widgets/messages_permission_banner.dart';
 import 'package:wallzy/core/utils/budget_cycle_helper.dart';
 import 'package:wallzy/features/settings/screens/currency_selection_screen.dart';
+import 'package:wallzy/features/settings/widgets/ledgr_max_settings_widget.dart';
 import 'package:wallzy/features/settings/widgets/theme_selector_widgets.dart';
 import 'package:wallzy/core/services/notification_service.dart';
 import 'package:wallzy/features/dashboard/provider/home_widgets_provider.dart';
-import 'package:wallzy/features/revenuecat/services/revenuecat_service.dart';
-import 'package:wallzy/features/revenuecat/provider/revenuecat_provider.dart';
-import 'package:wallzy/features/transaction/provider/transaction_provider.dart';
 import 'package:wallzy/common/switch/custom_switch.dart';
 
 String _getDaySuffix(int day) {
@@ -139,8 +140,6 @@ class _AppSettingsScreenState extends State<AppSettingsScreen>
     final theme = Theme.of(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
 
-    final screenWidth = MediaQuery.of(context).size.width;
-
     return Scaffold(
       appBar: AppBar(title: const Text("Settings"), centerTitle: false),
       body: ListView(
@@ -149,61 +148,10 @@ class _AppSettingsScreenState extends State<AppSettingsScreen>
         children: [
           const MessagesPermissionBanner(),
 
-          _SectionHeader(title: "Ledgr Max"),
-          const SizedBox(height: 8),
-          _SettingsContainer(
-            children: [
-              Consumer<RevenueCatProvider>(
-                builder: (context, rcProvider, _) {
-                  final isPro = rcProvider.isPro;
-                  return ListTile(
-                    leading: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.withValues(alpha: 0.2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.workspace_premium_rounded,
-                        color: Colors.amber,
-                        size: 20,
-                      ),
-                    ),
-                    title: Text(
-                      isPro ? "Manage Subscription" : "Upgrade to Ledgr Max",
-                      style: TextStyle(
-                        fontFamily: 'momo',
-                        fontWeight: FontWeight.w600,
-                        color: isPro
-                            ? theme.colorScheme.onSurface
-                            : Colors.amber.shade700,
-                      ),
-                    ),
-                    subtitle: Text(
-                      isPro
-                          ? "You are currently on the Ledgr Max plan."
-                          : "Unlock unlimited syncing, AI automation, and more.",
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontSize: 12,
-                      ),
-                    ),
-                    trailing: const Icon(Icons.chevron_right_rounded),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    onTap: () {
-                      if (isPro) {
-                        RevenueCatService().showCustomerCenter();
-                      } else {
-                        RevenueCatService().presentPaywall();
-                      }
-                    },
-                  );
-                },
-              ),
-            ],
-          ),
+          // _SectionHeader(title: "Ledgr Max"),
+          // const SizedBox(height: 8),
+          LedgrMaxSettingsButton(),
+
           const SizedBox(height: 24),
 
           _SectionHeader(title: "Display"),
@@ -292,7 +240,15 @@ class _AppSettingsScreenState extends State<AppSettingsScreen>
                             ),
                           ],
                           onChanged: (mode) {
-                            if (mode != null) settings.setBudgetCycleMode(mode);
+                            PaywallInterceptor.execute(
+                              context: context,
+                              feature: PaywallFeature.budgetCycle,
+                              onAllowed: () {
+                                if (mode != null) {
+                                  settings.setBudgetCycleMode(mode);
+                                }
+                              },
+                            );
                           },
                         ),
                       ),
@@ -387,11 +343,9 @@ class _AppSettingsScreenState extends State<AppSettingsScreen>
                               final granted = await NotificationService()
                                   .requestPermission();
                               if (!granted && context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Notification permission denied. Enable in device settings.',
-                                    ),
+                                LedgrSnackbar.show(
+                                  content: Text(
+                                    'Notification permission denied. Enable in device settings.',
                                   ),
                                 );
                                 return;
@@ -406,11 +360,9 @@ class _AppSettingsScreenState extends State<AppSettingsScreen>
                             final granted = await NotificationService()
                                 .requestPermission();
                             if (!granted && context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Notification permission denied. Enable in device settings.',
-                                  ),
+                              LedgrSnackbar.show(
+                                content: Text(
+                                  'Notification permission denied. Enable in device settings.',
                                 ),
                               );
                               return;
@@ -445,11 +397,9 @@ class _AppSettingsScreenState extends State<AppSettingsScreen>
                               final granted = await NotificationService()
                                   .requestPermission();
                               if (!granted && context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Notification permission denied. Enable in device settings.',
-                                    ),
+                                LedgrSnackbar.show(
+                                  content: Text(
+                                    'Notification permission denied. Enable in device settings.',
                                   ),
                                 );
                                 return;
@@ -464,11 +414,9 @@ class _AppSettingsScreenState extends State<AppSettingsScreen>
                             final granted = await NotificationService()
                                 .requestPermission();
                             if (!granted && context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Notification permission denied. Enable in device settings.',
-                                  ),
+                              LedgrSnackbar.show(
+                                content: Text(
+                                  'Notification permission denied. Enable in device settings.',
                                 ),
                               );
                               return;
@@ -479,7 +427,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen>
                       ),
                       ListTile(
                         title: Text(
-                          "Daily Spending Summary",
+                          "Category Budget Limit Alert",
                           style: TextStyle(
                             color: theme.colorScheme.onSurface,
                             fontWeight: FontWeight.w600,
@@ -487,191 +435,244 @@ class _AppSettingsScreenState extends State<AppSettingsScreen>
                           ),
                         ),
                         subtitle: Text(
-                          "Daily summary of your spending at 10 PM",
+                          "Get notified when you exceed a category budget",
                           style: TextStyle(
                             color: theme.colorScheme.onSurfaceVariant,
                             fontSize: 12,
                           ),
                         ),
                         leading: const HugeIcon(
-                          icon: HugeIcons.strokeRoundedCalendar03,
+                          icon: HugeIcons.strokeRoundedAlert02,
                         ),
                         trailing: LedgrSwitch(
-                          value: settings.enableDailySummary,
+                          value: settings.enableCategoryLimitAlert,
                           onChanged: (val) async {
-                            if (val) {
-                              final granted = await NotificationService()
-                                  .requestPermission();
-                              if (!granted && context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Notification permission denied. Enable in device settings.',
-                                    ),
-                                  ),
-                                );
-                                return;
-                              }
-                            }
-                            settings.setEnableDailySummary(val);
+                            PaywallInterceptor.execute(
+                              context: context,
+                              feature: PaywallFeature.categoryBudgets,
+                              onAllowed: () async {
+                                if (val) {
+                                  final granted = await NotificationService()
+                                      .requestPermission();
+                                  if (!granted && context.mounted) {
+                                    LedgrSnackbar.show(
+                                      content: Text(
+                                        'Notification permission denied. Enable in device settings.',
+                                      ),
+                                    );
+                                    return;
+                                  }
+                                }
+                                settings.setEnableCategoryLimitAlert(val);
+                              },
+                            );
                           },
                         ),
                         onTap: () async {
-                          final val = !settings.enableDailySummary;
+                          final val = !settings.enableCategoryLimitAlert;
                           if (val) {
                             final granted = await NotificationService()
                                 .requestPermission();
                             if (!granted && context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Notification permission denied. Enable in device settings.',
-                                  ),
+                              LedgrSnackbar.show(
+                                content: Text(
+                                  'Notification permission denied. Enable in device settings.',
                                 ),
                               );
                               return;
                             }
                           }
-                          settings.setEnableDailySummary(val);
+                          settings.setEnableCategoryLimitAlert(val);
                         },
                       ),
-                      _DebugNotificationActions(
-                        type: 'daily',
-                        isEnabled: settings.enableDailySummary,
-                        debugTime: settings.dailyDebugTime,
-                        onTimeChanged: (time) =>
-                            settings.setDailyDebugTime(time),
-                      ),
-                      ListTile(
-                        title: Text(
-                          "Weekly Spending Summary",
-                          style: TextStyle(
-                            color: theme.colorScheme.onSurface,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                        subtitle: Text(
-                          "Weekly summary of your spending (Sunday 10 PM)",
-                          style: TextStyle(
-                            color: theme.colorScheme.onSurfaceVariant,
-                            fontSize: 12,
-                          ),
-                        ),
-                        leading: const HugeIcon(
-                          icon: HugeIcons.strokeRoundedCalendar02,
-                        ),
-                        trailing: LedgrSwitch(
-                          value: settings.enableWeeklySummary,
-                          onChanged: (val) async {
-                            if (val) {
-                              final granted = await NotificationService()
-                                  .requestPermission();
-                              if (!granted && context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Notification permission denied. Enable in device settings.',
-                                    ),
-                                  ),
-                                );
-                                return;
-                              }
-                            }
-                            settings.setEnableWeeklySummary(val);
-                          },
-                        ),
-                        onTap: () async {
-                          final val = !settings.enableWeeklySummary;
-                          if (val) {
-                            final granted = await NotificationService()
-                                .requestPermission();
-                            if (!granted && context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Notification permission denied. Enable in device settings.',
-                                  ),
-                                ),
-                              );
-                              return;
-                            }
-                          }
-                          settings.setEnableWeeklySummary(val);
-                        },
-                      ),
-                      _DebugNotificationActions(
-                        type: 'weekly',
-                        isEnabled: settings.enableWeeklySummary,
-                        debugTime: settings.weeklyDebugTime,
-                        onTimeChanged: (time) =>
-                            settings.setWeeklyDebugTime(time),
-                      ),
-                      ListTile(
-                        title: Text(
-                          "Monthly Spending Summary",
-                          style: TextStyle(
-                            color: theme.colorScheme.onSurface,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                        subtitle: Text(
-                          "Monthly summary of your spending (Last day at 10 PM)",
-                          style: TextStyle(
-                            color: theme.colorScheme.onSurfaceVariant,
-                            fontSize: 12,
-                          ),
-                        ),
-                        leading: const HugeIcon(
-                          icon: HugeIcons.strokeRoundedCalendar01,
-                        ),
-                        trailing: LedgrSwitch(
-                          value: settings.enableMonthlySummary,
-                          onChanged: (val) async {
-                            if (val) {
-                              final granted = await NotificationService()
-                                  .requestPermission();
-                              if (!granted && context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Notification permission denied. Enable in device settings.',
-                                    ),
-                                  ),
-                                );
-                                return;
-                              }
-                            }
-                            settings.setEnableMonthlySummary(val);
-                          },
-                        ),
-                        onTap: () async {
-                          final val = !settings.enableMonthlySummary;
-                          if (val) {
-                            final granted = await NotificationService()
-                                .requestPermission();
-                            if (!granted && context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Notification permission denied. Enable in device settings.',
-                                  ),
-                                ),
-                              );
-                              return;
-                            }
-                          }
-                          settings.setEnableMonthlySummary(val);
-                        },
-                      ),
-                      _DebugNotificationActions(
-                        type: 'monthly',
-                        isEnabled: settings.enableMonthlySummary,
-                        debugTime: settings.monthlyDebugTime,
-                        onTimeChanged: (time) =>
-                            settings.setMonthlyDebugTime(time),
-                      ),
+
+                      // ========== Summary Notifications Section Starts ============
+
+                      // ListTile(
+                      //   title: Text(
+                      //     "Daily Spending Summary",
+                      //     style: TextStyle(
+                      //       color: theme.colorScheme.onSurface,
+                      //       fontWeight: FontWeight.w600,
+                      //       fontSize: 14,
+                      //     ),
+                      //   ),
+                      //   subtitle: Text(
+                      //     "Daily summary of your spending at 10 PM",
+                      //     style: TextStyle(
+                      //       color: theme.colorScheme.onSurfaceVariant,
+                      //       fontSize: 12,
+                      //     ),
+                      //   ),
+                      //   leading: const HugeIcon(
+                      //     icon: HugeIcons.strokeRoundedCalendar03,
+                      //   ),
+                      //   trailing: LedgrSwitch(
+                      //     value: settings.enableDailySummary,
+                      //     onChanged: (val) async {
+                      //       if (val) {
+                      //         final granted = await NotificationService()
+                      //             .requestPermission();
+                      //         if (!granted && context.mounted) {
+                      //           LedgrSnackbar.show(
+                      //             content: Text(
+                      //               'Notification permission denied. Enable in device settings.',
+                      //             ),
+                      //           );
+                      //           return;
+                      //         }
+                      //       }
+                      //       settings.setEnableDailySummary(val);
+                      //     },
+                      //   ),
+                      //   onTap: () async {
+                      //     final val = !settings.enableDailySummary;
+                      //     if (val) {
+                      //       final granted = await NotificationService()
+                      //           .requestPermission();
+                      //       if (!granted && context.mounted) {
+                      //         LedgrSnackbar.show(
+                      //           content: Text(
+                      //             'Notification permission denied. Enable in device settings.',
+                      //           ),
+                      //         );
+                      //         return;
+                      //       }
+                      //     }
+                      //     settings.setEnableDailySummary(val);
+                      //   },
+                      // ),
+                      // _DebugNotificationActions(
+                      //   type: 'daily',
+                      //   isEnabled: settings.enableDailySummary,
+                      //   debugTime: settings.dailyDebugTime,
+                      //   onTimeChanged: (time) =>
+                      //       settings.setDailyDebugTime(time),
+                      // ),
+                      // ListTile(
+                      //   title: Text(
+                      //     "Weekly Spending Summary",
+                      //     style: TextStyle(
+                      //       color: theme.colorScheme.onSurface,
+                      //       fontWeight: FontWeight.w600,
+                      //       fontSize: 14,
+                      //     ),
+                      //   ),
+                      //   subtitle: Text(
+                      //     "Weekly summary of your spending (Sunday 10 PM)",
+                      //     style: TextStyle(
+                      //       color: theme.colorScheme.onSurfaceVariant,
+                      //       fontSize: 12,
+                      //     ),
+                      //   ),
+                      //   leading: const HugeIcon(
+                      //     icon: HugeIcons.strokeRoundedCalendar02,
+                      //   ),
+                      //   trailing: LedgrSwitch(
+                      //     value: settings.enableWeeklySummary,
+                      //     onChanged: (val) async {
+                      //       if (val) {
+                      //         final granted = await NotificationService()
+                      //             .requestPermission();
+                      //         if (!granted && context.mounted) {
+                      //           LedgrSnackbar.show(
+                      //             content: Text(
+                      //               'Notification permission denied. Enable in device settings.',
+                      //             ),
+                      //           );
+                      //           return;
+                      //         }
+                      //       }
+                      //       settings.setEnableWeeklySummary(val);
+                      //     },
+                      //   ),
+                      //   onTap: () async {
+                      //     final val = !settings.enableWeeklySummary;
+                      //     if (val) {
+                      //       final granted = await NotificationService()
+                      //           .requestPermission();
+                      //       if (!granted && context.mounted) {
+                      //         LedgrSnackbar.show(
+                      //           content: Text(
+                      //             'Notification permission denied. Enable in device settings.',
+                      //           ),
+                      //         );
+                      //         return;
+                      //       }
+                      //     }
+                      //     settings.setEnableWeeklySummary(val);
+                      //   },
+                      // ),
+                      // _DebugNotificationActions(
+                      //   type: 'weekly',
+                      //   isEnabled: settings.enableWeeklySummary,
+                      //   debugTime: settings.weeklyDebugTime,
+                      //   onTimeChanged: (time) =>
+                      //       settings.setWeeklyDebugTime(time),
+                      // ),
+                      // ListTile(
+                      //   title: Text(
+                      //     "Monthly Spending Summary",
+                      //     style: TextStyle(
+                      //       color: theme.colorScheme.onSurface,
+                      //       fontWeight: FontWeight.w600,
+                      //       fontSize: 14,
+                      //     ),
+                      //   ),
+                      //   subtitle: Text(
+                      //     "Monthly summary of your spending (Last day at 10 PM)",
+                      //     style: TextStyle(
+                      //       color: theme.colorScheme.onSurfaceVariant,
+                      //       fontSize: 12,
+                      //     ),
+                      //   ),
+                      //   leading: const HugeIcon(
+                      //     icon: HugeIcons.strokeRoundedCalendar01,
+                      //   ),
+                      //   trailing: LedgrSwitch(
+                      //     value: settings.enableMonthlySummary,
+                      //     onChanged: (val) async {
+                      //       if (val) {
+                      //         final granted = await NotificationService()
+                      //             .requestPermission();
+                      //         if (!granted && context.mounted) {
+                      //           LedgrSnackbar.show(
+                      //             content: Text(
+                      //               'Notification permission denied. Enable in device settings.',
+                      //             ),
+                      //           );
+                      //           return;
+                      //         }
+                      //       }
+                      //       settings.setEnableMonthlySummary(val);
+                      //     },
+                      //   ),
+                      //   onTap: () async {
+                      //     final val = !settings.enableMonthlySummary;
+                      //     if (val) {
+                      //       final granted = await NotificationService()
+                      //           .requestPermission();
+                      //       if (!granted && context.mounted) {
+                      //         LedgrSnackbar.show(
+                      //           content: Text(
+                      //             'Notification permission denied. Enable in device settings.',
+                      //           ),
+                      //         );
+                      //         return;
+                      //       }
+                      //     }
+                      //     settings.setEnableMonthlySummary(val);
+                      //   },
+                      // ),
+                      // _DebugNotificationActions(
+                      //   type: 'monthly',
+                      //   isEnabled: settings.enableMonthlySummary,
+                      //   debugTime: settings.monthlyDebugTime,
+                      //   onTimeChanged: (time) =>
+                      //       settings.setMonthlyDebugTime(time),
+                      // ),
+
+                      // ========== Summary Notifications Section Ends ============
                     ],
                   );
                 },
@@ -689,10 +690,18 @@ class _AppSettingsScreenState extends State<AppSettingsScreen>
                     children: [
                       ListTile(
                         onTap: _hasPermission
-                            ? () => settings.setAutoRecordTransactions(
-                                !settings.autoRecordTransactions,
+                            ? () => PaywallInterceptor.execute(
+                                context: context,
+                                feature: PaywallFeature.autosave,
+                                onAllowed: () {
+                                  settings.setAutoRecordTransactions(
+                                    !settings.autoRecordTransactions,
+                                  );
+                                },
                               )
-                            : null,
+                            : () => MessagesPermissionBanner.showInstructions(
+                                context,
+                              ),
                         title: Text(
                           "Auto-save transactions",
                           style: TextStyle(
@@ -734,8 +743,17 @@ class _AppSettingsScreenState extends State<AppSettingsScreen>
                           value:
                               _hasPermission && settings.autoRecordTransactions,
                           onChanged: _hasPermission
-                              ? (val) => settings.setAutoRecordTransactions(val)
-                              : null,
+                              ? (val) => PaywallInterceptor.execute(
+                                  context: context,
+                                  feature: PaywallFeature.autosave,
+                                  onAllowed: () {
+                                    settings.setAutoRecordTransactions(val);
+                                  },
+                                )
+                              : (val) =>
+                                    MessagesPermissionBanner.showInstructions(
+                                      context,
+                                    ),
                           // activeThumbColor: theme.colorScheme.primary,
                           // activeTrackColor: theme.colorScheme.primaryContainer,
                           // inactiveThumbColor: theme.colorScheme.outline,
@@ -746,40 +764,40 @@ class _AppSettingsScreenState extends State<AppSettingsScreen>
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
-                      if (!_hasPermission) ...[
-                        Divider(
-                          height: 1,
-                          indent: 16,
-                          endIndent: 16,
-                          color: theme.colorScheme.outlineVariant.withAlpha(
-                            128,
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              SizedBox(
-                                width: screenWidth * 0.4,
-                                child: Text(
-                                  "Notification access is required for this feature.",
-                                  maxLines: 2,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.orange,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                              MessagesPermissionBanner(isSmall: true),
-                            ],
-                          ),
-                        ),
-                      ],
+                      // if (!_hasPermission) ...[
+                      //   Divider(
+                      //     height: 1,
+                      //     indent: 16,
+                      //     endIndent: 16,
+                      //     color: theme.colorScheme.outlineVariant.withAlpha(
+                      //       128,
+                      //     ),
+                      //   ),
+                      //   Padding(
+                      //     padding: EdgeInsets.symmetric(
+                      //       horizontal: 16,
+                      //       vertical: 8,
+                      //     ),
+                      //     child: Row(
+                      //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      //       children: [
+                      //         SizedBox(
+                      //           width: screenWidth * 0.4,
+                      //           child: Text(
+                      //             "Notification access is required for this feature.",
+                      //             maxLines: 2,
+                      //             style: TextStyle(
+                      //               fontSize: 12,
+                      //               color: Colors.orange,
+                      //               fontWeight: FontWeight.w500,
+                      //             ),
+                      //           ),
+                      //         ),
+                      //         MessagesPermissionBanner(isSmall: true),
+                      //       ],
+                      //     ),
+                      //   ),
+                      // ],
                     ],
                   );
                 },
@@ -853,8 +871,8 @@ class _AppSettingsScreenState extends State<AppSettingsScreen>
                     ).toggleLock(val);
 
                     if (!success && mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Authentication failed')),
+                      LedgrSnackbar.show(
+                        content: Text('Authentication failed'),
                       );
                     }
                   },
@@ -870,9 +888,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen>
                   ).toggleLock(val);
 
                   if (!success && mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Authentication failed')),
-                    );
+                    LedgrSnackbar.show(content: Text('Authentication failed'));
                   }
                 },
               ),
@@ -1142,157 +1158,151 @@ class _SettingsContainer extends StatelessWidget {
   }
 }
 
-class _DebugNotificationActions extends StatelessWidget {
-  final String type;
-  final bool isEnabled;
-  final String? debugTime;
-  final Function(String?) onTimeChanged;
+// class _DebugNotificationActions extends StatelessWidget {
+//   final String type;
+//   final bool isEnabled;
+//   final String? debugTime;
+//   final Function(String?) onTimeChanged;
 
-  const _DebugNotificationActions({
-    required this.type,
-    required this.isEnabled,
-    required this.debugTime,
-    required this.onTimeChanged,
-  });
+//   const _DebugNotificationActions({
+//     required this.type,
+//     required this.isEnabled,
+//     required this.debugTime,
+//     required this.onTimeChanged,
+//   });
 
-  @override
-  Widget build(BuildContext context) {
-    if (!isEnabled) return const SizedBox.shrink();
+//   @override
+//   Widget build(BuildContext context) {
+//     if (!isEnabled) return const SizedBox.shrink();
 
-    return Padding(
-      padding: const EdgeInsets.only(left: 72, right: 16, bottom: 8),
-      child: Row(
-        children: [
-          _ActionButton(
-            label: "Test Now",
-            icon: Icons.play_arrow_rounded,
-            onTap: () async {
-              // Provider.of<TransactionProvider>(
-              //   context,
-              //   listen: false,
-              // ).triggerDebugSummary(type);
+//     return Padding(
+//       padding: const EdgeInsets.only(left: 72, right: 16, bottom: 8),
+//       child: Row(
+//         children: [
+//           _ActionButton(
+//             label: "Test Now",
+//             icon: Icons.play_arrow_rounded,
+//             onTap: () async {
+//               // Provider.of<TransactionProvider>(
+//               //   context,
+//               //   listen: false,
+//               // ).triggerDebugSummary(type);
 
-              // ====================================
-              //     DEBUG TEST FOR NOTIFICATION
-              // ====================================
+//               // ====================================
+//               //     DEBUG TEST FOR NOTIFICATION
+//               // ====================================
 
-              final debugTime = DateTime.now().add(const Duration(seconds: 15));
+//               final debugTime = DateTime.now().add(const Duration(seconds: 15));
 
-              await NotificationService().scheduleNotification(
-                id: 999,
-                title: "Debug Test",
-                body:
-                    "If you see this, the timezone and scheduling engine are working perfectly!",
-                scheduledDate: debugTime,
-              );
+//               await NotificationService().scheduleNotification(
+//                 id: 999,
+//                 title: "Debug Test",
+//                 body:
+//                     "If you see this, the timezone and scheduling engine are working perfectly!",
+//                 scheduledDate: debugTime,
+//               );
 
-              // ======== END OF TEST ============
+//               // ======== END OF TEST ============
 
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Triggered 15 seconds delay $type summary debug notification',
-                  ),
-                ),
-              );
-            },
-          ),
-          const SizedBox(width: 8),
-          _ActionButton(
-            label: debugTime ?? "Set Debug Time",
-            icon: Icons.timer_outlined,
-            onTap: () async {
-              final TimeOfDay? picked = await showTimePicker(
-                context: context,
-                initialTime: TimeOfDay.now(),
-              );
-              if (picked != null) {
-                final now = DateTime.now();
-                DateTime scheduledTime = DateTime(
-                  now.year,
-                  now.month,
-                  now.day,
-                  picked.hour,
-                  picked.minute,
-                );
+//               LedgrSnackbar.show(
+//                 content: Text(
+//                   'Triggered 15 seconds delay $type summary debug notification',
+//                 ),
+//               );
+//             },
+//           ),
+//           const SizedBox(width: 8),
+//           _ActionButton(
+//             label: debugTime ?? "Set Debug Time",
+//             icon: Icons.timer_outlined,
+//             onTap: () async {
+//               final TimeOfDay? picked = await showTimePicker(
+//                 context: context,
+//                 initialTime: TimeOfDay.now(),
+//               );
+//               if (picked != null) {
+//                 final now = DateTime.now();
+//                 DateTime scheduledTime = DateTime(
+//                   now.year,
+//                   now.month,
+//                   now.day,
+//                   picked.hour,
+//                   picked.minute,
+//                 );
 
-                if (scheduledTime.isBefore(now)) {
-                  scheduledTime = scheduledTime.add(const Duration(days: 1));
-                }
+//                 if (scheduledTime.isBefore(now)) {
+//                   scheduledTime = scheduledTime.add(const Duration(days: 1));
+//                 }
 
-                if (context.mounted) {
-                  final timeStr = picked.format(context);
-                  onTimeChanged(timeStr);
+//                 if (context.mounted) {
+//                   final timeStr = picked.format(context);
+//                   onTimeChanged(timeStr);
 
-                  Provider.of<TransactionProvider>(
-                    context,
-                    listen: false,
-                  ).triggerDebugSummary(type, customTime: scheduledTime);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Scheduled $type debug summary for $timeStr',
-                      ),
-                    ),
-                  );
-                }
-              }
-            },
-          ),
-          if (debugTime != null) ...[
-            const SizedBox(width: 4),
-            IconButton(
-              icon: const Icon(Icons.close, size: 16),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-              onPressed: () => onTimeChanged(null),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
+//                   Provider.of<TransactionProvider>(
+//                     context,
+//                     listen: false,
+//                   ).triggerDebugSummary(type, customTime: scheduledTime);
+//                   LedgrSnackbar.show(
+//                     content: Text('Scheduled $type debug summary for $timeStr'),
+//                   );
+//                 }
+//               }
+//             },
+//           ),
+//           if (debugTime != null) ...[
+//             const SizedBox(width: 4),
+//             IconButton(
+//               icon: const Icon(Icons.close, size: 16),
+//               padding: EdgeInsets.zero,
+//               constraints: const BoxConstraints(),
+//               onPressed: () => onTimeChanged(null),
+//             ),
+//           ],
+//         ],
+//       ),
+//     );
+//   }
+// }
 
-class _ActionButton extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final VoidCallback onTap;
+// class _ActionButton extends StatelessWidget {
+//   final String label;
+//   final IconData icon;
+//   final VoidCallback onTap;
 
-  const _ActionButton({
-    required this.label,
-    required this.icon,
-    required this.onTap,
-  });
+//   const _ActionButton({
+//     required this.label,
+//     required this.icon,
+//     required this.onTap,
+//   });
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 16, color: theme.colorScheme.primary),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.primary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     final theme = Theme.of(context);
+//     return InkWell(
+//       onTap: onTap,
+//       borderRadius: BorderRadius.circular(8),
+//       child: Container(
+//         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+//         decoration: BoxDecoration(
+//           color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+//           borderRadius: BorderRadius.circular(8),
+//         ),
+//         child: Row(
+//           mainAxisSize: MainAxisSize.min,
+//           children: [
+//             Icon(icon, size: 16, color: theme.colorScheme.primary),
+//             const SizedBox(width: 4),
+//             Text(
+//               label,
+//               style: TextStyle(
+//                 fontSize: 12,
+//                 fontWeight: FontWeight.w600,
+//                 color: theme.colorScheme.primary,
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }

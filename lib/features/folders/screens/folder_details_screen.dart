@@ -10,6 +10,8 @@ import 'package:wallzy/common/pie_chart/pie_chart_widget.dart';
 import 'package:wallzy/common/pie_chart/pie_model.dart';
 import 'package:wallzy/common/switch/custom_switch.dart';
 import 'package:wallzy/core/themes/theme.dart';
+import 'package:wallzy/core/utils/ledgr_max/paywall/paywall_features.dart';
+import 'package:wallzy/core/utils/ledgr_max/paywall/paywall_interceptor.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/features/folders/models/folder.dart';
 import 'package:wallzy/features/transaction/provider/meta_provider.dart';
@@ -816,12 +818,17 @@ class _SetBudgetPrompt extends StatelessWidget {
       ),
       child: InkWell(
         onTap: () {
-          // Open Tag Info Sheet to edit
-          showModalBottomSheet(
+          PaywallInterceptor.execute(
             context: context,
-            isScrollControlled: true,
-            backgroundColor: Colors.transparent,
-            builder: (ctx) => AddEditFolderBudgetModalSheet(tag: tag),
+            feature: PaywallFeature.folderBudgets,
+            onAllowed: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (ctx) => AddEditFolderBudgetModalSheet(tag: tag),
+              );
+            },
           );
         },
         borderRadius: BorderRadius.circular(16),

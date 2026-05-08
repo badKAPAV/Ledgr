@@ -5,6 +5,8 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import 'package:wallzy/common/helpers/fading_divider.dart';
 import 'package:wallzy/core/themes/theme.dart';
+import 'package:wallzy/core/utils/ledgr_max/paywall/paywall_features.dart';
+import 'package:wallzy/core/utils/ledgr_max/paywall/paywall_interceptor.dart';
 import 'package:wallzy/features/categories/models/category.dart';
 import 'package:wallzy/features/categories/provider/category_provider.dart';
 import 'package:wallzy/common/icon_picker/icons.dart';
@@ -39,7 +41,6 @@ class _CategorySettingsTabScreenState extends State<CategorySettingsTabScreen> {
     final activeCategories = categoryProvider.categories
         .where((c) => !c.isDeleted)
         .toList();
-    final theme = Theme.of(context);
 
     // Separate and sort lists
     final expenseCategories =
@@ -200,7 +201,11 @@ class _CategorySettingsTabScreenState extends State<CategorySettingsTabScreen> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => _showAddEditCategoryModal(context),
+          onTap: () => PaywallInterceptor.execute(
+            context: context,
+            feature: PaywallFeature.customCategories,
+            onAllowed: () => _showAddEditCategoryModal(context),
+          ),
           borderRadius: BorderRadius.circular(30),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
