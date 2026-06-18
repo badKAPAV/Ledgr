@@ -2,7 +2,7 @@ name: wallzy
 description: "A new Flutter project."
 publish_to: "none"
 
-version: 2.2.4+11 #! Version 11 created on May 6, 2026 with name 2.2.4
+version: 2.2.5+12 #! Version 12 created on May 18, 2026 with name 2.2.5
 
 environment:
   sdk: ^3.10.0

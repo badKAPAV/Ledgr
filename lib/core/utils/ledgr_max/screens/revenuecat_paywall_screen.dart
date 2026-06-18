@@ -230,9 +230,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
               height: 36,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: colorScheme.surfaceVariant.withOpacity(0.5),
+                color: colorScheme.surfaceVariant.withValues(alpha: 0.5),
                 border: Border.all(
-                  color: colorScheme.outlineVariant.withOpacity(0.5),
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
                 ),
               ),
               child: Icon(
@@ -273,7 +273,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
             "Your money, truly mastered.",
             style: TextStyle(
               fontSize: 14,
-              color: colorScheme.onSurfaceVariant.withOpacity(0.8),
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
             ),
           ),
         ],
@@ -285,9 +285,11 @@ class _PaywallScreenState extends State<PaywallScreen> {
     return Container(
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceVariant.withOpacity(0.5),
+        color: colorScheme.surfaceVariant.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.4)),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+        ),
       ),
       child: Row(
         children: [
@@ -331,7 +333,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
             color: selected ? colorScheme.surface : Colors.transparent,
             borderRadius: BorderRadius.circular(9),
             border: selected
-                ? Border.all(color: colorScheme.outlineVariant.withOpacity(0.4))
+                ? Border.all(
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+                  )
                 : null,
           ),
           child: Row(
@@ -355,7 +359,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: colorScheme.primary.withOpacity(0.12),
+                    color: colorScheme.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -404,7 +408,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFFF8C00).withOpacity(0.3),
+                    color: const Color(0xFFFF8C00).withValues(alpha: 0.3),
                     blurRadius: 15,
                     offset: const Offset(0, 8),
                   ),
@@ -428,7 +432,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                             fontSize: 10,
                             letterSpacing: 1.2,
                             fontWeight: FontWeight.w600,
-                            color: Colors.black.withOpacity(0.5),
+                            color: Colors.black.withValues(alpha: 0.5),
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -445,7 +449,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                           "Pay once, yours forever.",
                           style: TextStyle(
                             fontSize: 13,
-                            color: Colors.black.withOpacity(0.6),
+                            color: Colors.black.withValues(alpha: 0.6),
                           ),
                         ),
                       ],
@@ -462,7 +466,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                                 style: theme.textTheme.headlineSmall?.copyWith(
                                   fontSize: 22,
                                   fontWeight: FontWeight.w700,
-                                  color: Colors.black.withOpacity(0.4),
+                                  color: Colors.black.withValues(alpha: 0.4),
                                   letterSpacing: 3,
                                 ),
                               ),
@@ -485,7 +489,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                           "one-time",
                           style: TextStyle(
                             fontSize: 11,
-                            color: Colors.black.withOpacity(0.5),
+                            color: Colors.black.withValues(alpha: 0.5),
                           ),
                         ),
                       ],
@@ -547,7 +551,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF6366F1).withOpacity(0.3),
+                color: const Color(0xFF6366F1).withValues(alpha: 0.3),
                 blurRadius: 15,
                 offset: const Offset(0, 8),
               ),
@@ -568,7 +572,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                         fontSize: 10,
                         letterSpacing: 1.2,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -587,7 +591,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                           : "Cancel anytime.",
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                       ),
                     ),
                   ],
@@ -624,8 +628,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
                                             ?.copyWith(
                                               fontSize: 22,
                                               fontWeight: FontWeight.w700,
-                                              color: Colors.white.withOpacity(
-                                                0.5,
+                                              color: Colors.white.withValues(
+                                                alpha: 0.5,
                                               ),
                                               letterSpacing: 3,
                                             ),
@@ -650,7 +654,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                             _isEligibleForTrial ? "then $price/mo" : "/ month",
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.white.withOpacity(0.6),
+                              color: Colors.white.withValues(alpha: 0.6),
                             ),
                           ),
                         ],
@@ -673,10 +677,10 @@ class _PaywallScreenState extends State<PaywallScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
         decoration: BoxDecoration(
-          color: colorScheme.surfaceVariant.withOpacity(0.45),
+          color: colorScheme.surfaceVariant.withValues(alpha: 0.45),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: colorScheme.outlineVariant.withOpacity(0.4),
+            color: colorScheme.outlineVariant.withValues(alpha: 0.4),
           ),
         ),
         child: Row(
@@ -697,7 +701,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
             Icon(
               Icons.arrow_forward_ios_rounded,
               size: 12,
-              color: colorScheme.onSurfaceVariant.withOpacity(0.6),
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
             ),
           ],
         ),
@@ -715,10 +719,10 @@ class _PaywallScreenState extends State<PaywallScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
         decoration: BoxDecoration(
-          color: colorScheme.surfaceVariant.withOpacity(0.45),
+          color: colorScheme.surfaceVariant.withValues(alpha: 0.45),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: colorScheme.outlineVariant.withOpacity(0.4),
+            color: colorScheme.outlineVariant.withValues(alpha: 0.4),
           ),
         ),
         child: Row(
@@ -735,7 +739,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
             Icon(
               Icons.arrow_forward_ios_rounded,
               size: 12,
-              color: colorScheme.onSurfaceVariant.withOpacity(0.6),
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
             ),
           ],
         ),
@@ -753,7 +757,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
       _FeatureData(
         icon: Icons.people_outline_rounded,
         iconColor: colorScheme.primary,
-        iconBg: colorScheme.primary.withOpacity(0.10),
+        iconBg: colorScheme.primary.withValues(alpha: 0.10),
         name: "Accounts & Wallets",
         description: "Track all your accounts in one place",
         freeVal: free.userAccountsQuantity.toString(),
@@ -767,7 +771,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
       _FeatureData(
         icon: Icons.history_rounded,
         iconColor: Colors.teal,
-        iconBg: Colors.teal.withOpacity(0.10),
+        iconBg: Colors.teal.withValues(alpha: 0.10),
         name: "Transaction history",
         description: "Scroll back as far as you need",
         freeVal: "${free.transactionHistoryLimitMonths}mo",
@@ -781,7 +785,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
       _FeatureData(
         icon: Icons.category_outlined,
         iconColor: Colors.orange,
-        iconBg: Colors.orange.withOpacity(0.10),
+        iconBg: Colors.orange.withValues(alpha: 0.10),
         name: "Custom categories & budgets",
         description: "Organize your spending your way",
         freeVal: "",
@@ -793,7 +797,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
       _FeatureData(
         icon: Icons.bolt_outlined,
         iconColor: colorScheme.primary,
-        iconBg: colorScheme.primary.withOpacity(0.10),
+        iconBg: colorScheme.primary.withValues(alpha: 0.10),
         name: "Quick save & autosave",
         description: "Capture expenses in seconds",
         freeVal: "",
@@ -805,7 +809,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
       _FeatureData(
         icon: Icons.cloud_upload_outlined,
         iconColor: Colors.teal,
-        iconBg: Colors.teal.withOpacity(0.10),
+        iconBg: Colors.teal.withValues(alpha: 0.10),
         name: "Cloud backup & sync",
         description: "Your data, safe across devices",
         freeVal: "",
@@ -817,7 +821,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
       _FeatureData(
         icon: Icons.download_outlined,
         iconColor: Colors.orange,
-        iconBg: Colors.orange.withOpacity(0.10),
+        iconBg: Colors.orange.withValues(alpha: 0.10),
         name: "CSV export",
         description: "Take your data anywhere",
         freeVal: "",
@@ -840,7 +844,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               fontSize: 11,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.1,
-              color: colorScheme.onSurfaceVariant.withOpacity(0.6),
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
             ),
           ),
         ),
@@ -851,7 +855,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
             color: colorScheme.surface,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: colorScheme.outlineVariant.withOpacity(0.4),
+              color: colorScheme.outlineVariant.withValues(alpha: 0.4),
             ),
           ),
           child: ClipRRect(
@@ -876,7 +880,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
             "And many other features...",
             style: TextStyle(
               fontSize: 12,
-              color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
             ),
           ),
         ),
@@ -895,7 +899,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
             ? null
             : Border(
                 bottom: BorderSide(
-                  color: colorScheme.outlineVariant.withOpacity(0.25),
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.25),
                 ),
               ),
       ),
@@ -932,7 +936,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     feature.description,
                     style: TextStyle(
                       fontSize: 11,
-                      color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+                      color: colorScheme.onSurfaceVariant.withValues(
+                        alpha: 0.7,
+                      ),
                     ),
                   ),
                 ],
@@ -957,7 +963,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   child: Icon(
                     Icons.arrow_forward_rounded,
                     size: 10,
-                    color: colorScheme.onSurfaceVariant.withOpacity(0.35),
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.35),
                   ),
                 ),
                 _buildChip(
@@ -987,13 +993,13 @@ class _PaywallScreenState extends State<PaywallScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
         color: isPro && isEnabled
-            ? colorScheme.primary.withOpacity(0.10)
-            : colorScheme.surfaceVariant.withOpacity(0.6),
+            ? colorScheme.primary.withValues(alpha: 0.10)
+            : colorScheme.surfaceVariant.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: isPro && isEnabled
-              ? colorScheme.primary.withOpacity(0.2)
-              : colorScheme.outlineVariant.withOpacity(0.3),
+              ? colorScheme.primary.withValues(alpha: 0.2)
+              : colorScheme.outlineVariant.withValues(alpha: 0.3),
         ),
       ),
       child: Text(
@@ -1004,7 +1010,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
           fontWeight: isPro ? FontWeight.w600 : FontWeight.w400,
           color: isPro && isEnabled
               ? colorScheme.primary
-              : colorScheme.onSurfaceVariant.withOpacity(0.6),
+              : colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
         ),
       ),
     );
@@ -1017,7 +1023,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.3)),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+        ),
       ),
       child: Row(
         children: [
@@ -1125,7 +1133,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
             "Subscriptions automatically renew unless canceled at least 24 hours before the end of the current period.",
             style: TextStyle(
               fontSize: 11,
-              color: colorScheme.onSurfaceVariant.withOpacity(0.6),
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
             ),
             textAlign: TextAlign.center,
           ),

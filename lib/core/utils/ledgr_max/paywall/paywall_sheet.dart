@@ -38,12 +38,12 @@ class _PremiumUpsellSheetState extends State<PremiumUpsellSheet> {
           color: colorScheme.surface,
           borderRadius: BorderRadius.circular(32),
           border: Border.all(
-            color: colorScheme.outlineVariant.withOpacity(0.5),
+            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 40,
               spreadRadius: -10,
             ),
@@ -65,14 +65,14 @@ class _PremiumUpsellSheetState extends State<PremiumUpsellSheet> {
                 ),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: colorScheme.outlineVariant.withOpacity(
-                    theme.brightness == Brightness.dark ? 0.3 : 0.5,
+                  color: colorScheme.outlineVariant.withValues(
+                    alpha: theme.brightness == Brightness.dark ? 0.3 : 0.5,
                   ),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(
-                      theme.brightness == Brightness.dark ? 0.2 : 0.05,
+                    color: Colors.black.withValues(
+                      alpha: theme.brightness == Brightness.dark ? 0.2 : 0.05,
                     ),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
@@ -88,7 +88,7 @@ class _PremiumUpsellSheetState extends State<PremiumUpsellSheet> {
                       fontSize: 26,
                       fontWeight: FontWeight.w800,
                       letterSpacing: -1,
-                      color: colorScheme.onSurface.withOpacity(0.6),
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                   const SizedBox(width: 2),

@@ -58,14 +58,14 @@ class _LedgrMaxStatusButton extends StatelessWidget {
             ),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: colorScheme.outlineVariant.withOpacity(
-                theme.brightness == Brightness.dark ? 0.3 : 0.5,
+              color: colorScheme.outlineVariant.withValues(
+                alpha: theme.brightness == Brightness.dark ? 0.3 : 0.5,
               ),
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(
-                  theme.brightness == Brightness.dark ? 0.2 : 0.05,
+                color: Colors.black.withValues(
+                  alpha: theme.brightness == Brightness.dark ? 0.2 : 0.05,
                 ),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
@@ -82,7 +82,7 @@ class _LedgrMaxStatusButton extends StatelessWidget {
                   fontSize: 26,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -1,
-                  color: colorScheme.onSurface.withOpacity(0.6),
+                  color: colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
               const SizedBox(width: 2),
@@ -97,7 +97,7 @@ class _LedgrMaxStatusButton extends StatelessWidget {
               const Spacer(),
               Icon(
                 Icons.arrow_forward_ios,
-                color: colorScheme.onSurface.withOpacity(0.6),
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
                 size: 16,
               ),
               const SizedBox(width: 8),

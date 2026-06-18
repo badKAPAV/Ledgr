@@ -390,10 +390,12 @@ class _AddEditCategoryModalSheetState extends State<AddEditCategoryModalSheet> {
                           width: 48,
                           height: 48,
                           decoration: BoxDecoration(
-                            color: colors.primaryContainer.withOpacity(0.2),
+                            color: colors.primaryContainer.withValues(
+                              alpha: 0.2,
+                            ),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: colors.primary.withOpacity(0.5),
+                              color: colors.primary.withValues(alpha: 0.5),
                               width: 2,
                             ),
                           ),
@@ -514,10 +516,10 @@ class _AddEditCategoryModalSheetState extends State<AddEditCategoryModalSheet> {
                       bottom: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: colors.primaryContainer.withOpacity(0.5),
+                      color: colors.primaryContainer.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(50),
                       border: Border.all(
-                        color: colors.primary.withOpacity(0.2),
+                        color: colors.primary.withValues(alpha: 0.2),
                       ),
                     ),
                     child: Row(
@@ -554,7 +556,7 @@ class _AddEditCategoryModalSheetState extends State<AddEditCategoryModalSheet> {
                       color: colors.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(50),
                       border: Border.all(
-                        color: colors.outlineVariant.withOpacity(0.5),
+                        color: colors.outlineVariant.withValues(alpha: 0.5),
                       ),
                     ),
                     child: Row(
@@ -640,7 +642,9 @@ class _AddEditCategoryModalSheetState extends State<AddEditCategoryModalSheet> {
                       onPressed: _isLoading ? null : _delete,
                       style: OutlinedButton.styleFrom(
                         foregroundColor: colors.error,
-                        side: BorderSide(color: colors.error.withOpacity(0.5)),
+                        side: BorderSide(
+                          color: colors.error.withValues(alpha: 0.5),
+                        ),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(50),
@@ -830,8 +834,8 @@ class _AnimatedModeSelector extends StatelessWidget {
     return Container(
       height: 48,
       decoration: BoxDecoration(
-        color: colors.surfaceContainerHighest.withOpacity(
-          isDisabled ? 0.3 : 0.8,
+        color: colors.surfaceContainerHighest.withValues(
+          alpha: isDisabled ? 0.3 : 0.8,
         ),
         borderRadius: BorderRadius.circular(24),
       ),
@@ -858,7 +862,7 @@ class _AnimatedModeSelector extends StatelessWidget {
                         ? null
                         : [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -885,8 +889,8 @@ class _AnimatedModeSelector extends StatelessWidget {
                                 ? (isDisabled
                                       ? colors.outline
                                       : colors.onSurface)
-                                : colors.onSurfaceVariant.withOpacity(
-                                    isDisabled ? 0.5 : 1.0,
+                                : colors.onSurfaceVariant.withValues(
+                                    alpha: isDisabled ? 0.5 : 1.0,
                                   ),
                           ),
                           child: const Text("Expense"),
@@ -911,8 +915,8 @@ class _AnimatedModeSelector extends StatelessWidget {
                                 ? (isDisabled
                                       ? colors.outline
                                       : colors.onSurface)
-                                : colors.onSurfaceVariant.withOpacity(
-                                    isDisabled ? 0.5 : 1.0,
+                                : colors.onSurfaceVariant.withValues(
+                                    alpha: isDisabled ? 0.5 : 1.0,
                                   ),
                           ),
                           child: const Text("Income"),

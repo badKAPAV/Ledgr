@@ -14,6 +14,7 @@ import 'package:wallzy/core/utils/ledgr_max/paywall/paywall_interceptor.dart';
 import 'package:wallzy/features/accounts/models/account.dart';
 import 'package:wallzy/features/accounts/provider/account_provider.dart';
 import 'package:wallzy/features/accounts/screens/add_edit_account_screen.dart';
+import 'package:wallzy/features/accounts/widgets/edit_account_balance_sheet.dart';
 import 'package:wallzy/features/transaction/screens/transactions_screen.dart';
 import 'package:wallzy/features/settings/provider/settings_provider.dart';
 import 'package:wallzy/features/transaction/models/transaction.dart';
@@ -1024,6 +1025,18 @@ class _WalletStackDashboardState extends State<_WalletStackDashboard>
                       color: layout.color,
                       currencyFormat: currencyFormat,
                       isBalanceHidden: _isBalanceHidden,
+                      editAccountBalance: () {
+                        HapticFeedback.lightImpact();
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (_) => EditAccountBalanceModalSheet(
+                            account: account,
+                            passedContext: context,
+                          ),
+                        );
+                      },
                     )
                   : _StackCard(
                       account: account,
@@ -1046,6 +1059,18 @@ class _WalletStackDashboardState extends State<_WalletStackDashboard>
                           isScrollControlled: true,
                           backgroundColor: Colors.transparent,
                           builder: (_) => AccountInfoModalSheet(
+                            account: account,
+                            passedContext: context,
+                          ),
+                        );
+                      },
+                      editAccountBalance: () {
+                        HapticFeedback.lightImpact();
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (_) => EditAccountBalanceModalSheet(
                             account: account,
                             passedContext: context,
                           ),
@@ -1109,6 +1134,7 @@ class _StackCard extends StatelessWidget {
   final double cardSpacing;
   final VoidCallback onCollapseCard;
   final VoidCallback onInfoTap;
+  final VoidCallback editAccountBalance;
 
   const _StackCard({
     required this.account,
@@ -1121,6 +1147,7 @@ class _StackCard extends StatelessWidget {
     required this.cardSpacing,
     required this.onCollapseCard,
     required this.onInfoTap,
+    required this.editAccountBalance,
   });
 
   @override
@@ -1274,12 +1301,26 @@ class _StackCard extends StatelessWidget {
                               ),
                             ],
                           ),
-                          IconButton(
-                            onPressed: onInfoTap,
-                            icon: const Icon(
-                              Icons.info_outline_rounded,
-                              color: Colors.white70,
-                            ),
+                          Row(
+                            children: [
+                              if (account.accountType != 'credit')
+                                IconButton(
+                                  tooltip: 'Edit account balance',
+                                  onPressed: editAccountBalance,
+                                  icon: const Icon(
+                                    Icons.edit_rounded,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                              IconButton(
+                                tooltip: 'Show account info',
+                                onPressed: onInfoTap,
+                                icon: const Icon(
+                                  Icons.info_outline_rounded,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -1376,6 +1417,7 @@ class _FanCard extends StatelessWidget {
   final Color color;
   final NumberFormat currencyFormat;
   final bool isBalanceHidden;
+  final VoidCallback? editAccountBalance;
 
   const _FanCard({
     required this.account,
@@ -1383,6 +1425,7 @@ class _FanCard extends StatelessWidget {
     required this.color,
     required this.currencyFormat,
     required this.isBalanceHidden,
+    this.editAccountBalance,
   });
 
   @override
@@ -1474,6 +1517,21 @@ class _FanCard extends StatelessWidget {
             ],
           ),
 
+          if (account.accountType != 'credit' &&
+              editAccountBalance != null) ...[
+            const SizedBox(width: 8),
+            IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              icon: const Icon(
+                Icons.edit_rounded,
+                color: Colors.white70,
+                size: 18,
+              ),
+              onPressed: editAccountBalance,
+            ),
+          ],
+
           const SizedBox(width: 10),
 
           // Chevron
@@ -1538,12 +1596,12 @@ class _WalletPocket extends StatelessWidget {
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: primary.withOpacity(0.5),
+            color: primary.withValues(alpha: 0.5),
             blurRadius: 32,
             offset: const Offset(0, 14),
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -1584,8 +1642,8 @@ class _WalletPocket extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    onPrimary.withOpacity(0.12),
-                    onPrimary.withOpacity(0.0),
+                    onPrimary.withValues(alpha: 0.12),
+                    onPrimary.withValues(alpha: 0.0),
                   ],
                 ),
               ),
@@ -1602,136 +1660,155 @@ class _WalletPocket extends StatelessWidget {
             ),
           ),
 
-          // Card slot notches at top
-          // Positioned(top: 0, right: 36, child: _CardSlot(width: 64)),
-          // Positioned(top: 0, right: 112, child: _CardSlot(width: 52)),
-
-          // Main content
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "NET WORTH",
-                          style: TextStyle(
-                            color: onPrimary.withOpacity(0.6),
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          isBalanceHidden
-                              ? '****'
-                              : currencyFormat.format(netWorth),
-                          style: TextStyle(
-                            color: onPrimary,
-                            fontSize: 30,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: -1,
-                          ),
-                        ),
-                      ],
-                    ),
-                    GestureDetector(
-                      onTap: onToggleVisibility,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 7,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: onPrimary.withOpacity(0.35),
-                            width: 1.5,
-                          ),
-                          borderRadius: BorderRadius.circular(24),
-                          color: onPrimary.withOpacity(0.08),
-                        ),
-                        child: Icon(
-                          isBalanceHidden
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                          color: onPrimary,
-                          size: 16,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-
-                // Use SegmentedProgressBar
-                SegmentedProgressBar(
-                  height: 6,
-                  gap: 4, // No gap for this specific design
-                  borderRadius: BorderRadius.circular(4),
-                  segments: [
-                    if (totalAssets > 0)
-                      Segment(value: totalAssets, color: onPrimary),
-                    if (totalDebt > 0)
-                      Segment(
-                        value: totalDebt,
-                        color: onPrimary.withOpacity(0.18),
-                      ),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-                IntrinsicHeight(
-                  child: Row(
+          // Main content - Now uses Positioned.fill to take up the full height
+          Positioned.fill(
+            child: Padding(
+              // Reduced bottom padding slightly to give the text room
+              padding: const EdgeInsets.fromLTRB(24, 28, 24, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.max, // Force it to stretch
+                children: [
+                  // --- TOP SECTION ---
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(
-                        child: _StatCell(
-                          onPrimary: onPrimary,
-                          dotOpacity: 1.0,
-                          label: "ASSETS",
-                          value: isBalanceHidden
-                              ? '****'
-                              : currencyFormat.format(totalAssets),
-                        ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "NET WORTH",
+                            style: TextStyle(
+                              color: onPrimary.withValues(alpha: 0.6),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            isBalanceHidden
+                                ? '****'
+                                : currencyFormat.format(netWorth),
+                            style: TextStyle(
+                              color: onPrimary,
+                              fontSize: 30,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: -1,
+                            ),
+                          ),
+                        ],
                       ),
-                      VerticalDivider(
-                        color: onPrimary.withOpacity(0.2),
-                        width: 1,
-                        thickness: 1,
-                      ),
-                      const SizedBox(width: 24),
-                      Expanded(
-                        child: _StatCell(
-                          onPrimary: onPrimary,
-                          dotOpacity: 0.35,
-                          label: "LIABILITIES",
-                          value: isBalanceHidden
-                              ? '****'
-                              : currencyFormat.format(totalDebt),
+                      GestureDetector(
+                        onTap: onToggleVisibility,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 7,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: onPrimary.withValues(alpha: 0.35),
+                              width: 1.5,
+                            ),
+                            borderRadius: BorderRadius.circular(24),
+                            color: onPrimary.withValues(alpha: 0.08),
+                          ),
+                          child: Icon(
+                            isBalanceHidden
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            color: onPrimary,
+                            size: 16,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ),
-              ],
+
+                  // Flexible space between header and stats
+                  const Spacer(flex: 2),
+
+                  // --- MIDDLE SECTION ---
+                  Column(
+                    children: [
+                      SegmentedProgressBar(
+                        height: 6,
+                        gap: 4,
+                        borderRadius: BorderRadius.circular(4),
+                        segments: [
+                          if (totalAssets > 0)
+                            Segment(value: totalAssets, color: onPrimary),
+                          if (totalDebt > 0)
+                            Segment(
+                              value: totalDebt,
+                              color: onPrimary.withValues(alpha: 0.18),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      IntrinsicHeight(
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _StatCell(
+                                onPrimary: onPrimary,
+                                dotOpacity: 1.0,
+                                label: "ASSETS",
+                                value: isBalanceHidden
+                                    ? '****'
+                                    : currencyFormat.format(totalAssets),
+                              ),
+                            ),
+                            VerticalDivider(
+                              color: onPrimary.withValues(alpha: 0.2),
+                              width: 1,
+                              thickness: 1,
+                            ),
+                            const SizedBox(width: 24),
+                            Expanded(
+                              child: _StatCell(
+                                onPrimary: onPrimary,
+                                dotOpacity: 0.35,
+                                label: "LIABILITIES",
+                                value: isBalanceHidden
+                                    ? '****'
+                                    : currencyFormat.format(totalDebt),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // Pushes the hint all the way to the bottom
+                  const Spacer(flex: 3),
+
+                  // --- BOTTOM SECTION ---
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: onPrimary.withValues(alpha: 0.4),
+                        size: 16,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        "COLLAPSE OPEN ACCOUNTS",
+                        style: TextStyle(
+                          color: onPrimary.withValues(alpha: 0.4),
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
-
-          // Faint wallet logo watermark
-          // Positioned(
-          //   bottom: 18,
-          //   right: 24,
-          //   child: Icon(
-          //     Icons.account_balance_wallet_outlined,
-          //     color: onPrimary.withOpacity(0.2),
-          //     size: 20,
-          //   ),
-          // ),
         ],
       ),
     );
@@ -1746,7 +1823,7 @@ class _DashedBorderPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = color.withOpacity(0.22)
+      ..color = color.withValues(alpha: 0.22)
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
 
@@ -1779,7 +1856,7 @@ class _DiagonalStripesPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = color.withOpacity(0.025)
+      ..color = color.withValues(alpha: 0.025)
       ..strokeWidth = 2;
     for (double x = -size.height; x < size.width + size.height; x += 20) {
       canvas.drawLine(
@@ -1795,30 +1872,30 @@ class _DiagonalStripesPainter extends CustomPainter {
 }
 
 // Card slot notch widget
-class _CardSlot extends StatelessWidget {
-  final double width;
-  const _CardSlot({required this.width});
+// class _CardSlot extends StatelessWidget {
+//   final double width;
+//   const _CardSlot({required this.width});
 
-  @override
-  Widget build(BuildContext context) => Container(
-    width: width,
-    height: 10,
-    decoration: BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          Colors.black.withOpacity(0.22),
-          Colors.black.withOpacity(0.08),
-        ],
-      ),
-      borderRadius: const BorderRadius.only(
-        bottomLeft: Radius.circular(6),
-        bottomRight: Radius.circular(6),
-      ),
-    ),
-  );
-}
+//   @override
+//   Widget build(BuildContext context) => Container(
+//     width: width,
+//     height: 10,
+//     decoration: BoxDecoration(
+//       gradient: LinearGradient(
+//         begin: Alignment.topCenter,
+//         end: Alignment.bottomCenter,
+//         colors: [
+//           Colors.black.withValues(alpha: 0.22),
+//           Colors.black.withValues(alpha: 0.08),
+//         ],
+//       ),
+//       borderRadius: const BorderRadius.only(
+//         bottomLeft: Radius.circular(6),
+//         bottomRight: Radius.circular(6),
+//       ),
+//     ),
+//   );
+// }
 
 class _StatCell extends StatelessWidget {
   final Color onPrimary;
@@ -1839,13 +1916,13 @@ class _StatCell extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 3,
-            backgroundColor: onPrimary.withOpacity(dotOpacity),
+            backgroundColor: onPrimary.withValues(alpha: dotOpacity),
           ),
           const SizedBox(width: 5),
           Text(
             label,
             style: TextStyle(
-              color: onPrimary.withOpacity(0.55),
+              color: onPrimary.withValues(alpha: 0.55),
               fontSize: 9,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.8,

@@ -12,7 +12,6 @@ import 'package:wallzy/features/folders/screens/folder_details_screen.dart';
 import 'package:wallzy/core/themes/theme.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:wallzy/common/widgets/empty_report_placeholder.dart';
-import 'package:wallzy/common/icon_picker/icon_picker_sheet.dart';
 import 'package:wallzy/common/icon_picker/icons.dart';
 
 import 'package:wallzy/app_drawer.dart';

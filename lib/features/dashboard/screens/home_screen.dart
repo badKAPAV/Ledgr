@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field
+
 import 'dart:async';
 import 'package:collection/collection.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';

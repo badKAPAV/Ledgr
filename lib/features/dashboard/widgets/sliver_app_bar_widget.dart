@@ -468,6 +468,16 @@ class _GaugeInfoContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final formattedAmount = formatter.format(amount);
+
+    // 2. Safely extract the symbol and the numeric parts
+    final currencySymbol = formattedAmount.isNotEmpty
+        ? formattedAmount.substring(0, 1)
+        : '';
+    final numericAmount = formattedAmount.isNotEmpty
+        ? formattedAmount.substring(1)
+        : '';
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -489,9 +499,19 @@ class _GaugeInfoContent extends StatelessWidget {
             RichText(
               text: TextSpan(
                 children: [
-                  // The Large Amount
                   TextSpan(
-                    text: formatter.format(amount),
+                    text: currencySymbol,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: isOverspent
+                          ? theme.colorScheme.error.withValues(alpha: 0.6)
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      fontSize: 20,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  TextSpan(
+                    text: numericAmount,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w900,
                       color: isOverspent

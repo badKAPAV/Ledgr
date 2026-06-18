@@ -190,6 +190,22 @@ class _PendingSmsScreenState extends State<PendingSmsScreen> {
     if (!authProvider.isLoggedIn) return;
     if (_transactions.isEmpty) return;
 
+    // Cache all providers BEFORE the first async gap (showDialog)
+    final txProvider = Provider.of<TransactionProvider>(context, listen: false);
+    final accountProvider = Provider.of<AccountProvider>(
+      context,
+      listen: false,
+    );
+    final metaProvider = Provider.of<MetaProvider>(context, listen: false);
+    final settingsProvider = Provider.of<SettingsProvider>(
+      context,
+      listen: false,
+    );
+    final categoryProvider = Provider.of<CategoryProvider>(
+      context,
+      listen: false,
+    );
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -234,17 +250,6 @@ class _PendingSmsScreenState extends State<PendingSmsScreen> {
         },
       ),
       duration: const Duration(days: 1),
-    );
-
-    final txProvider = Provider.of<TransactionProvider>(context, listen: false);
-    final accountProvider = Provider.of<AccountProvider>(
-      context,
-      listen: false,
-    );
-    final metaProvider = Provider.of<MetaProvider>(context, listen: false);
-    final settingsProvider = Provider.of<SettingsProvider>(
-      context,
-      listen: false,
     );
 
     int savedCount = 0;
@@ -300,7 +305,6 @@ class _PendingSmsScreenState extends State<PendingSmsScreen> {
                 : TransactionMode.expense,
           );
 
-          final categoryProvider = context.read<CategoryProvider>();
           categoryName =
               categoryProvider.categories
                   .firstWhereOrNull((c) => c.id == categoryId)
@@ -501,8 +505,9 @@ class _PendingSmsScreenState extends State<PendingSmsScreen> {
               padding: const EdgeInsets.symmetric(vertical: 8),
               initialItemCount: _transactions.length,
               itemBuilder: (context, index, animation) {
-                if (index >= _transactions.length)
+                if (index >= _transactions.length) {
                   return const SizedBox.shrink();
+                }
 
                 final tx = _transactions[index];
                 return SizeTransition(

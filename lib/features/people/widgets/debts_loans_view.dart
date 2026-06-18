@@ -30,7 +30,6 @@ class _DebtsLoansViewState extends State<DebtsLoansView> {
       symbol: currencySymbol,
       decimalDigits: 0,
     );
-    final theme = Theme.of(context);
 
     final currentList = _selectedType == 'youOwe'
         ? peopleProvider.youOweList
