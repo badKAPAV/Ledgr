@@ -83,7 +83,7 @@ Built to be simple, fast, and expandable:
 
 ## 📥 Download
 
-**To get access to closed beta, drop an email with your email address and you'll get a link to download the latest build via Play Store**
+**To get access to closed beta, [Join this Google group](https://groups.google.com/g/ledgr-closed-testers) and then [Click on this link](https://play.google.com/store/apps/details?id=com.kapav.wallzy) to get access to the app directly from Play Store.**
 
 > **Note**
 > - This build is currently distributed through Closed Testing in Play Store.
