@@ -1,5 +1,5 @@
 # Ledgr
-### Advanced Solo Expense Tracker with Smart Transaction Detection
+### Advanced Expense Tracker with Smart Transaction Detection
 
 **Ledgr** is a simple, private, and powerful expense tracking app designed to help you understand and control your finances with minimal effort.  
 Its standout feature intelligently detects bank transaction alerts and lets you log expenses in a single tap—while keeping **all your data fully on-device**.
@@ -52,7 +52,7 @@ Its standout feature intelligently detects bank transaction alerts and lets you 
 - **Clean & Focused UI**  
   Designed to stay out of your way while giving you clarity and control.
 
-- **Global**
+- **Global**  
   Has support for currencies all over the world.
 
 ---
@@ -70,11 +70,8 @@ Built to be simple, fast, and expandable:
 
 ## 🚀 Upcoming Features
 
-- **Smart Budgets & Limits**  
-  Set category-wise limits and get insights when you overspend.
-
-- **Savings Goals**  
-  Track progress toward personal financial goals.
+- **Split Bills with Anyone**  
+  Easily split expenses with existing Ledgr users or non-users directly from the app to track shared costs effortlessly.
 
 - **More quality-of-life improvements**  
   Performance, UX refinements, and smarter insights.
@@ -83,12 +80,11 @@ Built to be simple, fast, and expandable:
 
 ## 📥 Download
 
-**To get access to closed beta, [Join this Google group](https://groups.google.com/g/ledgr-closed-testers) and then [Click on this link](https://play.google.com/store/apps/details?id=com.kapav.wallzy) to get access to the app directly from Play Store.**
+**[Download from Google Play](https://play.google.com/store/apps/details?id=com.kapav.wallzy)**
 
-> **Note**
-> - This build is currently distributed through Closed Testing in Play Store.
-> - Transaction detection requires notification access to bank alerts.
-> - Detection accuracy may vary between banks.
+> **Note**  
+> - Transaction detection requires notification access to bank alerts.  
+> - Detection accuracy may vary between banks.  
 
 If your bank’s messages are not detected correctly, go to Feedback > SMS parsing request and fill up the form as instructed.
 
